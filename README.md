@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0 (MVP Development)  
 **Unity Compatibility:** Unity 6 (6000.0.0f1+) and Unity 2023.3+  
-**Status:** Etapa 1 - Technical Documentation Phase  
+**Status:** Stage 1 - Technical Documentation Phase  
 
 An AI-powered project management and documentation tool for Unity developers that automatically generates comprehensive project documentation, creates templates, and provides intelligent development workflow assistance.
 
@@ -14,7 +14,7 @@ Unity Project Architect is a Unity Editor package designed to:
 - **Integrate AI assistance** (Claude API) for planning and content generation
 - **Manage development workflows** within Unity Editor using UI Toolkit
 
-## 📋 Current Status - Etapa 1 Complete ✅
+## 📋 Current Status - Stage 1 Complete ✅
 
 **Completed Tasks:**
 - [x] Unity package structure setup with proper directories
@@ -90,7 +90,7 @@ Location: `Documentation~/CodingConventions.md`
 - **Dependencies:** Unity UI Toolkit only
 - **Keywords:** documentation, project-management, ai, templates, productivity
 
-## 🚀 Next Steps - Etapa 2: Functional Code (18 hours)
+## 🚀 Next Steps - Stage 2: Functional Code (18 hours)
 
 **Sprint 2.1: Core Framework (6h)**
 - Implement core data models (ProjectData, DocumentationSettings)
@@ -137,6 +137,6 @@ All development follows the established conventions in `Documentation~/CodingCon
 
 ---
 
-**Ready for Etapa 2 Implementation** 🚀
+**Ready for Stage 2 Implementation** 🚀
 
 The foundation is now complete with proper Unity package structure, comprehensive requirements documentation, and established coding standards. The project is ready to begin the 18-hour functional implementation phase.
