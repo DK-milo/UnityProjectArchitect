@@ -317,7 +317,7 @@ namespace UnityProjectArchitect.Services
                 SupportsProgressTracking = true,
                 SupportsUndo = false,
                 SupportsBackup = true,
-                SupportedFileTypes = new List<string> { ".cs", ".unity", ".asmdef", ".json", ".md" },
+                SupportedFileTypes = new List<string> { ".unity", ".asmdef", ".json", ".md" },
                 Features = new Dictionary<string, bool>
                 {
                     { "AsyncOperations", true },

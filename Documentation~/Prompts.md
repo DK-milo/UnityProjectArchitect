@@ -7,6 +7,7 @@ I'm developing a Unity package called **"Unity Project Architect"** - an AI-powe
 A Unity Editor package that helps developers:
 - Generate complete project documentation (6 standard sections)
 - Create project templates and structures automatically
+- Organize folder hierarchies and project setup (no script generation)
 - Use AI assistance (Claude API) for planning and documentation
 - Manage development workflows within Unity Editor
 
@@ -122,6 +123,7 @@ com.yourname.project-architect/
 3. **AI-optional** - works without API key, enhanced with it
 4. **Template-based** - pre-generated assets, not runtime generation
 5. **Unity-native** - follows Unity conventions and patterns
+6. **Structure-only templates** - creates folders, scenes, and documentation; users write their own scripts
 
 ## Development Guidelines
 

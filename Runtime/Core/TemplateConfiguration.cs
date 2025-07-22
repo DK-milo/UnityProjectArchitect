@@ -181,7 +181,6 @@ namespace UnityProjectArchitect.Core
         [SerializeField] private string relativePath = "";
         [SerializeField] private bool createOnApply = true;
         [SerializeField] private List<FolderDefinition> subFolders = new List<FolderDefinition>();
-        [SerializeField] private List<string> fileTemplates = new List<string>();
 
         public string Name 
         { 
@@ -214,12 +213,10 @@ namespace UnityProjectArchitect.Core
         }
 
         public List<FolderDefinition> SubFolders => subFolders;
-        public List<string> FileTemplates => fileTemplates;
 
         public FolderDefinition()
         {
             subFolders = new List<FolderDefinition>();
-            fileTemplates = new List<string>();
         }
 
         public FolderDefinition(string folderName, FolderType type, string desc = "") : this()
@@ -237,13 +234,6 @@ namespace UnityProjectArchitect.Core
             }
         }
 
-        public void AddFileTemplate(string templateName)
-        {
-            if (!fileTemplates.Contains(templateName))
-            {
-                fileTemplates.Add(templateName);
-            }
-        }
 
         public override bool Equals(object obj)
         {

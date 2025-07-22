@@ -15,7 +15,7 @@ Unity Project Architect is an AI-powered Unity Editor package that automates pro
 **Key Value Propositions:**
 - **Zero-friction documentation**: Automatically generates 6 standard documentation sections
 - **AI-enhanced productivity**: Claude API integration for intelligent content generation
-- **Template-driven development**: Pre-built project structures for common Unity patterns
+- **Structure-aware organization**: Intelligent folder and scene templates for common Unity patterns
 - **Unity-native experience**: Fully integrated Editor tools using UI Toolkit
 
 ---
@@ -27,9 +27,9 @@ To become the standard tool for Unity project documentation and architectural pl
 
 ### 2.2 Primary Goals
 1. **Reduce documentation time by 80%** through automated generation
-2. **Standardize project structures** across teams and projects
+2. **Organize project structures** across teams and projects
 3. **Improve project maintainability** through comprehensive documentation
-4. **Accelerate project setup** with intelligent templates
+4. **Accelerate project organization** with intelligent structure templates
 
 ### 2.3 Success Metrics
 - Package installation rate in Unity Asset Store (target: 1000+ downloads in first month)
