@@ -4,7 +4,7 @@
 **Version:** 1.0  
 **Date:** July 21, 2025  
 **Project Timeline:** 30 hours MVP  
-**Target Release:** Etapa 3 Completion  
+**Target Release:** Stage 3 Completion  
 
 ---
 
@@ -256,7 +256,7 @@ namespace UnityProjectArchitect
 
 ## 9. Development Roadmap
 
-### 9.1 Etapa 1: Technical Documentation (8 hours)
+### 9.1 Stage 1: Technical Documentation (8 hours)
 **Week 1 - Days 1-2**
 - [x] Product Requirements Document (2h)
 - [ ] System Architecture (2h)
@@ -265,7 +265,7 @@ namespace UnityProjectArchitect
 - [ ] Testing Plan (1h)
 - [ ] Development Roadmap (0.5h)
 
-### 9.2 Etapa 2: Functional Code (18 hours)
+### 9.2 Stage 2: Functional Code (18 hours)
 **Week 2 - Days 3-7**
 - **Sprint 2.1**: Core Framework (6h)
   - Package structure and assembly definitions
@@ -280,7 +280,7 @@ namespace UnityProjectArchitect
   - Prompt engineering for each section
   - AI assistant interface
 
-### 9.3 Etapa 3: Final Delivery (4 hours)
+### 9.3 Stage 3: Final Delivery (4 hours)
 **Week 2 - Final Day**
 - Comprehensive testing and bug fixes
 - Demo project creation

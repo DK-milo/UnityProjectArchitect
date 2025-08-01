@@ -92,7 +92,36 @@ public enum DocumentationType
 }
 ```
 
-### 2.2 Code Organization
+### 2.2 Variable Declarations
+**ALWAYS use explicit types instead of var keyword:**
+```csharp
+// ✅ CORRECT - Use explicit types
+StringBuilder sb = new StringBuilder();
+List<ClassDefinition> classes = new List<ClassDefinition>();
+Dictionary<string, string> properties = new Dictionary<string, string>();
+IEnumerable<UserStory> stories = GenerateStories().Where(s => s.Priority == "High");
+
+// ❌ INCORRECT - Do not use var
+var sb = new StringBuilder();
+var classes = new List<ClassDefinition>();
+var properties = new Dictionary<string, string>();
+var stories = GenerateStories().Where(s => s.Priority == "High");
+
+// Exception: var is acceptable only for anonymous types and complex generic types where the type is immediately obvious
+var anonymousObject = new { Name = "Test", Value = 42 };
+var query = from item in collection
+            where item.IsValid
+            select new { item.Name, item.Count };
+```
+
+**Rationale:**
+- Explicit types improve code readability and maintainability
+- Makes the code self-documenting
+- Helps catch type-related bugs at compile time
+- Aligns with Unity's coding standards for packages
+- Easier for other developers to understand the codebase
+
+### 2.3 Code Organization
 ```csharp
 // File header template
 /*
