@@ -46,6 +46,28 @@ This document defines the complete development pipeline for implementing feature
 - Alignment with overall project roadmap
 - Prerequisites are met from previous steps
 
+### 1.5. 📋 **Review Project Context & Coding Conventions** *(NEW)*
+
+**Process:**
+- **MANDATORY:** Before any code implementation, review all relevant documentation:
+  - Read `CodingConventions.md` for coding standards and variable declaration rules
+  - Review `ProductRequirementsDocument.md` for business requirements
+  - Check existing codebase patterns in similar files
+  - Understand established naming conventions and architectural patterns
+
+**Critical Requirements:**
+- **ALWAYS use explicit types instead of `var` keyword** (per CodingConventions.md Section 2.2)
+- Follow established naming conventions (PascalCase, camelCase, underscore prefixes)
+- Use proper namespace organization and file headers
+- Implement comprehensive error handling and logging patterns
+- Follow Unity-specific ScriptableObject and Editor patterns
+
+**Success Criteria:**
+- All new code follows established coding conventions
+- No `var` keyword usage (use explicit types like `string`, `List<T>`, etc.)
+- Consistent with existing codebase architecture
+- Proper error handling and validation patterns implemented
+
 ### 2. 🔧 **Implementation Phase**
 
 **Process:**

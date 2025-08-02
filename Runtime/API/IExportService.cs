@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityProjectArchitect.Core;
 
@@ -468,5 +469,66 @@ namespace UnityProjectArchitect.API
                 _ => false
             };
         }
+    }
+
+    [Serializable]
+    public class DiagramInfo
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DiagramType Type { get; set; }
+        public string ImagePath { get; set; }
+        public string ImageData { get; set; }
+        public Dictionary<string, object> Properties { get; set; }
+
+        public DiagramInfo()
+        {
+            Properties = new Dictionary<string, object>();
+        }
+
+        public DiagramInfo(string id, string title, DiagramType type) : this()
+        {
+            Id = id;
+            Title = title;
+            Type = type;
+        }
+    }
+
+    [Serializable]
+    public class CodeExample
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Language { get; set; }
+        public string Code { get; set; }
+        public string FilePath { get; set; }
+        public List<string> Tags { get; set; }
+
+        public CodeExample()
+        {
+            Tags = new List<string>();
+            Language = "csharp";
+        }
+
+        public CodeExample(string id, string title, string code) : this()
+        {
+            Id = id;
+            Title = title;
+            Code = code;
+        }
+    }
+
+    public enum DiagramType
+    {
+        Architecture,
+        Sequence,
+        Flow,
+        Class,
+        Entity,
+        Network,
+        Component,
+        Custom
     }
 }
