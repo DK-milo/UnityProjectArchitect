@@ -33,101 +33,101 @@ namespace UnityProjectArchitect.Core
     [Serializable]
     public class DocumentationSectionData
     {
-        [SerializeField] private DocumentationSectionType sectionType;
-        [SerializeField] private string title = "";
-        [SerializeField] private string content = "";
-        [SerializeField] private bool isEnabled = true;
-        [SerializeField] private DocumentationStatus status = DocumentationStatus.NotStarted;
-        [SerializeField] private AIGenerationMode aiMode = AIGenerationMode.AssistanceOnly;
-        [SerializeField] private DateTime lastUpdated;
-        [SerializeField] private string customPrompt = "";
-        [SerializeField] private int wordCountTarget = 500;
-        [SerializeField] private string[] requiredElements = new string[0];
+        [SerializeField] private DocumentationSectionType _sectionType;
+        [SerializeField] private string _title = "";
+        [SerializeField] private string _content = "";
+        [SerializeField] private bool _isEnabled = true;
+        [SerializeField] private DocumentationStatus _status = DocumentationStatus.NotStarted;
+        [SerializeField] private AIGenerationMode _aiMode = AIGenerationMode.AssistanceOnly;
+        [SerializeField] private DateTime _lastUpdated;
+        [SerializeField] private string _customPrompt = "";
+        [SerializeField] private int _wordCountTarget = 500;
+        [SerializeField] private string[] _requiredElements = new string[0];
 
         public DocumentationSectionType SectionType 
         { 
-            get => sectionType; 
-            set => sectionType = value; 
+            get => _sectionType; 
+            set => _sectionType = value; 
         }
 
         public string Title 
         { 
-            get => string.IsNullOrEmpty(title) ? GetDefaultTitle() : title; 
-            set => title = value; 
+            get => string.IsNullOrEmpty(_title) ? GetDefaultTitle() : _title; 
+            set => _title = value; 
         }
 
         public string Content 
         { 
-            get => content; 
+            get => _content; 
             set 
             { 
-                content = value; 
-                lastUpdated = DateTime.Now;
+                _content = value; 
+                _lastUpdated = DateTime.Now;
             } 
         }
 
         public bool IsEnabled 
         { 
-            get => isEnabled; 
-            set => isEnabled = value; 
+            get => _isEnabled; 
+            set => _isEnabled = value; 
         }
 
         public DocumentationStatus Status 
         { 
-            get => status; 
-            set => status = value; 
+            get => _status; 
+            set => _status = value; 
         }
 
         public AIGenerationMode AIMode 
         { 
-            get => aiMode; 
-            set => aiMode = value; 
+            get => _aiMode; 
+            set => _aiMode = value; 
         }
 
         public DateTime LastUpdated 
         { 
-            get => lastUpdated; 
-            set => lastUpdated = value; 
+            get => _lastUpdated; 
+            set => _lastUpdated = value; 
         }
 
         public string CustomPrompt 
         { 
-            get => string.IsNullOrEmpty(customPrompt) ? GetDefaultPrompt() : customPrompt; 
-            set => customPrompt = value; 
+            get => string.IsNullOrEmpty(_customPrompt) ? GetDefaultPrompt() : _customPrompt; 
+            set => _customPrompt = value; 
         }
 
         public int WordCountTarget 
         { 
-            get => wordCountTarget; 
-            set => wordCountTarget = Math.Max(100, value); 
+            get => _wordCountTarget; 
+            set => _wordCountTarget = Math.Max(100, value); 
         }
 
         public string[] RequiredElements 
         { 
-            get => requiredElements ?? new string[0]; 
-            set => requiredElements = value ?? new string[0]; 
+            get => _requiredElements ?? new string[0]; 
+            set => _requiredElements = value ?? new string[0]; 
         }
 
-        public bool HasContent => !string.IsNullOrWhiteSpace(content);
-        public int CurrentWordCount => HasContent ? content.Split(new char[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length : 0;
-        public bool MeetsWordTarget => CurrentWordCount >= wordCountTarget * 0.8f; // 80% of target is acceptable
+        public bool HasContent => !string.IsNullOrWhiteSpace(_content);
+        public int CurrentWordCount => HasContent ? _content.Split(new char[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length : 0;
+        public bool MeetsWordTarget => CurrentWordCount >= _wordCountTarget * 0.8f; // 80% of target is acceptable
 
         public DocumentationSectionData()
         {
-            lastUpdated = DateTime.Now;
-            requiredElements = GetDefaultRequiredElements();
+            _lastUpdated = DateTime.Now;
+            _requiredElements = GetDefaultRequiredElements();
         }
 
         public DocumentationSectionData(DocumentationSectionType type) : this()
         {
-            sectionType = type;
-            wordCountTarget = GetDefaultWordCountTarget();
-            requiredElements = GetDefaultRequiredElements();
+            _sectionType = type;
+            _wordCountTarget = GetDefaultWordCountTarget();
+            _requiredElements = GetDefaultRequiredElements();
         }
 
         private string GetDefaultTitle()
         {
-            return sectionType switch
+            return _sectionType switch
             {
                 DocumentationSectionType.GeneralProductDescription => "General Product Description",
                 DocumentationSectionType.SystemArchitecture => "System Architecture",
@@ -135,13 +135,13 @@ namespace UnityProjectArchitect.Core
                 DocumentationSectionType.APISpecification => "API Specification",
                 DocumentationSectionType.UserStories => "User Stories",
                 DocumentationSectionType.WorkTickets => "Work Tickets",
-                _ => sectionType.ToString()
+                _ => _sectionType.ToString()
             };
         }
 
         private string GetDefaultPrompt()
         {
-            return sectionType switch
+            return _sectionType switch
             {
                 DocumentationSectionType.GeneralProductDescription => 
                     "Create a comprehensive product description that covers the project's purpose, target audience, key features, and value proposition. Include market context and competitive advantages.",
@@ -167,7 +167,7 @@ namespace UnityProjectArchitect.Core
 
         private int GetDefaultWordCountTarget()
         {
-            return sectionType switch
+            return _sectionType switch
             {
                 DocumentationSectionType.GeneralProductDescription => 800,
                 DocumentationSectionType.SystemArchitecture => 1200,
@@ -181,7 +181,7 @@ namespace UnityProjectArchitect.Core
 
         private string[] GetDefaultRequiredElements()
         {
-            return sectionType switch
+            return _sectionType switch
             {
                 DocumentationSectionType.GeneralProductDescription => new[]
                 {
@@ -240,14 +240,14 @@ namespace UnityProjectArchitect.Core
 
         public void MarkAsGenerated()
         {
-            status = DocumentationStatus.Generated;
-            lastUpdated = DateTime.Now;
+            _status = DocumentationStatus.Generated;
+            _lastUpdated = DateTime.Now;
         }
 
         public void MarkAsCompleted()
         {
-            status = DocumentationStatus.Completed;
-            lastUpdated = DateTime.Now;
+            _status = DocumentationStatus.Completed;
+            _lastUpdated = DateTime.Now;
         }
 
         public bool ValidateContent()
@@ -258,7 +258,7 @@ namespace UnityProjectArchitect.Core
             // Check if required elements are mentioned in content
             foreach (string element in RequiredElements)
             {
-                if (!content.Contains(element, StringComparison.OrdinalIgnoreCase))
+                if (!_content.Contains(element, StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
@@ -271,9 +271,9 @@ namespace UnityProjectArchitect.Core
         {
             if (!HasContent) return 0f;
             
-            float wordProgress = Math.Min(1f, (float)CurrentWordCount / wordCountTarget);
+            float wordProgress = Math.Min(1f, (float)CurrentWordCount / _wordCountTarget);
             float elementProgress = RequiredElements.Length > 0 ? 
-                RequiredElements.Count(element => content.Contains(element, StringComparison.OrdinalIgnoreCase)) / (float)RequiredElements.Length : 1f;
+                RequiredElements.Count(element => _content.Contains(element, StringComparison.OrdinalIgnoreCase)) / (float)RequiredElements.Length : 1f;
             
             return (wordProgress * 0.6f) + (elementProgress * 0.4f);
         }

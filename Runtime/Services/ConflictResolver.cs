@@ -13,7 +13,7 @@ namespace UnityProjectArchitect.Services
     {
         public List<TemplateConflict> DetectConflicts(ProjectData projectData, ProjectTemplate template)
         {
-            List<string> conflicts = new List<TemplateConflict>();
+            List<TemplateConflict> conflicts = new List<TemplateConflict>();
 
             // Detect folder conflicts
             DetectFolderConflicts(template, conflicts);
@@ -35,18 +35,18 @@ namespace UnityProjectArchitect.Services
 
         public async Task<TemplateOperationResult> ResolveConflictsAsync(List<TemplateConflict> conflicts, ConflictResolution defaultResolution)
         {
-            var result = new TemplateOperationResult("conflict-resolution", "Conflict Resolution");
-            List<string> resolvedConflicts = new List<TemplateConflict>();
+            TemplateOperationResult result = new TemplateOperationResult("conflict-resolution", "Conflict Resolution");
+            List<TemplateConflict> resolvedConflicts = new List<TemplateConflict>();
 
             try
             {
-                foreach (string conflict in conflicts)
+                foreach (TemplateConflict conflict in conflicts)
                 {
-                    var resolution = conflict.RecommendedResolution != ConflictResolution.Skip 
+                    ConflictResolution resolution = conflict.RecommendedResolution != ConflictResolution.Skip 
                         ? conflict.RecommendedResolution 
                         : defaultResolution;
 
-                    var resolved = await ResolveIndividualConflictAsync(conflict, resolution);
+                    bool resolved = await ResolveIndividualConflictAsync(conflict, resolution);
                     if (resolved)
                     {
                         resolvedConflicts.Add(conflict);
@@ -70,13 +70,13 @@ namespace UnityProjectArchitect.Services
             if (template.FolderStructure?.Folders == null)
                 return;
 
-            foreach (string folder in template.FolderStructure.Folders)
+            foreach (FolderDefinition folder in template.FolderStructure.Folders)
             {
-                var folderPath = Path.Combine(Application.dataPath, folder.RelativePath);
+                string folderPath = Path.Combine(Application.dataPath, folder.RelativePath);
                 
                 if (Directory.Exists(folderPath))
                 {
-                    var conflict = new TemplateConflict(
+                    TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.FolderExists,
                         folderPath,
                         $"Folder '{folder.Name}' already exists at {folderPath}"
@@ -96,13 +96,13 @@ namespace UnityProjectArchitect.Services
 
         private void DetectSubFolderConflicts(FolderDefinition folder, string basePath, List<TemplateConflict> conflicts)
         {
-            foreach (string subFolder in folder.SubFolders)
+            foreach (FolderDefinition subFolder in folder.SubFolders)
             {
-                var subFolderPath = Path.Combine(basePath, subFolder.RelativePath);
+                string subFolderPath = Path.Combine(basePath, subFolder.RelativePath);
                 
                 if (Directory.Exists(subFolderPath))
                 {
-                    var conflict = new TemplateConflict(
+                    TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.FolderExists,
                         subFolderPath,
                         $"Subfolder '{subFolder.Name}' already exists at {subFolderPath}"
@@ -125,16 +125,16 @@ namespace UnityProjectArchitect.Services
             if (template.SceneTemplates?.Count == 0)
                 return;
 
-            foreach (string sceneTemplate in template.SceneTemplates)
+            foreach (SceneTemplate sceneTemplate in template.SceneTemplates)
             {
                 if (!sceneTemplate.CreateOnApply)
                     continue;
 
-                var scenePath = Path.Combine(Application.dataPath, "Scenes", $"{sceneTemplate.SceneName}.unity");
+                string scenePath = Path.Combine(Application.dataPath, "Scenes", $"{sceneTemplate.SceneName}.unity");
                 
                 if (File.Exists(scenePath))
                 {
-                    var conflict = new TemplateConflict(
+                    TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.SceneConflict,
                         scenePath,
                         $"Scene '{sceneTemplate.SceneName}' already exists"
@@ -156,11 +156,11 @@ namespace UnityProjectArchitect.Services
 
             foreach (string asmdef in template.AssemblyDefinitions)
             {
-                var asmdefPath = Path.Combine(Application.dataPath, "Scripts", $"{asmdef}.asmdef");
+                string asmdefPath = Path.Combine(Application.dataPath, "Scripts", $"{asmdef}.asmdef");
                 
                 if (File.Exists(asmdefPath))
                 {
-                    var conflict = new TemplateConflict(
+                    TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.AssemblyDefinitionConflict,
                         asmdefPath,
                         $"Assembly definition '{asmdef}' already exists"
@@ -181,15 +181,15 @@ namespace UnityProjectArchitect.Services
                 return;
 
             // Read existing packages from manifest.json
-            var manifestPath = Path.Combine(Application.dataPath, "../Packages/manifest.json");
-            HashSet existingPackages = new HashSet<string>();
+            string manifestPath = Path.Combine(Application.dataPath, "../Packages/manifest.json");
+            HashSet<string> existingPackages = new HashSet<string>();
 
             try
             {
                 if (File.Exists(manifestPath))
                 {
                     string manifestContent = File.ReadAllText(manifestPath);
-                    var manifest = JsonUtility.FromJson<PackageManifest>(manifestContent);
+                    PackageManifest manifest = JsonUtility.FromJson<PackageManifest>(manifestContent);
                     
                     if (manifest?.dependencies != null)
                     {
@@ -209,7 +209,7 @@ namespace UnityProjectArchitect.Services
             {
                 if (existingPackages.Contains(requiredPackage))
                 {
-                    var conflict = new TemplateConflict(
+                    TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.PackageConflict,
                         requiredPackage,
                         $"Package '{requiredPackage}' is already installed"
@@ -262,12 +262,12 @@ namespace UnityProjectArchitect.Services
             // Check documentation section conflicts
             if (template.DefaultDocumentationSections?.Count > 0)
             {
-                foreach (string templateSection in template.DefaultDocumentationSections)
+                foreach (DocumentationSectionData templateSection in template.DefaultDocumentationSections)
                 {
-                    var existingSection = projectData.GetDocumentationSection(templateSection.SectionType);
+                    DocumentationSectionData existingSection = projectData.GetDocumentationSection(templateSection.SectionType);
                     if (existingSection != null && existingSection.HasContent)
                     {
-                        var conflict = new TemplateConflict(
+                        TemplateConflict conflict = new TemplateConflict(
                             TemplateConflictType.SettingsConflict,
                             $"DocumentationSection.{templateSection.SectionType}",
                             $"Documentation section '{templateSection.SectionType}' already has content"
@@ -378,15 +378,15 @@ namespace UnityProjectArchitect.Services
             {
                 case TemplateConflictType.FileExists:
                 case TemplateConflictType.SceneConflict:
-                    var directory = Path.GetDirectoryName(conflict.ResourcePath);
-                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(conflict.ResourcePath);
-                    var extension = Path.GetExtension(conflict.ResourcePath);
+                    string directory = Path.GetDirectoryName(conflict.ResourcePath);
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(conflict.ResourcePath);
+                    string extension = Path.GetExtension(conflict.ResourcePath);
                     
-                    var counter = 1;
+                    int counter = 1;
                     string newPath;
                     do
                     {
-                        var newFileName = $"{fileNameWithoutExtension}_{counter}{extension}";
+                        string newFileName = $"{fileNameWithoutExtension}_{counter}{extension}";
                         newPath = Path.Combine(directory, newFileName);
                         counter++;
                     } while (File.Exists(newPath) && counter < 100);
@@ -399,13 +399,13 @@ namespace UnityProjectArchitect.Services
                     break;
 
                 case TemplateConflictType.FolderExists:
-                    var parentDir = Path.GetDirectoryName(conflict.ResourcePath);
-                    var folderName = Path.GetFileName(conflict.ResourcePath);
+                    string parentDir = Path.GetDirectoryName(conflict.ResourcePath);
+                    string folderName = Path.GetFileName(conflict.ResourcePath);
                     
                     counter = 1;
                     do
                     {
-                        var newFolderName = $"{folderName}_{counter}";
+                        string newFolderName = $"{folderName}_{counter}";
                         newPath = Path.Combine(parentDir, newFolderName);
                         counter++;
                     } while (Directory.Exists(newPath) && counter < 100);
@@ -426,7 +426,7 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var backupPath = GetBackupPath(conflict.ResourcePath);
+                string backupPath = GetBackupPath(conflict.ResourcePath);
                 
                 switch (conflict.ConflictType)
                 {
@@ -464,10 +464,10 @@ namespace UnityProjectArchitect.Services
 
         private string GetBackupPath(string originalPath)
         {
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var directory = Path.GetDirectoryName(originalPath);
-            var fileName = Path.GetFileNameWithoutExtension(originalPath);
-            var extension = Path.GetExtension(originalPath);
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string directory = Path.GetDirectoryName(originalPath);
+            string fileName = Path.GetFileNameWithoutExtension(originalPath);
+            string extension = Path.GetExtension(originalPath);
             
             return Path.Combine(directory, $"{fileName}_backup_{timestamp}{extension}");
         }
@@ -478,15 +478,15 @@ namespace UnityProjectArchitect.Services
             
             foreach (string file in Directory.GetFiles(sourceDir))
             {
-                var fileName = Path.GetFileName(file);
-                var destFile = Path.Combine(destDir, fileName);
+                string fileName = Path.GetFileName(file);
+                string destFile = Path.Combine(destDir, fileName);
                 File.Copy(file, destFile, true);
             }
             
             foreach (string dir in Directory.GetDirectories(sourceDir))
             {
-                var dirName = Path.GetFileName(dir);
-                var destSubDir = Path.Combine(destDir, dirName);
+                string dirName = Path.GetFileName(dir);
+                string destSubDir = Path.Combine(destDir, dirName);
                 CopyDirectory(dir, destSubDir);
             }
         }

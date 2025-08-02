@@ -415,36 +415,36 @@ namespace UnityProjectArchitect.Services
     public class DocumentationSectionAsset : ScriptableObject
     {
         [Header("Section Information")]
-        [SerializeField] private DocumentationSectionType sectionType;
-        [SerializeField] private string sectionTitle;
-        [SerializeField] private string sectionContent;
-        [SerializeField] private DocumentationStatus status;
-        [SerializeField] private DateTime lastUpdated;
-        [SerializeField] private int wordCount;
+        [SerializeField] private DocumentationSectionType _sectionType;
+        [SerializeField] private string _sectionTitle;
+        [SerializeField] private string _sectionContent;
+        [SerializeField] private DocumentationStatus _status;
+        [SerializeField] private DateTime _lastUpdated;
+        [SerializeField] private int _wordCount;
         
         [Header("Export Metadata")]
-        [SerializeField] private DateTime exportedAt;
-        [SerializeField] private string exportedBy;
+        [SerializeField] private DateTime _exportedAt;
+        [SerializeField] private string _exportedBy;
 
-        public DocumentationSectionType SectionType => sectionType;
-        public string SectionTitle => sectionTitle;
-        public string SectionContent => sectionContent;
-        public DocumentationStatus Status => status;
-        public DateTime LastUpdated => lastUpdated;
-        public int WordCount => wordCount;
-        public DateTime ExportedAt => exportedAt;
-        public string ExportedBy => exportedBy;
+        public DocumentationSectionType SectionType => _sectionType;
+        public string SectionTitle => _sectionTitle;
+        public string SectionContent => _sectionContent;
+        public DocumentationStatus Status => _status;
+        public DateTime LastUpdated => _lastUpdated;
+        public int WordCount => _wordCount;
+        public DateTime ExportedAt => _exportedAt;
+        public string ExportedBy => _exportedBy;
 
         public void Initialize(DocumentationSectionData sectionData)
         {
-            sectionType = sectionData.SectionType;
-            sectionTitle = sectionData.Title;
-            sectionContent = sectionData.Content;
-            status = sectionData.Status;
-            lastUpdated = sectionData.LastUpdated;
-            wordCount = sectionData.CurrentWordCount;
-            exportedAt = DateTime.Now;
-            exportedBy = "Unity Project Architect";
+            _sectionType = sectionData.SectionType;
+            _sectionTitle = sectionData.Title;
+            _sectionContent = sectionData.Content;
+            _status = sectionData.Status;
+            _lastUpdated = sectionData.LastUpdated;
+            _wordCount = sectionData.CurrentWordCount;
+            _exportedAt = DateTime.Now;
+            _exportedBy = "Unity Project Architect";
         }
     }
 
@@ -452,36 +452,36 @@ namespace UnityProjectArchitect.Services
     public class DocumentationCollectionAsset : ScriptableObject
     {
         [Header("Collection Information")]
-        [SerializeField] private string collectionTitle;
-        [SerializeField] private string projectName;
-        [SerializeField] private string projectVersion;
-        [SerializeField] private int totalSections;
-        [SerializeField] private int completedSections;
+        [SerializeField] private string _collectionTitle;
+        [SerializeField] private string _projectName;
+        [SerializeField] private string _projectVersion;
+        [SerializeField] private int _totalSections;
+        [SerializeField] private int _completedSections;
         
         [Header("Export Metadata")]
-        [SerializeField] private DateTime exportedAt;
-        [SerializeField] private string exportedBy;
-        [SerializeField] private List<string> includedSectionTypes;
+        [SerializeField] private DateTime _exportedAt;
+        [SerializeField] private string _exportedBy;
+        [SerializeField] private List<string> _includedSectionTypes;
 
-        public string CollectionTitle => collectionTitle;
-        public string ProjectName => projectName;
-        public string ProjectVersion => projectVersion;
-        public int TotalSections => totalSections;
-        public int CompletedSections => completedSections;
-        public DateTime ExportedAt => exportedAt;
-        public string ExportedBy => exportedBy;
-        public List<string> IncludedSectionTypes => includedSectionTypes;
+        public string CollectionTitle => _collectionTitle;
+        public string ProjectName => _projectName;
+        public string ProjectVersion => _projectVersion;
+        public int TotalSections => _totalSections;
+        public int CompletedSections => _completedSections;
+        public DateTime ExportedAt => _exportedAt;
+        public string ExportedBy => _exportedBy;
+        public List<string> IncludedSectionTypes => _includedSectionTypes;
 
         public void Initialize(ExportContent content)
         {
-            collectionTitle = content.Title ?? "Documentation";
-            projectName = content.ProjectData?.ProjectName ?? "Unknown Project";
-            projectVersion = content.ProjectData?.ProjectVersion ?? "1.0.0";
-            totalSections = content.Sections?.Count ?? 0;
-            completedSections = content.Sections?.Count(s => s.Status == DocumentationStatus.Completed) ?? 0;
-            exportedAt = DateTime.Now;
-            exportedBy = "Unity Project Architect";
-            includedSectionTypes = content.Sections?.Where(s => s.IsEnabled)
+            _collectionTitle = content.Title ?? "Documentation";
+            _projectName = content.ProjectData?.ProjectName ?? "Unknown Project";
+            _projectVersion = content.ProjectData?.ProjectVersion ?? "1.0.0";
+            _totalSections = content.Sections?.Count ?? 0;
+            _completedSections = content.Sections?.Count(s => s.Status == DocumentationStatus.Completed) ?? 0;
+            _exportedAt = DateTime.Now;
+            _exportedBy = "Unity Project Architect";
+            _includedSectionTypes = content.Sections?.Where(s => s.IsEnabled)
                                                    .Select(s => s.SectionType.ToString())
                                                    .ToList() ?? new List<string>();
         }

@@ -37,7 +37,7 @@ namespace UnityProjectArchitect.Services
 
         public ExportTemplate GetDefaultTemplate(ExportFormat format)
         {
-            var templates = GetTemplatesForFormat(format);
+            List<ExportTemplate> templates = GetTemplatesForFormat(format);
             return templates.FirstOrDefault(t => t.TemplateId.EndsWith("_default")) ?? templates.FirstOrDefault();
         }
 
@@ -56,7 +56,7 @@ namespace UnityProjectArchitect.Services
                 _formatTemplates[template.Format] = new List<ExportTemplate>();
             }
 
-            var existingTemplate = _formatTemplates[template.Format].FirstOrDefault(t => t.TemplateId == template.TemplateId);
+            ExportTemplate existingTemplate = _formatTemplates[template.Format].FirstOrDefault(t => t.TemplateId == template.TemplateId);
             if (existingTemplate != null)
             {
                 _formatTemplates[template.Format].Remove(existingTemplate);
@@ -69,7 +69,7 @@ namespace UnityProjectArchitect.Services
         {
             if (!_templates.ContainsKey(templateId)) return;
 
-            var template = _templates[templateId];
+            ExportTemplate template = _templates[templateId];
             _templates.Remove(templateId);
 
             if (_formatTemplates.ContainsKey(template.Format))
@@ -85,12 +85,12 @@ namespace UnityProjectArchitect.Services
                 return "";
             }
 
-            var allVariables = CreateDefaultVariables(content);
+            Dictionary<string, object> allVariables = CreateDefaultVariables(content);
             
             // Merge custom variables
             if (variables != null)
             {
-                foreach (string kvp in variables)
+                foreach (KeyValuePair<string, object> kvp in variables)
                 {
                     allVariables[kvp.Key] = kvp.Value;
                 }
@@ -99,7 +99,7 @@ namespace UnityProjectArchitect.Services
             // Merge content variables
             if (content.Variables != null)
             {
-                foreach (string kvp in content.Variables)
+                foreach (KeyValuePair<string, object> kvp in content.Variables)
                 {
                     allVariables[kvp.Key] = kvp.Value;
                 }
@@ -139,7 +139,7 @@ namespace UnityProjectArchitect.Services
             // Validate template variables
             if (template.Variables != null)
             {
-                foreach (string variable in template.Variables)
+                foreach (TemplateVariable variable in template.Variables)
                 {
                     if (string.IsNullOrEmpty(variable.Name))
                     {
@@ -149,7 +149,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for template syntax errors
-            var syntaxValidation = ValidateTemplateSyntax(template.TemplateContent);
+            ValidationResult syntaxValidation = ValidateTemplateSyntax(template.TemplateContent);
             validation.Errors.AddRange(syntaxValidation.Errors);
             validation.Warnings.AddRange(syntaxValidation.Warnings);
 
@@ -166,8 +166,8 @@ namespace UnityProjectArchitect.Services
                     return null;
                 }
 
-                var content = await File.ReadAllTextAsync(filePath);
-                var template = ParseTemplateFromContent(content, Path.GetFileNameWithoutExtension(filePath));
+                string content = await File.ReadAllTextAsync(filePath);
+                ExportTemplate template = ParseTemplateFromContent(content, Path.GetFileNameWithoutExtension(filePath));
                 
                 return template;
             }
@@ -182,13 +182,13 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var directory = Path.GetDirectoryName(filePath);
+                string directory = Path.GetDirectoryName(filePath);
                 if (!Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
 
-                var templateData = SerializeTemplate(template);
+                string templateData = SerializeTemplate(template);
                 await File.WriteAllTextAsync(filePath, templateData);
                 
                 return true;
@@ -479,7 +479,7 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> CreateDefaultVariables(ExportContent content)
         {
-            Dictionary variables = new Dictionary<string, object>();
+            Dictionary<string, object> variables = new Dictionary<string, object>();
 
             // Project variables
             if (content.ProjectData != null)
@@ -508,11 +508,11 @@ namespace UnityProjectArchitect.Services
             variables["section_count"] = content.Sections?.Count ?? 0;
 
             // Statistics
-            var totalWords = content.Sections?.Sum(s => s.CurrentWordCount) ?? 0;
+            int totalWords = content.Sections?.Sum(s => s.CurrentWordCount) ?? 0;
             variables["total_words"] = totalWords;
 
-            var completedSections = content.Sections?.Count(s => s.Status == DocumentationStatus.Completed) ?? 0;
-            var totalSections = content.Sections?.Count ?? 1;
+            int completedSections = content.Sections?.Count(s => s.Status == DocumentationStatus.Completed) ?? 0;
+            int totalSections = content.Sections?.Count ?? 1;
             variables["completion_percentage"] = (float)completedSections / totalSections;
 
             return variables;
@@ -520,12 +520,12 @@ namespace UnityProjectArchitect.Services
 
         private async Task<string> ProcessTemplateVariables(string template, Dictionary<string, object> variables)
         {
-            var processed = template;
+            string processed = template;
 
-            foreach (string variable in variables)
+            foreach (KeyValuePair<string, object> variable in variables)
             {
-                var placeholder = $"{{{{{variable.Key}}}}}";
-                var value = variable.Value?.ToString() ?? "";
+                string placeholder = $"{{{{{variable.Key}}}}}";
+                string value = variable.Value?.ToString() ?? "";
                 
                 // Handle formatting for specific types
                 if (variable.Value is float floatValue && variable.Key.Contains("percentage"))
@@ -553,8 +553,8 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for unmatched variable brackets
-            var openBrackets = templateContent.Count(c => c == '{');
-            var closeBrackets = templateContent.Count(c => c == '}');
+            int openBrackets = templateContent.Count(c => c == '{');
+            int closeBrackets = templateContent.Count(c => c == '}');
 
             if (openBrackets != closeBrackets)
             {
@@ -563,11 +563,11 @@ namespace UnityProjectArchitect.Services
 
             // Check for valid variable syntax
             System.Text.RegularExpressions.Regex variablePattern = new System.Text.RegularExpressions.Regex(@"\{\{(\w+)\}\}");
-            var matches = variablePattern.Matches(templateContent);
+            System.Text.RegularExpressions.MatchCollection matches = variablePattern.Matches(templateContent);
 
             foreach (System.Text.RegularExpressions.Match match in matches)
             {
-                var variableName = match.Groups[1].Value;
+                string variableName = match.Groups[1].Value;
                 if (string.IsNullOrEmpty(variableName))
                 {
                     validation.Warnings.Add("Empty variable name found in template");

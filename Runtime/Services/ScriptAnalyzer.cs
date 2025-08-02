@@ -41,7 +41,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<List<ClassDefinition>> ExtractClassDefinitionsAsync(string scriptPath)
         {
-            List<string> classes = new List<ClassDefinition>();
+            List<ClassDefinition> classes = new List<ClassDefinition>();
             
             if (File.Exists(scriptPath))
             {
@@ -64,10 +64,10 @@ namespace UnityProjectArchitect.Services
 
         public async Task<List<MethodDefinition>> ExtractMethodDefinitionsAsync(string scriptPath)
         {
-            List<string> methods = new List<MethodDefinition>();
+            List<MethodDefinition> methods = new List<MethodDefinition>();
             List<ClassDefinition> classes = await ExtractClassDefinitionsAsync(scriptPath);
             
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
                 methods.AddRange(classDefinition.Methods);
             }
@@ -77,12 +77,12 @@ namespace UnityProjectArchitect.Services
 
         public async Task<DependencyGraph> BuildDependencyGraphAsync(string scriptsPath)
         {
-            var dependencyGraph = new DependencyGraph();
-            var classes = await ExtractClassDefinitionsAsync(scriptsPath);
+            DependencyGraph dependencyGraph = new DependencyGraph();
+            List<ClassDefinition> classes = await ExtractClassDefinitionsAsync(scriptsPath);
 
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
-                var node = new DependencyNode(classDefinition.FullName, classDefinition.Name, "Class")
+                DependencyNode node = new DependencyNode(classDefinition.FullName, classDefinition.Name, "Class")
                 {
                     FilePath = classDefinition.FilePath
                 };
@@ -93,7 +93,7 @@ namespace UnityProjectArchitect.Services
                 dependencies.AddRange(classDefinition.BaseClasses);
                 dependencies.AddRange(classDefinition.Interfaces);
                 
-                foreach (string method in classDefinition.Methods)
+                foreach (MethodDefinition method in classDefinition.Methods)
                 {
                     dependencies.AddRange(ExtractTypeDependenciesFromMethod(method));
                 }
@@ -102,7 +102,7 @@ namespace UnityProjectArchitect.Services
 
                 foreach (string dependency in dependencies.Distinct())
                 {
-                    var edge = new DependencyEdge(classDefinition.FullName, dependency, DetermineDependencyType(dependency, classDefinition));
+                    DependencyEdge edge = new DependencyEdge(classDefinition.FullName, dependency, DetermineDependencyType(dependency, classDefinition));
                     dependencyGraph.Edges.Add(edge);
 
                     if (!dependencyGraph.ReverseDependencies.ContainsKey(dependency))
@@ -136,11 +136,11 @@ namespace UnityProjectArchitect.Services
 
         private async Task AnalyzeSingleScriptAsync(string filePath, ScriptAnalysisResult result)
         {
-            var content = await File.ReadAllTextAsync(filePath);
-            var classes = ExtractClassesFromContent(content, filePath);
+            string content = await File.ReadAllTextAsync(filePath);
+            List<ClassDefinition> classes = ExtractClassesFromContent(content, filePath);
             result.Classes.AddRange(classes);
 
-            var interfaces = ExtractInterfacesFromContent(content, filePath);
+            List<InterfaceDefinition> interfaces = ExtractInterfacesFromContent(content, filePath);
             result.Interfaces.AddRange(interfaces);
 
             foreach (string classDefinition in classes)
@@ -151,7 +151,7 @@ namespace UnityProjectArchitect.Services
 
         private async Task AnalyzeDirectoryAsync(string directoryPath, ScriptAnalysisResult result)
         {
-            var scriptFiles = Directory.GetFiles(directoryPath, "*.cs", SearchOption.AllDirectories);
+            string[] scriptFiles = Directory.GetFiles(directoryPath, "*.cs", SearchOption.AllDirectories);
             
             foreach (string file in scriptFiles)
             {
@@ -162,23 +162,23 @@ namespace UnityProjectArchitect.Services
         private List<ClassDefinition> ExtractClassesFromContent(string content, string filePath)
         {
             List<string> classes = new List<ClassDefinition>();
-            var lines = content.Split('\n');
+            string[] lines = content.Split('\n');
             
-            var namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
-            var classPattern = @"(public|private|protected|internal)?\s*(abstract|sealed|static)?\s*(class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^{]+))?\s*{";
+            string namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
+            string classPattern = @"(public|private|protected|internal)?\s*(abstract|sealed|static)?\s*(class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^{]+))?\s*{";
 
             string currentNamespace = "";
-            var namespaceMatch = Regex.Match(content, namespacePattern);
+            Match namespaceMatch = Regex.Match(content, namespacePattern);
             if (namespaceMatch.Success)
             {
                 currentNamespace = namespaceMatch.Groups[1].Value;
             }
 
-            var classMatches = Regex.Matches(content, classPattern);
+            MatchCollection classMatches = Regex.Matches(content, classPattern);
             
             foreach (Match match in classMatches)
             {
-                var classDefinition = new ClassDefinition
+                ClassDefinition classDefinition = new ClassDefinition
                 {
                     Name = match.Groups[4].Value,
                     FullName = string.IsNullOrEmpty(currentNamespace) ? match.Groups[4].Value : $"{currentNamespace}.{match.Groups[4].Value}",
@@ -190,7 +190,7 @@ namespace UnityProjectArchitect.Services
 
                 if (!string.IsNullOrEmpty(match.Groups[5].Value))
                 {
-                    var inheritance = match.Groups[5].Value.Split(',').Select(s => s.Trim()).ToArray();
+                    string[] inheritance = match.Groups[5].Value.Split(',').Select(s => s.Trim()).ToArray();
                     foreach (string item in inheritance)
                     {
                         if (item.StartsWith("I") && char.IsUpper(item[1]))
@@ -209,7 +209,7 @@ namespace UnityProjectArchitect.Services
                 classDefinition.Fields = ExtractFieldsFromClass(content, classDefinition.Name);
                 classDefinition.Attributes = ExtractAttributesFromClass(content, classDefinition.Name);
                 
-                var classContent = ExtractClassContent(content, classDefinition.Name);
+                string classContent = ExtractClassContent(content, classDefinition.Name);
                 classDefinition.LinesOfCode = classContent.Split('\n').Length;
                 classDefinition.Complexity = CalculateClassComplexity(classContent);
 
@@ -221,23 +221,23 @@ namespace UnityProjectArchitect.Services
 
         private List<InterfaceDefinition> ExtractInterfacesFromContent(string content, string filePath)
         {
-            List<string> interfaces = new List<InterfaceDefinition>();
+            List<InterfaceDefinition> interfaces = new List<InterfaceDefinition>();
             
-            var namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
-            var interfacePattern = @"(public|private|protected|internal)?\s*interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^{]+))?\s*{";
+            string namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
+            string interfacePattern = @"(public|private|protected|internal)?\s*interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^{]+))?\s*{";
 
             string currentNamespace = "";
-            var namespaceMatch = Regex.Match(content, namespacePattern);
+            Match namespaceMatch = Regex.Match(content, namespacePattern);
             if (namespaceMatch.Success)
             {
                 currentNamespace = namespaceMatch.Groups[1].Value;
             }
 
-            var interfaceMatches = Regex.Matches(content, interfacePattern);
+            MatchCollection interfaceMatches = Regex.Matches(content, interfacePattern);
 
             foreach (Match match in interfaceMatches)
             {
-                var interfaceDefinition = new InterfaceDefinition
+                InterfaceDefinition interfaceDefinition = new InterfaceDefinition
                 {
                     Name = match.Groups[2].Value,
                     FullName = string.IsNullOrEmpty(currentNamespace) ? match.Groups[2].Value : $"{currentNamespace}.{match.Groups[2].Value}",
@@ -251,7 +251,7 @@ namespace UnityProjectArchitect.Services
                     interfaceDefinition.BaseInterfaces = match.Groups[3].Value.Split(',').Select(s => s.Trim()).ToList();
                 }
 
-                var interfaceContent = ExtractInterfaceContent(content, interfaceDefinition.Name);
+                string interfaceContent = ExtractInterfaceContent(content, interfaceDefinition.Name);
                 interfaceDefinition.Methods = ExtractMethodSignaturesFromInterface(interfaceContent);
                 interfaceDefinition.Properties = ExtractPropertySignaturesFromInterface(interfaceContent);
                 interfaceDefinition.LinesOfCode = interfaceContent.Split('\n').Length;
@@ -264,14 +264,14 @@ namespace UnityProjectArchitect.Services
 
         private List<MethodDefinition> ExtractMethodsFromClass(string content, string className)
         {
-            List<string> methods = new List<MethodDefinition>();
+            List<MethodDefinition> methods = new List<MethodDefinition>();
             
-            var methodPattern = @"(public|private|protected|internal)?\s*(static|virtual|override|abstract)?\s*(async)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*{";
-            var matches = Regex.Matches(content, methodPattern);
+            string methodPattern = @"(public|private|protected|internal)?\s*(static|virtual|override|abstract)?\s*(async)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*{";
+            MatchCollection matches = Regex.Matches(content, methodPattern);
 
             foreach (Match match in matches)
             {
-                var method = new MethodDefinition
+                MethodDefinition method = new MethodDefinition
                 {
                     Name = match.Groups[5].Value,
                     ReturnType = match.Groups[4].Value,
@@ -287,7 +287,7 @@ namespace UnityProjectArchitect.Services
                     method.Parameters = ParseParameters(match.Groups[6].Value);
                 }
 
-                var methodContent = ExtractMethodContent(content, method.Name);
+                string methodContent = ExtractMethodContent(content, method.Name);
                 method.LinesOfCode = methodContent.Split('\n').Length;
                 method.CyclomaticComplexity = CalculateMethodComplexity(methodContent);
 
@@ -299,14 +299,14 @@ namespace UnityProjectArchitect.Services
 
         private List<PropertyDefinition> ExtractPropertiesFromClass(string content, string className)
         {
-            List<string> properties = new List<PropertyDefinition>();
+            List<PropertyDefinition> properties = new List<PropertyDefinition>();
             
-            var propertyPattern = @"(public|private|protected|internal)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*})?[^}]*(set[^}]*})?";
-            var matches = Regex.Matches(content, propertyPattern);
+            string propertyPattern = @"(public|private|protected|internal)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*})?[^}]*(set[^}]*})?";
+            MatchCollection matches = Regex.Matches(content, propertyPattern);
 
             foreach (Match match in matches)
             {
-                var property = new PropertyDefinition
+                PropertyDefinition property = new PropertyDefinition
                 {
                     Name = match.Groups[3].Value,
                     Type = match.Groups[2].Value,
@@ -324,14 +324,14 @@ namespace UnityProjectArchitect.Services
 
         private List<FieldDefinition> ExtractFieldsFromClass(string content, string className)
         {
-            List<string> fields = new List<FieldDefinition>();
+            List<FieldDefinition> fields = new List<FieldDefinition>();
             
-            var fieldPattern = @"(public|private|protected|internal)?\s*(static|readonly|const)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:=\s*([^;]+))?\s*;";
-            var matches = Regex.Matches(content, fieldPattern);
+            string fieldPattern = @"(public|private|protected|internal)?\s*(static|readonly|const)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:=\s*([^;]+))?\s*;";
+            MatchCollection matches = Regex.Matches(content, fieldPattern);
 
             foreach (Match match in matches)
             {
-                var field = new FieldDefinition
+                FieldDefinition field = new FieldDefinition
                 {
                     Name = match.Groups[4].Value,
                     Type = match.Groups[3].Value,
@@ -352,8 +352,8 @@ namespace UnityProjectArchitect.Services
         {
             List<string> attributes = new List<string>();
             
-            var attributePattern = @"\[([^\]]+)\]";
-            var matches = Regex.Matches(content, attributePattern);
+            string attributePattern = @"\[([^\]]+)\]";
+            MatchCollection matches = Regex.Matches(content, attributePattern);
 
             foreach (Match match in matches)
             {
@@ -365,14 +365,14 @@ namespace UnityProjectArchitect.Services
 
         private List<MethodSignature> ExtractMethodSignaturesFromInterface(string content)
         {
-            List<string> methods = new List<MethodSignature>();
+            List<MethodSignature> methods = new List<MethodSignature>();
             
-            var methodPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*;";
-            var matches = Regex.Matches(content, methodPattern);
+            string methodPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*;";
+            MatchCollection matches = Regex.Matches(content, methodPattern);
 
             foreach (Match match in matches)
             {
-                var method = new MethodSignature
+                MethodSignature method = new MethodSignature
                 {
                     ReturnType = match.Groups[1].Value,
                     Name = match.Groups[2].Value
@@ -391,14 +391,14 @@ namespace UnityProjectArchitect.Services
 
         private List<PropertySignature> ExtractPropertySignaturesFromInterface(string content)
         {
-            List<string> properties = new List<PropertySignature>();
+            List<PropertySignature> properties = new List<PropertySignature>();
             
-            var propertyPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*;)?[^}]*(set[^}]*;)?";
-            var matches = Regex.Matches(content, propertyPattern);
+            string propertyPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*;)?[^}]*(set[^}]*;)?";
+            MatchCollection matches = Regex.Matches(content, propertyPattern);
 
             foreach (Match match in matches)
             {
-                var property = new PropertySignature
+                PropertySignature property = new PropertySignature
                 {
                     Type = match.Groups[1].Value,
                     Name = match.Groups[2].Value,
@@ -414,21 +414,21 @@ namespace UnityProjectArchitect.Services
 
         private List<ParameterDefinition> ParseParameters(string parametersString)
         {
-            List<string> parameters = new List<ParameterDefinition>();
+            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
             
             if (string.IsNullOrWhiteSpace(parametersString))
                 return parameters;
 
-            var paramParts = parametersString.Split(',');
+            string[] paramParts = parametersString.Split(',');
             
             foreach (string part in paramParts)
             {
-                var trimmed = part.Trim();
-                var words = trimmed.Split(' ');
+                string trimmed = part.Trim();
+                string[] words = trimmed.Split(' ');
                 
                 if (words.Length >= 2)
                 {
-                    var parameter = new ParameterDefinition
+                    ParameterDefinition parameter = new ParameterDefinition
                     {
                         Type = words[words.Length - 2],
                         Name = words[words.Length - 1]
@@ -443,7 +443,7 @@ namespace UnityProjectArchitect.Services
 
                     if (trimmed.Contains("="))
                     {
-                        var equalIndex = trimmed.IndexOf('=');
+                        int equalIndex = trimmed.IndexOf('=');
                         parameter.DefaultValue = trimmed.Substring(equalIndex + 1).Trim();
                     }
 
@@ -468,29 +468,29 @@ namespace UnityProjectArchitect.Services
 
         private string ExtractClassContent(string content, string className)
         {
-            var pattern = $@"class\s+{className}\s*[^{{]*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
-            var match = Regex.Match(content, pattern, RegexOptions.Singleline);
+            string pattern = $@"class\s+{className}\s*[^{{]*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
+            Match match = Regex.Match(content, pattern, RegexOptions.Singleline);
             return match.Success ? match.Groups[1].Value : "";
         }
 
         private string ExtractInterfaceContent(string content, string interfaceName)
         {
-            var pattern = $@"interface\s+{interfaceName}\s*[^{{]*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
-            var match = Regex.Match(content, pattern, RegexOptions.Singleline);
+            string pattern = $@"interface\s+{interfaceName}\s*[^{{]*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
+            Match match = Regex.Match(content, pattern, RegexOptions.Singleline);
             return match.Success ? match.Groups[1].Value : "";
         }
 
         private string ExtractMethodContent(string content, string methodName)
         {
-            var pattern = $@"{methodName}\s*\([^)]*\)\s*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
-            var match = Regex.Match(content, pattern, RegexOptions.Singleline);
+            string pattern = $@"{methodName}\s*\([^)]*\)\s*{{([^{{}}]*({{[^{{}}]*}}[^{{}}]*)*[^{{}}]*)}}";
+            Match match = Regex.Match(content, pattern, RegexOptions.Singleline);
             return match.Success ? match.Groups[1].Value : "";
         }
 
         private float CalculateClassComplexity(string classContent)
         {
-            var complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
-            var complexity = 1f;
+            string[] complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
+            float complexity = 1f;
 
             foreach (string keyword in complexityKeywords)
             {
@@ -502,8 +502,8 @@ namespace UnityProjectArchitect.Services
 
         private float CalculateMethodComplexity(string methodContent)
         {
-            var complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
-            var complexity = 1f;
+            string[] complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
+            float complexity = 1f;
 
             foreach (string keyword in complexityKeywords)
             {
@@ -525,7 +525,7 @@ namespace UnityProjectArchitect.Services
 
         private bool IsPrimitiveType(string type)
         {
-            var primitiveTypes = new[] { "int", "float", "double", "bool", "string", "char", "byte", "short", "long", "decimal", "void" };
+            string[] primitiveTypes = new[] { "int", "float", "double", "bool", "string", "char", "byte", "short", "long", "decimal", "void" };
             return primitiveTypes.Contains(type.ToLower());
         }
 
@@ -542,7 +542,7 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectDesignPatterns(List<ClassDefinition> classes)
         {
-            List<string> patterns = new List<DesignPattern>();
+            List<DesignPattern> patterns = new List<DesignPattern>();
 
             patterns.AddRange(DetectSingletonPattern(classes));
             patterns.AddRange(DetectFactoryPattern(classes));
@@ -553,12 +553,12 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectSingletonPattern(List<ClassDefinition> classes)
         {
-            List<string> patterns = new List<DesignPattern>();
+            List<DesignPattern> patterns = new List<DesignPattern>();
 
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
-                var hasStaticInstance = classDefinition.Fields.Any(f => f.IsStatic && f.Type == classDefinition.Name);
-                var hasPrivateConstructor = classDefinition.Methods.Any(m => m.Name == classDefinition.Name && m.AccessModifier == AccessModifier.Private);
+                bool hasStaticInstance = classDefinition.Fields.Any(f => f.IsStatic && f.Type == classDefinition.Name);
+                bool hasPrivateConstructor = classDefinition.Methods.Any(m => m.Name == classDefinition.Name && m.AccessModifier == AccessModifier.Private);
                 
                 if (hasStaticInstance && hasPrivateConstructor)
                 {
@@ -576,13 +576,13 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectFactoryPattern(List<ClassDefinition> classes)
         {
-            List<string> patterns = new List<DesignPattern>();
+            List<DesignPattern> patterns = new List<DesignPattern>();
 
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
                 if (classDefinition.Name.Contains("Factory"))
                 {
-                    var hasCreateMethod = classDefinition.Methods.Any(m => m.Name.Contains("Create"));
+                    bool hasCreateMethod = classDefinition.Methods.Any(m => m.Name.Contains("Create"));
                     
                     if (hasCreateMethod)
                     {
@@ -601,12 +601,12 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectObserverPattern(List<ClassDefinition> classes)
         {
-            List<string> patterns = new List<DesignPattern>();
+            List<DesignPattern> patterns = new List<DesignPattern>();
 
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
-                var hasEventFields = classDefinition.Fields.Any(f => f.Type.Contains("Action") || f.Type.Contains("Event"));
-                var hasNotifyMethod = classDefinition.Methods.Any(m => m.Name.Contains("Notify") || m.Name.Contains("Update"));
+                bool hasEventFields = classDefinition.Fields.Any(f => f.Type.Contains("Action") || f.Type.Contains("Event"));
+                bool hasNotifyMethod = classDefinition.Methods.Any(m => m.Name.Contains("Notify") || m.Name.Contains("Update"));
                 
                 if (hasEventFields && hasNotifyMethod)
                 {
@@ -624,9 +624,9 @@ namespace UnityProjectArchitect.Services
 
         private List<CodeIssue> DetectCodeIssues(ScriptAnalysisResult result)
         {
-            List<string> issues = new List<CodeIssue>();
+            List<CodeIssue> issues = new List<CodeIssue>();
 
-            foreach (string classDefinition in result.Classes)
+            foreach (ClassDefinition classDefinition in result.Classes)
             {
                 if (classDefinition.Methods.Count > 20)
                 {
@@ -652,7 +652,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                foreach (string method in classDefinition.Methods)
+                foreach (MethodDefinition method in classDefinition.Methods)
                 {
                     if (method.CyclomaticComplexity > 10)
                     {
@@ -673,7 +673,7 @@ namespace UnityProjectArchitect.Services
 
         private CodeMetrics CalculateCodeMetrics(ScriptAnalysisResult result)
         {
-            var metrics = new CodeMetrics
+            CodeMetrics metrics = new CodeMetrics
             {
                 TotalClasses = result.Classes.Count,
                 TotalMethods = result.Methods.Count,

@@ -8,147 +8,147 @@ namespace UnityProjectArchitect.Core
     public class ProjectSettings : ScriptableObject
     {
         [Header("AI Configuration")]
-        [SerializeField] private AIProvider defaultAIProvider = AIProvider.Claude;
-        [SerializeField] private string aiApiEndpoint = "";
-        [SerializeField] private int aiRequestTimeout = 30;
-        [SerializeField] private int maxRetryAttempts = 3;
+        [SerializeField] private AIProvider _defaultAIProvider = AIProvider.Claude;
+        [SerializeField] private string _aiApiEndpoint = "";
+        [SerializeField] private int _aiRequestTimeout = 30;
+        [SerializeField] private int _maxRetryAttempts = 3;
 
         [Header("Documentation Generation")]
-        [SerializeField] private bool enableAutoGeneration = true;
-        [SerializeField] private string defaultOutputFormat = "markdown";
-        [SerializeField] private bool includeTimestamps = true;
-        [SerializeField] private bool enableVersioning = true;
-        [SerializeField] private int maxVersionHistory = 10;
+        [SerializeField] private bool _enableAutoGeneration = true;
+        [SerializeField] private string _defaultOutputFormat = "markdown";
+        [SerializeField] private bool _includeTimestamps = true;
+        [SerializeField] private bool _enableVersioning = true;
+        [SerializeField] private int _maxVersionHistory = 10;
 
         [Header("Template Management")]
-        [SerializeField] private List<ProjectTemplate> availableTemplates = new List<ProjectTemplate>();
-        [SerializeField] private bool autoApplyRecommendedTemplates = false;
-        [SerializeField] private string customTemplatesPath = "Templates/";
+        [SerializeField] private List<ProjectTemplate> _availableTemplates = new List<ProjectTemplate>();
+        [SerializeField] private bool _autoApplyRecommendedTemplates = false;
+        [SerializeField] private string _customTemplatesPath = "Templates/";
 
         [Header("Export Settings")]
-        [SerializeField] private List<ExportFormat> enabledExportFormats = new List<ExportFormat>();
-        [SerializeField] private string defaultExportPath = "Documentation/Export/";
-        [SerializeField] private bool createSubfoldersForExports = true;
+        [SerializeField] private List<ExportFormat> _enabledExportFormats = new List<ExportFormat>();
+        [SerializeField] private string _defaultExportPath = "Documentation/Export/";
+        [SerializeField] private bool _createSubfoldersForExports = true;
 
         [Header("Performance")]
-        [SerializeField] private bool enableProgressIndicators = true;
-        [SerializeField] private bool enableBackgroundProcessing = true;
-        [SerializeField] private int maxConcurrentOperations = 3;
+        [SerializeField] private bool _enableProgressIndicators = true;
+        [SerializeField] private bool _enableBackgroundProcessing = true;
+        [SerializeField] private int _maxConcurrentOperations = 3;
 
         [Header("Debug")]
-        [SerializeField] private bool enableDebugLogging = false;
-        [SerializeField] private LogLevel logLevel = LogLevel.Info;
+        [SerializeField] private bool _enableDebugLogging = false;
+        [SerializeField] private LogLevel _logLevel = LogLevel.Info;
 
         public AIProvider DefaultAIProvider 
         { 
-            get => defaultAIProvider; 
-            set => defaultAIProvider = value; 
+            get => _defaultAIProvider; 
+            set => _defaultAIProvider = value; 
         }
 
         public string AIApiEndpoint 
         { 
-            get => aiApiEndpoint; 
-            set => aiApiEndpoint = value; 
+            get => _aiApiEndpoint; 
+            set => _aiApiEndpoint = value; 
         }
 
         public int AIRequestTimeout 
         { 
-            get => aiRequestTimeout; 
-            set => aiRequestTimeout = Math.Max(5, value); 
+            get => _aiRequestTimeout; 
+            set => _aiRequestTimeout = Math.Max(5, value); 
         }
 
         public int MaxRetryAttempts 
         { 
-            get => maxRetryAttempts; 
-            set => maxRetryAttempts = Math.Max(1, Math.Min(10, value)); 
+            get => _maxRetryAttempts; 
+            set => _maxRetryAttempts = Math.Max(1, Math.Min(10, value)); 
         }
 
         public bool EnableAutoGeneration 
         { 
-            get => enableAutoGeneration; 
-            set => enableAutoGeneration = value; 
+            get => _enableAutoGeneration; 
+            set => _enableAutoGeneration = value; 
         }
 
         public string DefaultOutputFormat 
         { 
-            get => defaultOutputFormat; 
-            set => defaultOutputFormat = value; 
+            get => _defaultOutputFormat; 
+            set => _defaultOutputFormat = value; 
         }
 
         public bool IncludeTimestamps 
         { 
-            get => includeTimestamps; 
-            set => includeTimestamps = value; 
+            get => _includeTimestamps; 
+            set => _includeTimestamps = value; 
         }
 
         public bool EnableVersioning 
         { 
-            get => enableVersioning; 
-            set => enableVersioning = value; 
+            get => _enableVersioning; 
+            set => _enableVersioning = value; 
         }
 
         public int MaxVersionHistory 
         { 
-            get => maxVersionHistory; 
-            set => maxVersionHistory = Math.Max(1, Math.Min(100, value)); 
+            get => _maxVersionHistory; 
+            set => _maxVersionHistory = Math.Max(1, Math.Min(100, value)); 
         }
 
-        public List<ProjectTemplate> AvailableTemplates => availableTemplates;
+        public List<ProjectTemplate> AvailableTemplates => _availableTemplates;
 
         public bool AutoApplyRecommendedTemplates 
         { 
-            get => autoApplyRecommendedTemplates; 
-            set => autoApplyRecommendedTemplates = value; 
+            get => _autoApplyRecommendedTemplates; 
+            set => _autoApplyRecommendedTemplates = value; 
         }
 
         public string CustomTemplatesPath 
         { 
-            get => customTemplatesPath; 
-            set => customTemplatesPath = value; 
+            get => _customTemplatesPath; 
+            set => _customTemplatesPath = value; 
         }
 
-        public List<ExportFormat> EnabledExportFormats => enabledExportFormats;
+        public List<ExportFormat> EnabledExportFormats => _enabledExportFormats;
 
         public string DefaultExportPath 
         { 
-            get => defaultExportPath; 
-            set => defaultExportPath = value; 
+            get => _defaultExportPath; 
+            set => _defaultExportPath = value; 
         }
 
         public bool CreateSubfoldersForExports 
         { 
-            get => createSubfoldersForExports; 
-            set => createSubfoldersForExports = value; 
+            get => _createSubfoldersForExports; 
+            set => _createSubfoldersForExports = value; 
         }
 
         public bool EnableProgressIndicators 
         { 
-            get => enableProgressIndicators; 
-            set => enableProgressIndicators = value; 
+            get => _enableProgressIndicators; 
+            set => _enableProgressIndicators = value; 
         }
 
         public bool EnableBackgroundProcessing 
         { 
-            get => enableBackgroundProcessing; 
-            set => enableBackgroundProcessing = value; 
+            get => _enableBackgroundProcessing; 
+            set => _enableBackgroundProcessing = value; 
         }
 
         public int MaxConcurrentOperations 
         { 
-            get => maxConcurrentOperations; 
-            set => maxConcurrentOperations = Math.Max(1, Math.Min(10, value)); 
+            get => _maxConcurrentOperations; 
+            set => _maxConcurrentOperations = Math.Max(1, Math.Min(10, value)); 
         }
 
         public bool EnableDebugLogging 
         { 
-            get => enableDebugLogging; 
-            set => enableDebugLogging = value; 
+            get => _enableDebugLogging; 
+            set => _enableDebugLogging = value; 
         }
 
         public LogLevel LogLevel 
         { 
-            get => logLevel; 
-            set => logLevel = value; 
+            get => _logLevel; 
+            set => _logLevel = value; 
         }
 
         private void OnEnable()
@@ -158,9 +158,9 @@ namespace UnityProjectArchitect.Core
 
         private void InitializeDefaultSettings()
         {
-            if (enabledExportFormats.Count == 0)
+            if (_enabledExportFormats.Count == 0)
             {
-                enabledExportFormats.AddRange(new[]
+                _enabledExportFormats.AddRange(new[]
                 {
                     ExportFormat.Markdown,
                     ExportFormat.PDF,
@@ -171,56 +171,56 @@ namespace UnityProjectArchitect.Core
 
         public void AddTemplate(ProjectTemplate template)
         {
-            if (template != null && !availableTemplates.Contains(template))
+            if (template != null && !_availableTemplates.Contains(template))
             {
-                availableTemplates.Add(template);
+                _availableTemplates.Add(template);
             }
         }
 
         public void RemoveTemplate(ProjectTemplate template)
         {
-            availableTemplates.Remove(template);
+            _availableTemplates.Remove(template);
         }
 
         public ProjectTemplate GetTemplateById(string templateId)
         {
-            return availableTemplates.Find(t => t.TemplateId == templateId);
+            return _availableTemplates.Find(t => t.TemplateId == templateId);
         }
 
         public List<ProjectTemplate> GetTemplatesForProjectType(ProjectType projectType)
         {
-            return availableTemplates.FindAll(t => t.TargetProjectType == projectType || t.TargetProjectType == ProjectType.General);
+            return _availableTemplates.FindAll(t => t.TargetProjectType == projectType || t.TargetProjectType == ProjectType.General);
         }
 
         public bool IsExportFormatEnabled(ExportFormat format)
         {
-            return enabledExportFormats.Contains(format);
+            return _enabledExportFormats.Contains(format);
         }
 
         [ContextMenu("Reset to Defaults")]
         public void ResetToDefaults()
         {
-            defaultAIProvider = AIProvider.Claude;
-            aiApiEndpoint = "";
-            aiRequestTimeout = 30;
-            maxRetryAttempts = 3;
-            enableAutoGeneration = true;
-            defaultOutputFormat = "markdown";
-            includeTimestamps = true;
-            enableVersioning = true;
-            maxVersionHistory = 10;
-            availableTemplates.Clear();
-            autoApplyRecommendedTemplates = false;
-            customTemplatesPath = "Templates/";
-            enabledExportFormats.Clear();
+            _defaultAIProvider = AIProvider.Claude;
+            _aiApiEndpoint = "";
+            _aiRequestTimeout = 30;
+            _maxRetryAttempts = 3;
+            _enableAutoGeneration = true;
+            _defaultOutputFormat = "markdown";
+            _includeTimestamps = true;
+            _enableVersioning = true;
+            _maxVersionHistory = 10;
+            _availableTemplates.Clear();
+            _autoApplyRecommendedTemplates = false;
+            _customTemplatesPath = "Templates/";
+            _enabledExportFormats.Clear();
             InitializeDefaultSettings();
-            defaultExportPath = "Documentation/Export/";
-            createSubfoldersForExports = true;
-            enableProgressIndicators = true;
-            enableBackgroundProcessing = true;
-            maxConcurrentOperations = 3;
-            enableDebugLogging = false;
-            logLevel = LogLevel.Info;
+            _defaultExportPath = "Documentation/Export/";
+            _createSubfoldersForExports = true;
+            _enableProgressIndicators = true;
+            _enableBackgroundProcessing = true;
+            _maxConcurrentOperations = 3;
+            _enableDebugLogging = false;
+            _logLevel = LogLevel.Info;
 
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
@@ -249,92 +249,92 @@ namespace UnityProjectArchitect.Core
     [Serializable]
     public class AIConfiguration
     {
-        [SerializeField] private AIProvider provider = AIProvider.Claude;
-        [SerializeField] private string apiKey = "";
-        [SerializeField] private string modelName = "";
-        [SerializeField] private float temperature = 0.7f;
-        [SerializeField] private int maxTokens = 2000;
-        [SerializeField] private bool streamResponse = false;
+        [SerializeField] private AIProvider _provider = AIProvider.Claude;
+        [SerializeField] private string _apiKey = "";
+        [SerializeField] private string _modelName = "";
+        [SerializeField] private float _temperature = 0.7f;
+        [SerializeField] private int _maxTokens = 2000;
+        [SerializeField] private bool _streamResponse = false;
 
         public AIProvider Provider 
         { 
-            get => provider; 
-            set => provider = value; 
+            get => _provider; 
+            set => _provider = value; 
         }
 
         public string ApiKey 
         { 
-            get => apiKey; 
-            set => apiKey = value; 
+            get => _apiKey; 
+            set => _apiKey = value; 
         }
 
         public string ModelName 
         { 
-            get => modelName; 
-            set => modelName = value; 
+            get => _modelName; 
+            set => _modelName = value; 
         }
 
         public float Temperature 
         { 
-            get => temperature; 
-            set => temperature = Mathf.Clamp01(value); 
+            get => _temperature; 
+            set => _temperature = Mathf.Clamp01(value); 
         }
 
         public int MaxTokens 
         { 
-            get => maxTokens; 
-            set => maxTokens = Math.Max(100, Math.Min(8192, value)); 
+            get => _maxTokens; 
+            set => _maxTokens = Math.Max(100, Math.Min(8192, value)); 
         }
 
         public bool StreamResponse 
         { 
-            get => streamResponse; 
-            set => streamResponse = value; 
+            get => _streamResponse; 
+            set => _streamResponse = value; 
         }
 
         public bool IsValid()
         {
-            return provider != AIProvider.None && !string.IsNullOrEmpty(apiKey);
+            return _provider != AIProvider.None && !string.IsNullOrEmpty(_apiKey);
         }
     }
 
     [Serializable]
     public class GenerationPreferences
     {
-        [SerializeField] private bool useCustomPrompts = false;
-        [SerializeField] private bool includeCodeExamples = true;
-        [SerializeField] private bool generateDiagrams = true;
-        [SerializeField] private bool includeTOC = true;
-        [SerializeField] private string documentationStyle = "Professional";
+        [SerializeField] private bool _useCustomPrompts = false;
+        [SerializeField] private bool _includeCodeExamples = true;
+        [SerializeField] private bool _generateDiagrams = true;
+        [SerializeField] private bool _includeTOC = true;
+        [SerializeField] private string _documentationStyle = "Professional";
 
         public bool UseCustomPrompts 
         { 
-            get => useCustomPrompts; 
-            set => useCustomPrompts = value; 
+            get => _useCustomPrompts; 
+            set => _useCustomPrompts = value; 
         }
 
         public bool IncludeCodeExamples 
         { 
-            get => includeCodeExamples; 
-            set => includeCodeExamples = value; 
+            get => _includeCodeExamples; 
+            set => _includeCodeExamples = value; 
         }
 
         public bool GenerateDiagrams 
         { 
-            get => generateDiagrams; 
-            set => generateDiagrams = value; 
+            get => _generateDiagrams; 
+            set => _generateDiagrams = value; 
         }
 
         public bool IncludeTOC 
         { 
-            get => includeTOC; 
-            set => includeTOC = value; 
+            get => _includeTOC; 
+            set => _includeTOC = value; 
         }
 
         public string DocumentationStyle 
         { 
-            get => documentationStyle; 
-            set => documentationStyle = value; 
+            get => _documentationStyle; 
+            set => _documentationStyle = value; 
         }
     }
 }

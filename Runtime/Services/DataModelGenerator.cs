@@ -101,7 +101,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Classes != null)
                 {
-                    var scriptableObjects = analysisResult.Scripts.Classes
+                    List<ClassDefinition> scriptableObjects = analysisResult.Scripts.Classes
                         .Where(c => c.IsScriptableObject)
                         .OrderBy(c => c.Name)
                         .ToList();
@@ -111,7 +111,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("ScriptableObjects provide persistent, asset-based data storage for configuration and game data:");
                         sb.AppendLine();
 
-                        foreach (string so in scriptableObjects)
+                        foreach (ClassDefinition so in scriptableObjects)
                         {
                             sb.AppendLine($"### {so.Name}");
                             sb.AppendLine($"**Namespace:** `{so.Namespace}`");
@@ -121,9 +121,9 @@ namespace UnityProjectArchitect.Services
                             if (so.Properties.Any())
                             {
                                 sb.AppendLine("**Properties:**");
-                                foreach (string prop in so.Properties.Take(10))
+                                foreach (PropertyDefinition prop in so.Properties.Take(10))
                                 {
-                                    var accessModifier = prop.AccessModifier == AccessModifier.Public ? "" : $"{prop.AccessModifier.ToString().ToLower()} ";
+                                    string accessModifier = prop.AccessModifier == AccessModifier.Public ? "" : $"{prop.AccessModifier.ToString().ToLower()} ";
                                     sb.AppendLine($"- `{accessModifier}{prop.Type} {prop.Name}` - {GetPropertyDescription(prop)}");
                                 }
                                 
@@ -137,9 +137,9 @@ namespace UnityProjectArchitect.Services
                             if (so.Fields.Any())
                             {
                                 sb.AppendLine("**Fields:**");
-                                foreach (string field in so.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(5))
+                                foreach (FieldDefinition field in so.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(5))
                                 {
-                                    var modifiers = GetFieldModifiers(field);
+                                    string modifiers = GetFieldModifiers(field);
                                     sb.AppendLine($"- `{modifiers}{field.Type} {field.Name}` - {GetFieldDescription(field)}");
                                 }
                                 sb.AppendLine();
@@ -147,7 +147,7 @@ namespace UnityProjectArchitect.Services
 
                             if (so.Attributes.Any())
                             {
-                                var unityAttributes = so.Attributes.Where(a => a.Contains("CreateAssetMenu") || a.Contains("System.Serializable")).ToList();
+                                List<string> unityAttributes = so.Attributes.Where(a => a.Contains("CreateAssetMenu") || a.Contains("System.Serializable")).ToList();
                                 if (unityAttributes.Any())
                                 {
                                     sb.AppendLine($"**Unity Attributes:** {string.Join(", ", unityAttributes)}");
@@ -180,7 +180,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Classes != null)
                 {
-                    var dataClasses = analysisResult.Scripts.Classes
+                    List<ClassDefinition> dataClasses = analysisResult.Scripts.Classes
                         .Where(c => IsDataClass(c) && !c.IsScriptableObject)
                         .OrderBy(c => c.Name)
                         .ToList();
@@ -190,7 +190,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Runtime data structures for managing application state and temporary data:");
                         sb.AppendLine();
 
-                        foreach (string dataClass in dataClasses.Take(10))
+                        foreach (ClassDefinition dataClass in dataClasses.Take(10))
                         {
                             sb.AppendLine($"### {dataClass.Name}");
                             sb.AppendLine($"**Type:** {dataClass.Type}");
@@ -210,11 +210,11 @@ namespace UnityProjectArchitect.Services
                             if (dataClass.Properties.Any())
                             {
                                 sb.AppendLine("**Data Properties:**");
-                                Dictionary propertiesTable = new Dictionary<string, string>();
+                                Dictionary<string, string> propertiesTable = new Dictionary<string, string>();
                                 
-                                foreach (string prop in dataClass.Properties.Take(8))
+                                foreach (PropertyDefinition prop in dataClass.Properties.Take(8))
                                 {
-                                    var accessInfo = GetPropertyAccessInfo(prop);
+                                    string accessInfo = GetPropertyAccessInfo(prop);
                                     propertiesTable[prop.Name] = $"{prop.Type} {accessInfo}";
                                 }
                                 
@@ -223,13 +223,13 @@ namespace UnityProjectArchitect.Services
 
                             if (dataClass.Fields.Any())
                             {
-                                var publicFields = dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).ToList();
+                                List<FieldDefinition> publicFields = dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).ToList();
                                 if (publicFields.Any())
                                 {
                                     sb.AppendLine("**Public Fields:**");
-                                    foreach (string field in publicFields.Take(5))
+                                    foreach (FieldDefinition field in publicFields.Take(5))
                                     {
-                                        var modifiers = GetFieldModifiers(field);
+                                        string modifiers = GetFieldModifiers(field);
                                         sb.AppendLine($"- `{modifiers}{field.Type} {field.Name}`");
                                     }
                                     sb.AppendLine();
@@ -276,7 +276,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Defining discrete states and categories within the application:");
                         sb.AppendLine();
 
-                        foreach (string enumClass in enums.Take(8))
+                        foreach (ClassDefinition enumClass in enums.Take(8))
                         {
                             sb.AppendLine($"- **{enumClass.Name}** (`{enumClass.Namespace}`) - {GetEnumDescription(enumClass)}");
                         }
@@ -294,7 +294,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Lightweight data structures for performance-critical scenarios:");
                         sb.AppendLine();
 
-                        foreach (string structClass in structs.Take(5))
+                        foreach (ClassDefinition structClass in structs.Take(5))
                         {
                             sb.AppendLine($"### {structClass.Name}");
                             sb.AppendLine($"**Namespace:** `{structClass.Namespace}`");
@@ -302,14 +302,14 @@ namespace UnityProjectArchitect.Services
                             if (structClass.Properties.Any())
                             {
                                 sb.AppendLine($"**Properties:** {structClass.Properties.Count}");
-                                var propNames = structClass.Properties.Take(3).Select(p => p.Name);
+                                IEnumerable<string> propNames = structClass.Properties.Take(3).Select(p => p.Name);
                                 sb.AppendLine($"- {string.Join(", ", propNames)}");
                             }
                             
                             if (structClass.Fields.Any())
                             {
                                 sb.AppendLine($"**Fields:** {structClass.Fields.Count}");
-                                var fieldNames = structClass.Fields.Take(3).Select(f => f.Name);
+                                IEnumerable<string> fieldNames = structClass.Fields.Take(3).Select(f => f.Name);
                                 sb.AppendLine($"- {string.Join(", ", fieldNames)}");
                             }
                             sb.AppendLine();
@@ -338,15 +338,15 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Dependencies != null)
                 {
-                    var dependencies = analysisResult.Scripts.Dependencies;
-                    var dataClasses = analysisResult.Scripts.Classes.Where(c => IsDataClass(c) || c.IsScriptableObject).ToList();
+                    DependencyGraph dependencies = analysisResult.Scripts.Dependencies;
+                    List<ClassDefinition> dataClasses = analysisResult.Scripts.Classes.Where(c => IsDataClass(c) || c.IsScriptableObject).ToList();
 
                     if (dataClasses.Any())
                     {
                         sb.AppendLine("**Data Inheritance Hierarchy:**");
                         
                         List<string> inheritanceRelations = new List<string>();
-                        foreach (string dataClass in dataClasses)
+                        foreach (ClassDefinition dataClass in dataClasses)
                         {
                             if (dataClass.BaseClasses.Any())
                             {
@@ -373,9 +373,9 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("**Data Composition:**");
                         List<string> compositionRelations = new List<string>();
                         
-                        foreach (string dataClass in dataClasses)
+                        foreach (ClassDefinition dataClass in dataClasses)
                         {
-                            var complexProperties = dataClass.Properties
+                            List<PropertyDefinition> complexProperties = dataClass.Properties
                                 .Where(p => dataClasses.Any(dc => dc.Name == p.Type || p.Type.Contains(dc.Name)))
                                 .ToList();
 
@@ -410,7 +410,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Classes != null)
                 {
-                    var dataClasses = analysisResult.Scripts.Classes
+                    List<ClassDefinition> dataClasses = analysisResult.Scripts.Classes
                         .Where(c => IsDataClass(c) || c.IsScriptableObject)
                         .Take(15) // Limit for readability
                         .ToList();
@@ -422,21 +422,21 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("    %% Data Model Class Diagram");
                         sb.AppendLine();
 
-                        foreach (string dataClass in dataClasses)
+                        foreach (ClassDefinition dataClass in dataClasses)
                         {
                             sb.AppendLine($"    class {dataClass.Name} {{");
                             
                             // Add key properties
                             foreach (string prop in dataClass.Properties.Take(5))
                             {
-                                var visibility = GetVisibilitySymbol(prop.AccessModifier);
+                                string visibility = GetVisibilitySymbol(prop.AccessModifier);
                                 sb.AppendLine($"        {visibility}{prop.Type} {prop.Name}");
                             }
                             
                             // Add key fields
                             foreach (string field in dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(3))
                             {
-                                var visibility = GetVisibilitySymbol(field.AccessModifier);
+                                string visibility = GetVisibilitySymbol(field.AccessModifier);
                                 sb.AppendLine($"        {visibility}{field.Type} {field.Name}");
                             }
                             
@@ -445,7 +445,7 @@ namespace UnityProjectArchitect.Services
                         }
 
                         // Add relationships
-                        foreach (string dataClass in dataClasses)
+                        foreach (ClassDefinition dataClass in dataClasses)
                         {
                             foreach (string baseClass in dataClass.BaseClasses)
                             {
@@ -458,7 +458,7 @@ namespace UnityProjectArchitect.Services
                             // Show composition relationships
                             foreach (string prop in dataClass.Properties.Take(2))
                             {
-                                var relatedClass = dataClasses.FirstOrDefault(dc => dc.Name == prop.Type || prop.Type.Contains(dc.Name));
+                                ClassDefinition relatedClass = dataClasses.FirstOrDefault(dc => dc.Name == prop.Type || prop.Type.Contains(dc.Name));
                                 if (relatedClass != null && relatedClass.Name != dataClass.Name)
                                 {
                                     sb.AppendLine($"    {dataClass.Name} --> {relatedClass.Name} : {prop.Name}");
@@ -493,16 +493,16 @@ namespace UnityProjectArchitect.Services
         private bool IsDataClass(ClassDefinition classDefinition)
         {
             // Heuristics to identify data classes
-            var hasDataIndicators = classDefinition.Name.EndsWith("Data") ||
+            bool hasDataIndicators = classDefinition.Name.EndsWith("Data") ||
                                   classDefinition.Name.EndsWith("Config") ||
                                   classDefinition.Name.EndsWith("Settings") ||
                                   classDefinition.Name.EndsWith("Info") ||
                                   classDefinition.Name.Contains("Model");
 
-            var hasOnlyDataMembers = classDefinition.Methods.Count <= 2 && // Constructor + maybe one helper
+            bool hasOnlyDataMembers = classDefinition.Methods.Count <= 2 && // Constructor + maybe one helper
                                    (classDefinition.Properties.Count > 0 || classDefinition.Fields.Count > 0);
 
-            var hasSerializationAttributes = classDefinition.Attributes.Any(a => 
+            bool hasSerializationAttributes = classDefinition.Attributes.Any(a => 
                 a.Contains("Serializable") || a.Contains("DataContract"));
 
             return hasDataIndicators || hasOnlyDataMembers || hasSerializationAttributes;

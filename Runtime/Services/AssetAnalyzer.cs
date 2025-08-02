@@ -38,7 +38,7 @@ namespace UnityProjectArchitect.Services
 
             if (File.Exists(assetPath))
             {
-                var assetInfo = await AnalyzeSingleAssetAsync(assetPath);
+                AssetInfo assetInfo = await AnalyzeSingleAssetAsync(assetPath);
                 result.Assets.Add(assetInfo);
             }
             else if (Directory.Exists(assetPath))
@@ -60,7 +60,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<List<AssetDependency>> GetAssetDependenciesAsync(string assetPath)
         {
-            List<string> dependencies = new List<AssetDependency>();
+            List<AssetDependency> dependencies = new List<AssetDependency>();
 
             if (File.Exists(assetPath))
             {
@@ -68,11 +68,11 @@ namespace UnityProjectArchitect.Services
             }
             else if (Directory.Exists(assetPath))
             {
-                var assetFiles = GetAllAssetFiles(assetPath);
+                string[] assetFiles = GetAllAssetFiles(assetPath);
                 
                 foreach (string file in assetFiles)
                 {
-                    var fileDependencies = await AnalyzeAssetDependencies(file);
+                    List<AssetDependency> fileDependencies = await AnalyzeAssetDependencies(file);
                     dependencies.AddRange(fileDependencies);
                 }
             }
@@ -83,9 +83,9 @@ namespace UnityProjectArchitect.Services
         public async Task<AssetUsageReport> GetAssetUsageReportAsync(string assetsPath)
         {
             AssetUsageReport report = new AssetUsageReport();
-            var allAssets = GetAllAssetFiles(assetsPath);
+            string[] allAssets = GetAllAssetFiles(assetsPath);
 
-            Dictionary assetDependencies = new Dictionary<string, AssetUsageInfo>();
+            Dictionary<string, AssetUsageInfo> assetDependencies = new Dictionary<string, AssetUsageInfo>();
 
             foreach (string asset in allAssets)
             {
@@ -94,9 +94,9 @@ namespace UnityProjectArchitect.Services
 
             foreach (string asset in allAssets)
             {
-                var dependencies = await AnalyzeAssetDependencies(asset);
+                List<AssetDependency> dependencies = await AnalyzeAssetDependencies(asset);
                 
-                foreach (string dependency in dependencies)
+                foreach (AssetDependency dependency in dependencies)
                 {
                     if (assetDependencies.ContainsKey(dependency.DependencyPath))
                     {
@@ -112,7 +112,7 @@ namespace UnityProjectArchitect.Services
             List<string> sceneFiles = allAssets.Where(a => Path.GetExtension(a) == ".unity").ToList();
             foreach (string scene in sceneFiles)
             {
-                var sceneDependencies = await AnalyzeSceneDependencies(scene);
+                List<string> sceneDependencies = await AnalyzeSceneDependencies(scene);
                 foreach (string dependency in sceneDependencies)
                 {
                     if (assetDependencies.ContainsKey(dependency))
@@ -141,7 +141,7 @@ namespace UnityProjectArchitect.Services
 
             if (File.Exists(assetPath))
             {
-                var extension = Path.GetExtension(assetPath).ToLower();
+                string extension = Path.GetExtension(assetPath).ToLower();
                 return extensionToAssetType.ContainsKey(extension);
             }
 
@@ -150,13 +150,13 @@ namespace UnityProjectArchitect.Services
 
         private async Task AnalyzeDirectoryAsync(string directoryPath, AssetAnalysisResult result)
         {
-            var assetFiles = GetAllAssetFiles(directoryPath);
+            string[] assetFiles = GetAllAssetFiles(directoryPath);
 
             foreach (string file in assetFiles)
             {
                 try
                 {
-                    var assetInfo = await AnalyzeSingleAssetAsync(file);
+                    AssetInfo assetInfo = await AnalyzeSingleAssetAsync(file);
                     result.Assets.Add(assetInfo);
                 }
                 catch (Exception ex)
@@ -186,23 +186,23 @@ namespace UnityProjectArchitect.Services
             });
         }
 
-        private List<string> GetAllAssetFiles(string directoryPath)
+        private string[] GetAllAssetFiles(string directoryPath)
         {
             List<string> assetFiles = new List<string>();
-            var supportedExtensions = extensionToAssetType.Keys.ToArray();
+            string[] supportedExtensions = extensionToAssetType.Keys.ToArray();
 
             foreach (string extension in supportedExtensions)
             {
-                var files = Directory.GetFiles(directoryPath, $"*{extension}", SearchOption.AllDirectories);
+                string[] files = Directory.GetFiles(directoryPath, $"*{extension}", SearchOption.AllDirectories);
                 assetFiles.AddRange(files);
             }
 
-            return assetFiles;
+            return assetFiles.ToArray();
         }
 
         private string GetAssetTypeFromPath(string assetPath)
         {
-            var extension = Path.GetExtension(assetPath).ToLower();
+            string extension = Path.GetExtension(assetPath).ToLower();
             return extensionToAssetType.ContainsKey(extension) ? extensionToAssetType[extension] : "Unknown";
         }
 
@@ -210,8 +210,8 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                List<string> dependencies = new List<AssetDependency>();
-                var assetType = GetAssetTypeFromPath(assetPath);
+                List<AssetDependency> dependencies = new List<AssetDependency>();
+                string assetType = GetAssetTypeFromPath(assetPath);
 
                 switch (assetType)
                 {
@@ -235,13 +235,13 @@ namespace UnityProjectArchitect.Services
 
         private List<AssetDependency> AnalyzeMaterialDependencies(string materialPath)
         {
-            List<string> dependencies = new List<AssetDependency>();
+            List<AssetDependency> dependencies = new List<AssetDependency>();
 
             try
             {
                 string content = File.ReadAllText(materialPath);
                 
-                var textureReferences = ExtractYamlReferences(content, "Texture2D");
+                List<string> textureReferences = ExtractYamlReferences(content, "Texture2D");
                 foreach (string reference in textureReferences)
                 {
                     dependencies.Add(new AssetDependency(materialPath, reference, AssetDependencyType.Direct)
@@ -250,7 +250,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var shaderReferences = ExtractYamlReferences(content, "Shader");
+                List<string> shaderReferences = ExtractYamlReferences(content, "Shader");
                 foreach (string reference in shaderReferences)
                 {
                     dependencies.Add(new AssetDependency(materialPath, reference, AssetDependencyType.Direct)
@@ -269,13 +269,13 @@ namespace UnityProjectArchitect.Services
 
         private List<AssetDependency> AnalyzePrefabDependencies(string prefabPath)
         {
-            List<string> dependencies = new List<AssetDependency>();
+            List<AssetDependency> dependencies = new List<AssetDependency>();
 
             try
             {
                 string content = File.ReadAllText(prefabPath);
                 
-                var meshReferences = ExtractYamlReferences(content, "Mesh");
+                List<string> meshReferences = ExtractYamlReferences(content, "Mesh");
                 foreach (string reference in meshReferences)
                 {
                     dependencies.Add(new AssetDependency(prefabPath, reference, AssetDependencyType.Direct)
@@ -293,7 +293,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var scriptReferences = ExtractYamlReferences(content, "MonoScript");
+                List<string> scriptReferences = ExtractYamlReferences(content, "MonoScript");
                 foreach (string reference in scriptReferences)
                 {
                     dependencies.Add(new AssetDependency(prefabPath, reference, AssetDependencyType.Direct)
@@ -361,7 +361,7 @@ namespace UnityProjectArchitect.Services
             {
                 string content = File.ReadAllText(assetPath);
                 
-                var scriptReferences = ExtractYamlReferences(content, "MonoScript");
+                List<string> scriptReferences = ExtractYamlReferences(content, "MonoScript");
                 foreach (string reference in scriptReferences)
                 {
                     dependencies.Add(new AssetDependency(assetPath, reference, AssetDependencyType.Direct)
@@ -407,23 +407,23 @@ namespace UnityProjectArchitect.Services
         {
             List<string> references = new List<string>();
             
-            var lines = yamlContent.Split('\n');
+            string[] lines = yamlContent.Split('\n');
             
             for (int i = 0; i < lines.Length; i++)
             {
-                var line = lines[i].Trim();
+                string line = lines[i].Trim();
                 
                 if (line.Contains("fileID:") && line.Contains("guid:"))
                 {
-                    var guidStart = line.IndexOf("guid: ") + 6;
+                    int guidStart = line.IndexOf("guid: ") + 6;
                     if (guidStart > 5)
                     {
-                        var guidEnd = line.IndexOf(',', guidStart);
+                        int guidEnd = line.IndexOf(',', guidStart);
                         if (guidEnd == -1) guidEnd = line.IndexOf('}', guidStart);
                         
                         if (guidEnd > guidStart)
                         {
-                            var guid = line.Substring(guidStart, guidEnd - guidStart).Trim();
+                            string guid = line.Substring(guidStart, guidEnd - guidStart).Trim();
                             if (!string.IsNullOrEmpty(guid) && guid != "0")
                             {
                                 references.Add($"guid:{guid}");
@@ -438,7 +438,7 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> ExtractAssetMetadata(string assetPath, string assetType)
         {
-            Dictionary metadata = new Dictionary<string, object>();
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
 
             switch (assetType)
             {
@@ -458,18 +458,18 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> ExtractTextureMetadata(string texturePath)
         {
-            Dictionary metadata = new Dictionary<string, object>();
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
 
             try
             {
-                var metaPath = texturePath + ".meta";
+                string metaPath = texturePath + ".meta";
                 if (File.Exists(metaPath))
                 {
                     string metaContent = File.ReadAllText(metaPath);
                     
                     if (metaContent.Contains("maxTextureSize:"))
                     {
-                        var sizeMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"maxTextureSize:\s*(\d+)");
+                        System.Text.RegularExpressions.Match sizeMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"maxTextureSize:\s*(\d+)");
                         if (sizeMatch.Success)
                         {
                             metadata["MaxTextureSize"] = int.Parse(sizeMatch.Groups[1].Value);
@@ -478,7 +478,7 @@ namespace UnityProjectArchitect.Services
 
                     if (metaContent.Contains("textureFormat:"))
                     {
-                        var formatMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"textureFormat:\s*(-?\d+)");
+                        System.Text.RegularExpressions.Match formatMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"textureFormat:\s*(-?\d+)");
                         if (formatMatch.Success)
                         {
                             metadata["TextureFormat"] = int.Parse(formatMatch.Groups[1].Value);
@@ -499,18 +499,18 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> ExtractAudioMetadata(string audioPath)
         {
-            Dictionary metadata = new Dictionary<string, object>();
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
 
             try
             {
-                var metaPath = audioPath + ".meta";
+                string metaPath = audioPath + ".meta";
                 if (File.Exists(metaPath))
                 {
                     string metaContent = File.ReadAllText(metaPath);
                     
                     if (metaContent.Contains("loadType:"))
                     {
-                        var loadTypeMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"loadType:\s*(\d+)");
+                        System.Text.RegularExpressions.Match loadTypeMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"loadType:\s*(\d+)");
                         if (loadTypeMatch.Success)
                         {
                             metadata["LoadType"] = int.Parse(loadTypeMatch.Groups[1].Value);
@@ -531,11 +531,11 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> ExtractMeshMetadata(string meshPath)
         {
-            Dictionary metadata = new Dictionary<string, object>();
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
 
             try
             {
-                var metaPath = meshPath + ".meta";
+                string metaPath = meshPath + ".meta";
                 if (File.Exists(metaPath))
                 {
                     string metaContent = File.ReadAllText(metaPath);
@@ -559,16 +559,16 @@ namespace UnityProjectArchitect.Services
 
             try
             {
-                var metaPath = assetPath + ".meta";
+                string metaPath = assetPath + ".meta";
                 if (File.Exists(metaPath))
                 {
                     string metaContent = File.ReadAllText(metaPath);
                     
-                    var labelsMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"labels:\s*\[(.*?)\]", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    System.Text.RegularExpressions.Match labelsMatch = System.Text.RegularExpressions.Regex.Match(metaContent, @"labels:\s*\[(.*?)\]", System.Text.RegularExpressions.RegexOptions.Singleline);
                     if (labelsMatch.Success)
                     {
-                        var labelsText = labelsMatch.Groups[1].Value;
-                        var labelMatches = System.Text.RegularExpressions.Regex.Matches(labelsText, @"'([^']*)'");
+                        string labelsText = labelsMatch.Groups[1].Value;
+                        System.Text.RegularExpressions.MatchCollection labelMatches = System.Text.RegularExpressions.Regex.Matches(labelsText, @"'([^']*)'");
                         
                         foreach (System.Text.RegularExpressions.Match match in labelMatches)
                         {
@@ -587,9 +587,9 @@ namespace UnityProjectArchitect.Services
 
         private List<AssetIssue> DetectAssetIssues(AssetAnalysisResult result)
         {
-            List<string> issues = new List<AssetIssue>();
+            List<AssetIssue> issues = new List<AssetIssue>();
 
-            foreach (string asset in result.Assets)
+            foreach (AssetInfo asset in result.Assets)
             {
                 if (asset.SizeBytes > 10 * 1024 * 1024)
                 {
@@ -604,7 +604,7 @@ namespace UnityProjectArchitect.Services
 
                 if (asset.AssetType == "Texture2D" && asset.Metadata.ContainsKey("MaxTextureSize"))
                 {
-                    var maxSize = (int)asset.Metadata["MaxTextureSize"];
+                    int maxSize = (int)asset.Metadata["MaxTextureSize"];
                     if (maxSize > 2048)
                     {
                         issues.Add(new AssetIssue(AssetIssueType.UnoptimizedAsset, 
@@ -637,7 +637,7 @@ namespace UnityProjectArchitect.Services
 
         private AssetMetrics CalculateAssetMetrics(AssetAnalysisResult result)
         {
-            var metrics = new AssetMetrics
+            AssetMetrics metrics = new AssetMetrics
             {
                 TotalAssets = result.Assets.Count,
                 TotalSizeBytes = result.Assets.Sum(a => a.SizeBytes)

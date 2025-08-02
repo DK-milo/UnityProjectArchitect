@@ -435,7 +435,7 @@ namespace UnityProjectArchitect.API
 
         public static string GetFormattedReport(this ExportOperationResult result)
         {
-            var report = $"📤 Export Operation Report\n";
+            string report = $"📤 Export Operation Report\n";
             report += $"✅ Success: {result.Success}\n";
             report += $"📄 Format: {result.Format}\n";
             report += $"📁 Output: {result.OutputPath}\n";

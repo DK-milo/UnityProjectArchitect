@@ -400,7 +400,7 @@ namespace UnityProjectArchitect.API
 
         public static string GetFormattedReport(this ProjectAnalysisResult result)
         {
-            var report = $"📊 Project Analysis Report\n";
+            string report = $"📊 Project Analysis Report\n";
             report += $"📂 Project: {System.IO.Path.GetFileName(result.ProjectPath)}\n";
             report += $"⏱️ Analysis Time: {result.AnalysisTime.TotalSeconds:F1}s\n";
             report += $"📁 Total Files: {result.Metrics.TotalFiles:N0}\n";

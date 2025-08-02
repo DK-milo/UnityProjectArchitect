@@ -550,7 +550,7 @@ public class GameManager : MonoBehaviour
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float _moveSpeed = 5f;
     
     private void Update()
     {

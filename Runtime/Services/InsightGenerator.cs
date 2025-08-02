@@ -12,7 +12,7 @@ namespace UnityProjectArchitect.Services
     {
         public async Task<List<ProjectInsight>> GenerateInsightsAsync(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             await Task.Run(() =>
             {
@@ -45,7 +45,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateStructureInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Structure == null) return insights;
 
@@ -62,7 +62,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var deepNestingIssues = analysisResult.Structure.Issues
+            List<StructureIssue> deepNestingIssues = analysisResult.Structure.Issues
                 .Where(i => i.Type == StructureIssueType.DeepNesting).ToList();
             
             if (deepNestingIssues.Count > 0)
@@ -78,7 +78,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var largeFileIssues = analysisResult.Structure.Issues
+            List<StructureIssue> largeFileIssues = analysisResult.Structure.Issues
                 .Where(i => i.Type == StructureIssueType.LargeFile).ToList();
             
             if (largeFileIssues.Count > 0)
@@ -112,11 +112,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateCodeQualityInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Scripts == null) return insights;
 
-            var criticalIssues = analysisResult.Scripts.Issues
+            List<CodeIssue> criticalIssues = analysisResult.Scripts.Issues
                 .Where(i => i.Severity == CodeIssueSeverity.Critical).ToList();
             
             if (criticalIssues.Count > 0)
@@ -132,7 +132,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var majorIssues = analysisResult.Scripts.Issues
+            List<CodeIssue> majorIssues = analysisResult.Scripts.Issues
                 .Where(i => i.Severity == CodeIssueSeverity.Major).ToList();
             
             if (majorIssues.Count > 10)
@@ -152,7 +152,7 @@ namespace UnityProjectArchitect.Services
 
             if (analysisResult.Scripts.Metrics != null)
             {
-                var avgComplexity = analysisResult.Scripts.Metrics.AverageCyclomaticComplexity;
+                float avgComplexity = analysisResult.Scripts.Metrics.AverageCyclomaticComplexity;
                 if (avgComplexity > 10)
                 {
                     insights.Add(new ProjectInsight(InsightType.CodeQuality,
@@ -167,7 +167,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var commentRatio = analysisResult.Scripts.Metrics.CommentRatio;
+                float commentRatio = analysisResult.Scripts.Metrics.CommentRatio;
                 if (commentRatio < 0.1f)
                 {
                     insights.Add(new ProjectInsight(InsightType.CodeQuality,
@@ -183,10 +183,10 @@ namespace UnityProjectArchitect.Services
                 }
             }
 
-            var patterns = analysisResult.Scripts.DetectedPatterns;
+            List<DesignPattern> patterns = analysisResult.Scripts.DetectedPatterns;
             if (patterns.Count > 0)
             {
-                List<string> strongPatterns = patterns.Where(p => p.Confidence > 0.8f).ToList();
+                List<DesignPattern> strongPatterns = patterns.Where(p => p.Confidence > 0.8f).ToList();
                 if (strongPatterns.Count > 0)
                 {
                     insights.Add(new ProjectInsight(InsightType.CodeQuality,
@@ -206,11 +206,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GeneratePerformanceInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Performance == null) return insights;
 
-            var criticalPerformanceIssues = analysisResult.Performance.Issues
+            List<PerformanceIssue> criticalPerformanceIssues = analysisResult.Performance.Issues
                 .Where(i => i.Impact == PerformanceImpact.Critical).ToList();
             
             if (criticalPerformanceIssues.Count > 0)
@@ -226,7 +226,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var metrics = analysisResult.Performance.Metrics;
+            PerformanceMetrics metrics = analysisResult.Performance.Metrics;
             if (metrics != null)
             {
                 if (metrics.TextureMemoryMB > 500)
@@ -263,7 +263,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateArchitectureInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Architecture == null) return insights;
 
@@ -280,8 +280,8 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var architectureIssues = analysisResult.Architecture.Issues;
-            List<string> godClassIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.GodClass).ToList();
+            List<ArchitectureIssue> architectureIssues = analysisResult.Architecture.Issues;
+            List<ArchitectureIssue> godClassIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.GodClass).ToList();
             
             if (godClassIssues.Count > 0)
             {
@@ -296,7 +296,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            List<string> tightCouplingIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.TightCoupling).ToList();
+            List<ArchitectureIssue> tightCouplingIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.TightCoupling).ToList();
             if (tightCouplingIssues.Count > 0)
             {
                 insights.Add(new ProjectInsight(InsightType.Architecture,
@@ -312,7 +312,7 @@ namespace UnityProjectArchitect.Services
 
             if (analysisResult.Architecture.Metrics != null)
             {
-                var coupling = analysisResult.Architecture.Metrics.AverageCoupling;
+                float coupling = analysisResult.Architecture.Metrics.AverageCoupling;
                 if (coupling > 5)
                 {
                     insights.Add(new ProjectInsight(InsightType.Architecture,
@@ -327,7 +327,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var cohesion = analysisResult.Architecture.Metrics.AverageCohesion;
+                float cohesion = analysisResult.Architecture.Metrics.AverageCohesion;
                 if (cohesion < 0.6f)
                 {
                     insights.Add(new ProjectInsight(InsightType.Architecture,
@@ -348,11 +348,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateDependencyInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Scripts?.Dependencies == null) return insights;
 
-            var circularDependencies = analysisResult.Scripts.Dependencies.GetCircularDependencies();
+            List<string> circularDependencies = analysisResult.Scripts.Dependencies.GetCircularDependencies();
             if (circularDependencies.Count > 0)
             {
                 insights.Add(new ProjectInsight(InsightType.Dependencies,
@@ -366,12 +366,12 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var totalDependencies = analysisResult.Scripts.Dependencies.Edges.Count;
-            var totalNodes = analysisResult.Scripts.Dependencies.Nodes.Count;
+            int totalDependencies = analysisResult.Scripts.Dependencies.Edges.Count;
+            int totalNodes = analysisResult.Scripts.Dependencies.Nodes.Count;
             
             if (totalNodes > 0)
             {
-                var avgDependenciesPerClass = (float)totalDependencies / totalNodes;
+                float avgDependenciesPerClass = (float)totalDependencies / totalNodes;
                 if (avgDependenciesPerClass > 8)
                 {
                     insights.Add(new ProjectInsight(InsightType.Dependencies,
@@ -392,11 +392,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateMaintainabilityInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Metrics == null) return insights;
 
-            var maintainability = analysisResult.Metrics.Maintainability;
+            float maintainability = analysisResult.Metrics.Maintainability;
             if (maintainability < 0.6f)
             {
                 insights.Add(new ProjectInsight(InsightType.Maintainability,
@@ -411,7 +411,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var technicalDebt = analysisResult.Metrics.TechnicalDebt;
+            float technicalDebt = analysisResult.Metrics.TechnicalDebt;
             if (technicalDebt > 0.7f)
             {
                 insights.Add(new ProjectInsight(InsightType.Maintainability,
@@ -428,12 +428,12 @@ namespace UnityProjectArchitect.Services
 
             if (analysisResult.Scripts != null)
             {
-                var totalClasses = analysisResult.Scripts.TotalClasses;
-                var totalMethods = analysisResult.Scripts.TotalMethods;
+                int totalClasses = analysisResult.Scripts.TotalClasses;
+                int totalMethods = analysisResult.Scripts.TotalMethods;
                 
                 if (totalClasses > 0)
                 {
-                    var methodsPerClass = (float)totalMethods / totalClasses;
+                    float methodsPerClass = (float)totalMethods / totalClasses;
                     if (methodsPerClass > 15)
                     {
                         insights.Add(new ProjectInsight(InsightType.Maintainability,
@@ -455,14 +455,14 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateTestingInsights(ProjectAnalysisResult analysisResult)
         {
-            List<string> insights = new List<ProjectInsight>();
+            List<ProjectInsight> insights = new List<ProjectInsight>();
 
             if (analysisResult.Structure == null) return insights;
 
-            var hasTestFolders = analysisResult.Structure.Folders
+            bool hasTestFolders = analysisResult.Structure.Folders
                 .Any(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase));
             
-            var hasTestFiles = analysisResult.Structure.Files
+            bool hasTestFiles = analysisResult.Structure.Files
                 .Any(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase) && f.Extension == ".cs");
 
             if (!hasTestFolders && !hasTestFiles)
@@ -479,15 +479,15 @@ namespace UnityProjectArchitect.Services
             }
             else if (hasTestFolders || hasTestFiles)
             {
-                var testFileCount = analysisResult.Structure.Files
+                int testFileCount = analysisResult.Structure.Files
                     .Count(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase) && f.Extension == ".cs");
                 
-                var scriptFileCount = analysisResult.Structure.Files
+                int scriptFileCount = analysisResult.Structure.Files
                     .Count(f => f.Extension == ".cs" && !f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase));
 
                 if (scriptFileCount > 0)
                 {
-                    var testCoverageRatio = (float)testFileCount / scriptFileCount;
+                    float testCoverageRatio = (float)testFileCount / scriptFileCount;
                     
                     if (testCoverageRatio < 0.1f)
                     {

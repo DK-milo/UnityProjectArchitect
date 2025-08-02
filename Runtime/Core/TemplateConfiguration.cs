@@ -56,79 +56,79 @@ namespace UnityProjectArchitect.Core
     [Serializable]
     public class TemplateReference
     {
-        [SerializeField] private string templateId = "";
-        [SerializeField] private string templateName = "";
-        [SerializeField] private string templateVersion = "1.0.0";
-        [SerializeField] private DateTime appliedDate;
-        [SerializeField] private Dictionary<string, string> customizations = new Dictionary<string, string>();
+        [SerializeField] private string _templateId = "";
+        [SerializeField] private string _templateName = "";
+        [SerializeField] private string _templateVersion = "1.0.0";
+        [SerializeField] private DateTime _appliedDate;
+        [SerializeField] private Dictionary<string, string> _customizations = new Dictionary<string, string>();
 
         public string TemplateId 
         { 
-            get => templateId; 
-            set => templateId = value; 
+            get => _templateId; 
+            set => _templateId = value; 
         }
 
         public string TemplateName 
         { 
-            get => templateName; 
-            set => templateName = value; 
+            get => _templateName; 
+            set => _templateName = value; 
         }
 
         public string TemplateVersion 
         { 
-            get => templateVersion; 
-            set => templateVersion = value; 
+            get => _templateVersion; 
+            set => _templateVersion = value; 
         }
 
         public DateTime AppliedDate 
         { 
-            get => appliedDate; 
-            set => appliedDate = value; 
+            get => _appliedDate; 
+            set => _appliedDate = value; 
         }
 
-        public Dictionary<string, string> Customizations => customizations;
+        public Dictionary<string, string> Customizations => _customizations;
 
         public TemplateReference()
         {
-            appliedDate = DateTime.Now;
-            customizations = new Dictionary<string, string>();
+            _appliedDate = DateTime.Now;
+            _customizations = new Dictionary<string, string>();
         }
 
         public TemplateReference(string id, string name, string version = "1.0.0") : this()
         {
-            templateId = id;
-            templateName = name;
-            templateVersion = version;
+            _templateId = id;
+            _templateName = name;
+            _templateVersion = version;
         }
 
         public override bool Equals(object obj)
         {
-            return obj is TemplateReference other && templateId == other.templateId;
+            return obj is TemplateReference other && _templateId == other._templateId;
         }
 
         public override int GetHashCode()
         {
-            return templateId?.GetHashCode() ?? 0;
+            return _templateId?.GetHashCode() ?? 0;
         }
     }
 
     [Serializable]
     public class FolderStructureData
     {
-        [SerializeField] private List<FolderDefinition> folders = new List<FolderDefinition>();
-        [SerializeField] private string rootPath = "Assets";
-        [SerializeField] private bool useStandardUnityFolders = true;
+        [SerializeField] private List<FolderDefinition> _folders = new List<FolderDefinition>();
+        [SerializeField] private string _rootPath = "Assets";
+        [SerializeField] private bool _useStandardUnityFolders = true;
 
-        public List<FolderDefinition> Folders => folders;
+        public List<FolderDefinition> Folders => _folders;
         public string RootPath 
         { 
-            get => rootPath; 
-            set => rootPath = value; 
+            get => _rootPath; 
+            set => _rootPath = value; 
         }
         public bool UseStandardUnityFolders 
         { 
-            get => useStandardUnityFolders; 
-            set => useStandardUnityFolders = value; 
+            get => _useStandardUnityFolders; 
+            set => _useStandardUnityFolders = value; 
         }
 
         public FolderStructureData()
@@ -138,9 +138,9 @@ namespace UnityProjectArchitect.Core
 
         private void InitializeDefaultFolders()
         {
-            if (useStandardUnityFolders)
+            if (_useStandardUnityFolders)
             {
-                folders.AddRange(new[]
+                _folders.AddRange(new[]
                 {
                     new FolderDefinition("Scripts", FolderType.Scripts, "Game logic and components"),
                     new FolderDefinition("Prefabs", FolderType.Prefabs, "Reusable game objects"),
@@ -155,94 +155,94 @@ namespace UnityProjectArchitect.Core
 
         public void AddFolder(FolderDefinition folder)
         {
-            if (!folders.Contains(folder))
+            if (!_folders.Contains(folder))
             {
-                folders.Add(folder);
+                _folders.Add(folder);
             }
         }
 
         public void RemoveFolder(FolderDefinition folder)
         {
-            folders.Remove(folder);
+            _folders.Remove(folder);
         }
 
         public FolderDefinition GetFolder(string name)
         {
-            return folders.Find(f => f.Name == name);
+            return _folders.Find(f => f.Name == name);
         }
     }
 
     [Serializable]
     public class FolderDefinition
     {
-        [SerializeField] private string name = "";
-        [SerializeField] private FolderType folderType = FolderType.Custom;
-        [SerializeField] private string description = "";
-        [SerializeField] private string relativePath = "";
-        [SerializeField] private bool createOnApply = true;
-        [SerializeField] private List<FolderDefinition> subFolders = new List<FolderDefinition>();
+        [SerializeField] private string _name = "";
+        [SerializeField] private FolderType _folderType = FolderType.Custom;
+        [SerializeField] private string _description = "";
+        [SerializeField] private string _relativePath = "";
+        [SerializeField] private bool _createOnApply = true;
+        [SerializeField] private List<FolderDefinition> _subFolders = new List<FolderDefinition>();
 
         public string Name 
         { 
-            get => name; 
-            set => name = value; 
+            get => _name; 
+            set => _name = value; 
         }
 
         public FolderType FolderType 
         { 
-            get => folderType; 
-            set => folderType = value; 
+            get => _folderType; 
+            set => _folderType = value; 
         }
 
         public string Description 
         { 
-            get => description; 
-            set => description = value; 
+            get => _description; 
+            set => _description = value; 
         }
 
         public string RelativePath 
         { 
-            get => string.IsNullOrEmpty(relativePath) ? name : relativePath; 
-            set => relativePath = value; 
+            get => string.IsNullOrEmpty(_relativePath) ? _name : _relativePath; 
+            set => _relativePath = value; 
         }
 
         public bool CreateOnApply 
         { 
-            get => createOnApply; 
-            set => createOnApply = value; 
+            get => _createOnApply; 
+            set => _createOnApply = value; 
         }
 
-        public List<FolderDefinition> SubFolders => subFolders;
+        public List<FolderDefinition> SubFolders => _subFolders;
 
         public FolderDefinition()
         {
-            subFolders = new List<FolderDefinition>();
+            _subFolders = new List<FolderDefinition>();
         }
 
         public FolderDefinition(string folderName, FolderType type, string desc = "") : this()
         {
-            name = folderName;
-            folderType = type;
-            description = desc;
+            _name = folderName;
+            _folderType = type;
+            _description = desc;
         }
 
         public void AddSubFolder(FolderDefinition subFolder)
         {
-            if (!subFolders.Contains(subFolder))
+            if (!_subFolders.Contains(subFolder))
             {
-                subFolders.Add(subFolder);
+                _subFolders.Add(subFolder);
             }
         }
 
 
         public override bool Equals(object obj)
         {
-            return obj is FolderDefinition other && name == other.name && folderType == other.folderType;
+            return obj is FolderDefinition other && _name == other._name && _folderType == other._folderType;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(name, folderType);
+            return HashCode.Combine(_name, _folderType);
         }
     }
 
@@ -250,88 +250,88 @@ namespace UnityProjectArchitect.Core
     public class ProjectTemplate : ScriptableObject
     {
         [Header("Template Information")]
-        [SerializeField] private string templateId = "";
-        [SerializeField] private string templateName = "";
-        [SerializeField] private string templateDescription = "";
-        [SerializeField] private string templateVersion = "1.0.0";
-        [SerializeField] private ProjectType targetProjectType = ProjectType.General;
-        [SerializeField] private UnityVersion minUnityVersion = UnityVersion.Unity2023_3;
+        [SerializeField] private string _templateId = "";
+        [SerializeField] private string _templateName = "";
+        [SerializeField] private string _templateDescription = "";
+        [SerializeField] private string _templateVersion = "1.0.0";
+        [SerializeField] private ProjectType _targetProjectType = ProjectType.General;
+        [SerializeField] private UnityVersion _minUnityVersion = UnityVersion.Unity2023_3;
 
         [Header("Template Configuration")]
-        [SerializeField] private FolderStructureData folderStructure = new FolderStructureData();
-        [SerializeField] private List<string> requiredPackages = new List<string>();
-        [SerializeField] private List<SceneTemplate> sceneTemplates = new List<SceneTemplate>();
-        [SerializeField] private List<string> assemblyDefinitions = new List<string>();
+        [SerializeField] private FolderStructureData _folderStructure = new FolderStructureData();
+        [SerializeField] private List<string> _requiredPackages = new List<string>();
+        [SerializeField] private List<SceneTemplate> _sceneTemplates = new List<SceneTemplate>();
+        [SerializeField] private List<string> _assemblyDefinitions = new List<string>();
 
         [Header("Documentation")]
-        [SerializeField] private List<DocumentationSectionData> defaultDocumentationSections = new List<DocumentationSectionData>();
-        [SerializeField] private string[] recommendedTags = new string[0];
+        [SerializeField] private List<DocumentationSectionData> _defaultDocumentationSections = new List<DocumentationSectionData>();
+        [SerializeField] private string[] _recommendedTags = new string[0];
 
         [Header("Metadata")]
-        [SerializeField] private string author = "";
-        [SerializeField] private DateTime createdDate;
-        [SerializeField] private string[] keywords = new string[0];
+        [SerializeField] private string _author = "";
+        [SerializeField] private DateTime _createdDate;
+        [SerializeField] private string[] _keywords = new string[0];
 
         public string TemplateId 
         { 
-            get => string.IsNullOrEmpty(templateId) ? name : templateId; 
-            set => templateId = value; 
+            get => string.IsNullOrEmpty(_templateId) ? name : _templateId; 
+            set => _templateId = value; 
         }
 
         public string TemplateName 
         { 
-            get => string.IsNullOrEmpty(templateName) ? name : templateName; 
-            set => templateName = value; 
+            get => string.IsNullOrEmpty(_templateName) ? name : _templateName; 
+            set => _templateName = value; 
         }
 
         public string TemplateDescription 
         { 
-            get => templateDescription; 
-            set => templateDescription = value; 
+            get => _templateDescription; 
+            set => _templateDescription = value; 
         }
 
         public string TemplateVersion 
         { 
-            get => templateVersion; 
-            set => templateVersion = value; 
+            get => _templateVersion; 
+            set => _templateVersion = value; 
         }
 
         public ProjectType TargetProjectType 
         { 
-            get => targetProjectType; 
-            set => targetProjectType = value; 
+            get => _targetProjectType; 
+            set => _targetProjectType = value; 
         }
 
         public UnityVersion MinUnityVersion 
         { 
-            get => minUnityVersion; 
-            set => minUnityVersion = value; 
+            get => _minUnityVersion; 
+            set => _minUnityVersion = value; 
         }
 
-        public FolderStructureData FolderStructure => folderStructure;
-        public List<string> RequiredPackages => requiredPackages;
-        public List<SceneTemplate> SceneTemplates => sceneTemplates;
-        public List<string> AssemblyDefinitions => assemblyDefinitions;
-        public List<DocumentationSectionData> DefaultDocumentationSections => defaultDocumentationSections;
-        public string[] RecommendedTags => recommendedTags ?? new string[0];
+        public FolderStructureData FolderStructure => _folderStructure;
+        public List<string> RequiredPackages => _requiredPackages;
+        public List<SceneTemplate> SceneTemplates => _sceneTemplates;
+        public List<string> AssemblyDefinitions => _assemblyDefinitions;
+        public List<DocumentationSectionData> DefaultDocumentationSections => _defaultDocumentationSections;
+        public string[] RecommendedTags => _recommendedTags ?? new string[0];
         public string Author 
         { 
-            get => author; 
-            set => author = value; 
+            get => _author; 
+            set => _author = value; 
         }
-        public DateTime CreatedDate => createdDate;
-        public string[] Keywords => keywords ?? new string[0];
+        public DateTime CreatedDate => _createdDate;
+        public string[] Keywords => _keywords ?? new string[0];
 
         private void OnEnable()
         {
-            if (createdDate == default)
+            if (_createdDate == default)
             {
-                createdDate = DateTime.Now;
+                _createdDate = DateTime.Now;
             }
 
-            if (string.IsNullOrEmpty(templateId))
+            if (string.IsNullOrEmpty(_templateId))
             {
-                templateId = name;
+                _templateId = name;
             }
         }
 
@@ -348,10 +348,10 @@ namespace UnityProjectArchitect.Core
         [ContextMenu("Generate Default Documentation Sections")]
         public void GenerateDefaultDocumentationSections()
         {
-            defaultDocumentationSections.Clear();
+            _defaultDocumentationSections.Clear();
             foreach (DocumentationSectionType sectionType in Enum.GetValues<DocumentationSectionType>())
             {
-                defaultDocumentationSections.Add(new DocumentationSectionData(sectionType));
+                _defaultDocumentationSections.Add(new DocumentationSectionData(sectionType));
             }
         }
     }
@@ -359,40 +359,40 @@ namespace UnityProjectArchitect.Core
     [Serializable]
     public class SceneTemplate
     {
-        [SerializeField] private string sceneName = "";
-        [SerializeField] private string sceneDescription = "";
-        [SerializeField] private bool createOnApply = true;
-        [SerializeField] private List<string> requiredGameObjects = new List<string>();
+        [SerializeField] private string _sceneName = "";
+        [SerializeField] private string _sceneDescription = "";
+        [SerializeField] private bool _createOnApply = true;
+        [SerializeField] private List<string> _requiredGameObjects = new List<string>();
 
         public string SceneName 
         { 
-            get => sceneName; 
-            set => sceneName = value; 
+            get => _sceneName; 
+            set => _sceneName = value; 
         }
 
         public string SceneDescription 
         { 
-            get => sceneDescription; 
-            set => sceneDescription = value; 
+            get => _sceneDescription; 
+            set => _sceneDescription = value; 
         }
 
         public bool CreateOnApply 
         { 
-            get => createOnApply; 
-            set => createOnApply = value; 
+            get => _createOnApply; 
+            set => _createOnApply = value; 
         }
 
-        public List<string> RequiredGameObjects => requiredGameObjects;
+        public List<string> RequiredGameObjects => _requiredGameObjects;
 
         public SceneTemplate()
         {
-            requiredGameObjects = new List<string>();
+            _requiredGameObjects = new List<string>();
         }
 
         public SceneTemplate(string name, string description = "") : this()
         {
-            sceneName = name;
-            sceneDescription = description;
+            _sceneName = name;
+            _sceneDescription = description;
         }
     }
 }

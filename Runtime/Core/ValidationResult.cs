@@ -27,149 +27,149 @@ namespace UnityProjectArchitect.Core
     [Serializable]
     public class ValidationIssue
     {
-        [SerializeField] private ValidationSeverity severity = ValidationSeverity.Info;
-        [SerializeField] private ValidationType type = ValidationType.ProjectStructure;
-        [SerializeField] private string message = "";
-        [SerializeField] private string details = "";
-        [SerializeField] private string suggestedFix = "";
-        [SerializeField] private string context = "";
-        [SerializeField] private DateTime timestamp;
+        [SerializeField] private ValidationSeverity _severity = ValidationSeverity.Info;
+        [SerializeField] private ValidationType _type = ValidationType.ProjectStructure;
+        [SerializeField] private string _message = "";
+        [SerializeField] private string _details = "";
+        [SerializeField] private string _suggestedFix = "";
+        [SerializeField] private string _context = "";
+        [SerializeField] private DateTime _timestamp;
 
         public ValidationSeverity Severity 
         { 
-            get => severity; 
-            set => severity = value; 
+            get => _severity; 
+            set => _severity = value; 
         }
 
         public ValidationType Type 
         { 
-            get => type; 
-            set => type = value; 
+            get => _type; 
+            set => _type = value; 
         }
 
         public string Message 
         { 
-            get => message; 
-            set => message = value; 
+            get => _message; 
+            set => _message = value; 
         }
 
         public string Details 
         { 
-            get => details; 
-            set => details = value; 
+            get => _details; 
+            set => _details = value; 
         }
 
         public string SuggestedFix 
         { 
-            get => suggestedFix; 
-            set => suggestedFix = value; 
+            get => _suggestedFix; 
+            set => _suggestedFix = value; 
         }
 
         public string Context 
         { 
-            get => context; 
-            set => context = value; 
+            get => _context; 
+            set => _context = value; 
         }
 
         public DateTime Timestamp 
         { 
-            get => timestamp; 
-            set => timestamp = value; 
+            get => _timestamp; 
+            set => _timestamp = value; 
         }
 
         public ValidationIssue()
         {
-            timestamp = DateTime.Now;
+            _timestamp = DateTime.Now;
         }
 
         public ValidationIssue(ValidationSeverity sev, ValidationType typ, string msg) : this()
         {
-            severity = sev;
-            type = typ;
-            message = msg;
+            _severity = sev;
+            _type = typ;
+            _message = msg;
         }
 
         public ValidationIssue(ValidationSeverity sev, ValidationType typ, string msg, string det, string fix = "") : this(sev, typ, msg)
         {
-            details = det;
-            suggestedFix = fix;
+            _details = det;
+            _suggestedFix = fix;
         }
 
-        public bool IsBlocker => severity >= ValidationSeverity.Error;
-        public bool RequiresAttention => severity >= ValidationSeverity.Warning;
+        public bool IsBlocker => _severity >= ValidationSeverity.Error;
+        public bool RequiresAttention => _severity >= ValidationSeverity.Warning;
 
         public override string ToString()
         {
-            return $"[{severity}] {type}: {message}";
+            return $"[{_severity}] {_type}: {_message}";
         }
     }
 
     [Serializable]
     public class ValidationResult
     {
-        [SerializeField] private bool isValid = true;
-        [SerializeField] private List<ValidationIssue> issues = new List<ValidationIssue>();
-        [SerializeField] private DateTime validationTime;
-        [SerializeField] private string validationContext = "";
-        [SerializeField] private float validationScore = 100f;
+        [SerializeField] private bool _isValid = true;
+        [SerializeField] private List<ValidationIssue> _issues = new List<ValidationIssue>();
+        [SerializeField] private DateTime _validationTime;
+        [SerializeField] private string _validationContext = "";
+        [SerializeField] private float _validationScore = 100f;
 
         public bool IsValid 
         { 
-            get => isValid && !HasBlockers; 
-            private set => isValid = value; 
+            get => _isValid && !HasBlockers; 
+            private set => _isValid = value; 
         }
 
-        public List<ValidationIssue> Issues => issues;
+        public List<ValidationIssue> Issues => _issues;
 
         public DateTime ValidationTime 
         { 
-            get => validationTime; 
-            set => validationTime = value; 
+            get => _validationTime; 
+            set => _validationTime = value; 
         }
 
         public string ValidationContext 
         { 
-            get => validationContext; 
-            set => validationContext = value; 
+            get => _validationContext; 
+            set => _validationContext = value; 
         }
 
         public float ValidationScore 
         { 
-            get => validationScore; 
-            private set => validationScore = Mathf.Clamp(value, 0f, 100f); 
+            get => _validationScore; 
+            private set => _validationScore = Mathf.Clamp(value, 0f, 100f); 
         }
 
-        public bool HasIssues => issues.Count > 0;
-        public bool HasBlockers => issues.Any(issue => issue.IsBlocker);
-        public bool HasWarnings => issues.Any(issue => issue.Severity == ValidationSeverity.Warning);
-        public int IssueCount => issues.Count;
-        public int BlockerCount => issues.Count(issue => issue.IsBlocker);
-        public int WarningCount => issues.Count(issue => issue.Severity == ValidationSeverity.Warning);
-        public int InfoCount => issues.Count(issue => issue.Severity == ValidationSeverity.Info);
+        public bool HasIssues => _issues.Count > 0;
+        public bool HasBlockers => _issues.Any(issue => issue.IsBlocker);
+        public bool HasWarnings => _issues.Any(issue => issue.Severity == ValidationSeverity.Warning);
+        public int IssueCount => _issues.Count;
+        public int BlockerCount => _issues.Count(issue => issue.IsBlocker);
+        public int WarningCount => _issues.Count(issue => issue.Severity == ValidationSeverity.Warning);
+        public int InfoCount => _issues.Count(issue => issue.Severity == ValidationSeverity.Info);
 
         public ValidationResult()
         {
-            validationTime = DateTime.Now;
-            issues = new List<ValidationIssue>();
+            _validationTime = DateTime.Now;
+            _issues = new List<ValidationIssue>();
         }
 
         public ValidationResult(string context) : this()
         {
-            validationContext = context;
+            _validationContext = context;
         }
 
         public void AddIssue(ValidationIssue issue)
         {
             if (issue != null)
             {
-                issues.Add(issue);
+                _issues.Add(issue);
                 RecalculateValidation();
             }
         }
 
         public void AddIssue(ValidationSeverity severity, ValidationType type, string message, string details = "", string suggestedFix = "", string context = "")
         {
-            var issue = new ValidationIssue(severity, type, message, details, suggestedFix)
+            ValidationIssue issue = new ValidationIssue(severity, type, message, details, suggestedFix)
             {
                 Context = context
             };
@@ -198,27 +198,27 @@ namespace UnityProjectArchitect.Core
 
         public List<ValidationIssue> GetIssuesBySeverity(ValidationSeverity severity)
         {
-            return issues.Where(issue => issue.Severity == severity).ToList();
+            return _issues.Where(issue => issue.Severity == severity).ToList();
         }
 
         public List<ValidationIssue> GetIssuesByType(ValidationType type)
         {
-            return issues.Where(issue => issue.Type == type).ToList();
+            return _issues.Where(issue => issue.Type == type).ToList();
         }
 
         public List<ValidationIssue> GetBlockers()
         {
-            return issues.Where(issue => issue.IsBlocker).ToList();
+            return _issues.Where(issue => issue.IsBlocker).ToList();
         }
 
         public List<ValidationIssue> GetWarningsAndErrors()
         {
-            return issues.Where(issue => issue.RequiresAttention).ToList();
+            return _issues.Where(issue => issue.RequiresAttention).ToList();
         }
 
         public void RemoveIssue(ValidationIssue issue)
         {
-            if (issues.Remove(issue))
+            if (_issues.Remove(issue))
             {
                 RecalculateValidation();
             }
@@ -226,39 +226,39 @@ namespace UnityProjectArchitect.Core
 
         public void ClearIssues()
         {
-            issues.Clear();
+            _issues.Clear();
             RecalculateValidation();
         }
 
         public void ClearIssuesByType(ValidationType type)
         {
-            issues.RemoveAll(issue => issue.Type == type);
+            _issues.RemoveAll(issue => issue.Type == type);
             RecalculateValidation();
         }
 
         public void ClearIssuesBySeverity(ValidationSeverity severity)
         {
-            issues.RemoveAll(issue => issue.Severity == severity);
+            _issues.RemoveAll(issue => issue.Severity == severity);
             RecalculateValidation();
         }
 
         private void RecalculateValidation()
         {
-            isValid = !HasBlockers;
+            _isValid = !HasBlockers;
             CalculateScore();
-            validationTime = DateTime.Now;
+            _validationTime = DateTime.Now;
         }
 
         private void CalculateScore()
         {
-            if (issues.Count == 0)
+            if (_issues.Count == 0)
             {
-                validationScore = 100f;
+                _validationScore = 100f;
                 return;
             }
 
             float penalty = 0f;
-            foreach (string issue in issues)
+            foreach (ValidationIssue issue in _issues)
             {
                 penalty += issue.Severity switch
                 {
@@ -270,7 +270,7 @@ namespace UnityProjectArchitect.Core
                 };
             }
 
-            validationScore = Math.Max(0f, 100f - penalty);
+            _validationScore = Math.Max(0f, 100f - penalty);
         }
 
         public ValidationSummary GetSummary()
@@ -300,11 +300,11 @@ namespace UnityProjectArchitect.Core
         {
             ValidationResult combined = new ValidationResult("Combined Validation");
             
-            foreach (string result in results)
+            foreach (ValidationResult result in results)
             {
                 if (result != null)
                 {
-                    combined.issues.AddRange(result.Issues);
+                    combined._issues.AddRange(result.Issues);
                 }
             }
             
@@ -348,7 +348,7 @@ namespace UnityProjectArchitect.Core
             if (!result.HasIssues)
                 return "✅ Validation passed with no issues.";
 
-            var report = $"📊 Validation Report (Score: {result.ValidationScore:F1}/100)\n";
+            string report = $"📊 Validation Report (Score: {result.ValidationScore:F1}/100)\n";
             report += $"📅 Time: {result.ValidationTime:yyyy-MM-dd HH:mm:ss}\n\n";
 
             if (result.HasBlockers)
@@ -373,7 +373,7 @@ namespace UnityProjectArchitect.Core
                 report += "\n";
             }
 
-            var infoIssues = result.GetIssuesBySeverity(ValidationSeverity.Info);
+            List<ValidationIssue> infoIssues = result.GetIssuesBySeverity(ValidationSeverity.Info);
             if (infoIssues.Count > 0)
             {
                 report += "ℹ️  **INFO:**\n";

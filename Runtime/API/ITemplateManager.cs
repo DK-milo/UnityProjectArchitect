@@ -213,7 +213,7 @@ namespace UnityProjectArchitect.API
 
         public static string GetFormattedReport(this TemplateOperationResult result)
         {
-            var report = $"📋 Template Operation Report: {result.TemplateName}\n";
+            string report = $"📋 Template Operation Report: {result.TemplateName}\n";
             report += $"✅ Success: {result.Success}\n";
             report += $"⏱️ Time: {result.OperationTime.TotalSeconds:F1}s\n";
             report += $"📁 Created Folders: {result.CreatedFolders.Count}\n";

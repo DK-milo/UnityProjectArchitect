@@ -152,7 +152,7 @@ namespace UnityProjectArchitect.API
             ProjectData projectData, 
             DocumentationSectionType sectionType)
         {
-            var section = projectData.GetDocumentationSection(sectionType);
+            DocumentationSectionData section = projectData.GetDocumentationSection(sectionType);
             if (section != null)
             {
                 section.Status = DocumentationStatus.InProgress;

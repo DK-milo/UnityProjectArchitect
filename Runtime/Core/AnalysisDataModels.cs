@@ -341,8 +341,8 @@ namespace UnityProjectArchitect.Core
                     }
                     else if (recursionStack.Contains(dependency))
                     {
-                        var cycleStart = currentPath.IndexOf(dependency);
-                        var cycle = string.Join(" -> ", currentPath.Skip(cycleStart).Concat(new[] { dependency }));
+                        int cycleStart = currentPath.IndexOf(dependency);
+                        string cycle = string.Join(" -> ", currentPath.Skip(cycleStart).Concat(new[] { dependency }));
                         cycles.Add(cycle);
                     }
                 }
