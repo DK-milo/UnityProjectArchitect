@@ -1,14 +1,68 @@
-# Unity Project Architect - Development Pipeline
+# Unity Project Architect - Development Rules & Actions
 
-**Version:** 1.0  
-**Last Updated:** August 1, 2025  
-**Purpose:** Standardized development workflow for Unity Project Architect package
+**Version:** 1.1  
+**Last Updated:** August 2, 2025  
+**Purpose:** Standardized development workflow and custom actions for Unity Project Architect package
 
 ---
 
 ## Overview
 
-This document defines the complete development pipeline for implementing features and stages in the Unity Project Architect project. This process ensures consistent quality, documentation, and progress tracking across all development phases.
+This document defines the complete development pipeline for implementing features and stages in the Unity Project Architect project, plus custom actions that can be triggered instantly. This process ensures consistent quality, documentation, and progress tracking across all development phases.
+
+---
+
+## 🚀 **Custom Actions System**
+
+**Usage Format:** `Rules.md.[ActionName]`
+
+### Available Actions
+
+#### **Rules.md.CommitMessage**
+**Purpose:** Generate a comprehensive commit message following established format without executing any git commands  
+**Usage:** Simply type `Rules.md.CommitMessage`  
+**Output:** Ready-to-use commit message text for manual git commit
+
+**Format Template:**
+```
+Implement Step X: [Feature Name] - [Brief Description]
+
+- Add [File1.cs] [description of what it does]
+- Add [File2.cs] [description of what it does]  
+- Add [File3.cs] [description of what it does]
+[... continue for all significant files/changes]
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+#### **Rules.md.UpdateProgress**
+**Purpose:** Update DevelopmentRoadmapProgress.md with current completion status  
+**Usage:** Simply type `Rules.md.UpdateProgress`  
+**Output:** Updates roadmap document with latest progress
+
+#### **Rules.md.NextStep**
+**Purpose:** Identify and display the next step to implement from the roadmap with implementation preview  
+**Usage:** Simply type `Rules.md.NextStep`  
+**Output:** 
+- Clear indication of next step with format: `"Help me implement Step X: [Feature Name]"`
+- **Implementation Summary:** Overview of what will be implemented
+- **Process Preview:** Summary of pipeline steps that will be executed
+- **Prerequisites:** What needs to be reviewed before starting (coding conventions, existing patterns, etc.)
+- **Expected Deliverables:** List of files/components that will be created
+- **Estimated Time:** Time estimate for the step
+
+#### **Rules.md.DocumentUpdate**
+**Purpose:** Update document.md with latest commit entry  
+**Usage:** Simply type `Rules.md.DocumentUpdate`  
+**Output:** Updates commit history following established patterns
+
+### Adding New Actions
+To add new custom actions, follow this pattern:
+1. Add action name and description to this list
+2. Define clear input/output behavior
+3. Maintain consistent `Rules.md.[ActionName]` format
 
 ---
 
