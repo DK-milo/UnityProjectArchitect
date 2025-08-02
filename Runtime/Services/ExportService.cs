@@ -131,7 +131,7 @@ namespace UnityProjectArchitect.Services
                 OnExportProgress?.Invoke("Preparing section export...", 0.1f);
 
                 // Create export content with single section
-                var exportContent = new ExportContent
+                ExportContent exportContent = new ExportContent
                 {
                     Title = section.Title,
                     Sections = new List<DocumentationSectionData> { section }
@@ -199,7 +199,7 @@ namespace UnityProjectArchitect.Services
                 OnExportProgress?.Invoke("Preparing multi-section export...", 0.1f);
 
                 // Create export content with provided sections
-                var exportContent = new ExportContent
+                ExportContent exportContent = new ExportContent
                 {
                     Title = "Multi-Section Documentation",
                     Sections = sections.Where(s => s.IsEnabled).ToList()
@@ -296,7 +296,7 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var preview = new ExportPreview
+                ExportPreview preview = new ExportPreview
                 {
                     Format = format
                 };
@@ -307,23 +307,23 @@ namespace UnityProjectArchitect.Services
                     return preview;
                 }
 
-                var exportContent = BuildExportContent(projectData, new ExportRequest(format, ""));
-                var formatter = GetFormatter(format);
+                ExportContent exportContent = BuildExportContent(projectData, new ExportRequest(format, ""));
+                IExportFormatter formatter = GetFormatter(format);
 
                 if (formatter != null)
                 {
                     // Generate a quick preview
-                    var options = new ExportOptions
+                    ExportOptions options = new ExportOptions
                     {
                         IncludeTableOfContents = true,
                         IncludeMetadata = true
                     };
 
                     // Create preview text (first 500 characters)
-                    var result = await formatter.FormatAsync(exportContent, options);
+                    ExportOperationResult result = await formatter.FormatAsync(exportContent, options);
                     if (result.Success && result.Metadata.ContainsKey("content"))
                     {
-                        var content = result.Metadata["content"].ToString();
+                        string content = result.Metadata["content"].ToString();
                         preview.PreviewText = content.Length > 500 ? content.Substring(0, 500) + "..." : content;
                     }
 
@@ -334,7 +334,7 @@ namespace UnityProjectArchitect.Services
                 // Build file structure preview
                 preview.FileStructure = BuildFileStructurePreview(projectData, format);
                 
-                var enabledSections = projectData.DocumentationSections.Count(s => s.IsEnabled);
+                int enabledSections = projectData.DocumentationSections.Count(s => s.IsEnabled);
                 preview.PageCount = Math.Max(1, enabledSections);
 
                 return preview;
@@ -357,7 +357,7 @@ namespace UnityProjectArchitect.Services
 
         public List<ExportTemplate> GetAvailableTemplates(ExportFormat format)
         {
-            var formatter = GetFormatter(format);
+            IExportFormatter formatter = GetFormatter(format);
             if (formatter != null)
             {
                 return new List<ExportTemplate> { formatter.GetDefaultTemplate() };
@@ -372,9 +372,9 @@ namespace UnityProjectArchitect.Services
 
         public async Task<string> GetOutputPathAsync(ExportRequest exportRequest)
         {
-            var basePath = string.IsNullOrEmpty(exportRequest.OutputPath) ? Environment.CurrentDirectory : exportRequest.OutputPath;
-            var fileName = string.IsNullOrEmpty(exportRequest.FileName) ? "documentation" : exportRequest.FileName;
-            var extension = GetFileExtension(exportRequest.Format);
+            string basePath = string.IsNullOrEmpty(exportRequest.OutputPath) ? Environment.CurrentDirectory : exportRequest.OutputPath;
+            string fileName = string.IsNullOrEmpty(exportRequest.FileName) ? "documentation" : exportRequest.FileName;
+            string extension = GetFileExtension(exportRequest.Format);
             
             return Path.Combine(basePath, $"{fileName}.{extension}");
         }
@@ -455,7 +455,7 @@ namespace UnityProjectArchitect.Services
             // Add custom variables
             if (exportRequest.CustomVariables != null)
             {
-                foreach (string kvp in exportRequest.CustomVariables)
+                foreach (KeyValuePair<string, object> kvp in exportRequest.CustomVariables)
                 {
                     content.Variables[kvp.Key] = kvp.Value;
                 }
@@ -469,7 +469,7 @@ namespace UnityProjectArchitect.Services
             try
             {
                 // Ensure output directory exists
-                var outputDir = Path.GetDirectoryName(exportRequest.OutputPath);
+                string outputDir = Path.GetDirectoryName(exportRequest.OutputPath);
                 if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 {
                     Directory.CreateDirectory(outputDir);
@@ -496,8 +496,8 @@ namespace UnityProjectArchitect.Services
                 // Handle HTML content for PDF (would need actual PDF generation library)
                 if (result.Format == ExportFormat.PDF && result.Metadata.ContainsKey("html_content"))
                 {
-                    var htmlContent = result.Metadata["html_content"].ToString();
-                    var htmlPath = Path.ChangeExtension(await GetOutputPathAsync(exportRequest), "html");
+                    string htmlContent = result.Metadata["html_content"].ToString();
+                    string htmlPath = Path.ChangeExtension(await GetOutputPathAsync(exportRequest), "html");
                     
                     await File.WriteAllTextAsync(htmlPath, htmlContent);
                     
@@ -517,7 +517,7 @@ namespace UnityProjectArchitect.Services
         private List<string> BuildFileStructurePreview(ProjectData projectData, ExportFormat format)
         {
             List<string> structure = new List<string>();
-            var extension = GetFileExtension(format);
+            string extension = GetFileExtension(format);
             
             structure.Add($"{projectData.ProjectName}.{extension}");
             
@@ -526,7 +526,7 @@ namespace UnityProjectArchitect.Services
                 structure.Add($"  ├── {projectData.ProjectName}_ProjectData.asset");
                 structure.Add("  ├── Sections/");
                 
-                foreach (string section in projectData.DocumentationSections.Where(s => s.IsEnabled))
+                foreach (DocumentationSectionData section in projectData.DocumentationSections.Where(s => s.IsEnabled))
                 {
                     structure.Add($"  │   ├── {section.SectionType}_Section.asset");
                 }
@@ -568,7 +568,7 @@ namespace UnityProjectArchitect.Services
         {
             if (string.IsNullOrEmpty(fileName)) return false;
             
-            var invalidChars = Path.GetInvalidFileNameChars();
+            char[] invalidChars = Path.GetInvalidFileNameChars();
             return !fileName.Any(c => invalidChars.Contains(c));
         }
     }

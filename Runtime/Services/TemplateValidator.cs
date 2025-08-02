@@ -133,7 +133,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for duplicate folder names
-            var duplicateNames = template.FolderStructure.Folders
+            List<string> duplicateNames = template.FolderStructure.Folders
                 .GroupBy(f => f.Name.ToLowerInvariant())
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
@@ -159,7 +159,7 @@ namespace UnityProjectArchitect.Services
                     continue;
                 }
 
-                var invalidChars = Path.GetInvalidFileNameChars();
+                char[] invalidChars = Path.GetInvalidFileNameChars();
                 if (folder.Name.IndexOfAny(invalidChars) >= 0)
                 {
                     result.AddError(ValidationType.Templates,
@@ -173,7 +173,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for recommended Unity folders
-            var hasScriptsFolder = template.FolderStructure.Folders
+            bool hasScriptsFolder = template.FolderStructure.Folders
                 .Any(f => f.Name.Equals("Scripts", StringComparison.OrdinalIgnoreCase));
             
             if (!hasScriptsFolder)
@@ -198,7 +198,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for duplicate section types
-            var duplicateSections = template.DefaultDocumentationSections
+            List<DocumentationSectionType> duplicateSections = template.DefaultDocumentationSections
                 .GroupBy(s => s.SectionType)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
@@ -294,7 +294,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for invalid characters in scene name
-                var invalidChars = Path.GetInvalidFileNameChars();
+                char[] invalidChars = Path.GetInvalidFileNameChars();
                 if (sceneTemplate.SceneName.IndexOfAny(invalidChars) >= 0)
                 {
                     result.AddError(ValidationType.Templates,
@@ -335,7 +335,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for invalid characters
-                var invalidChars = Path.GetInvalidFileNameChars();
+                char[] invalidChars = Path.GetInvalidFileNameChars();
                 if (asmdef.IndexOfAny(invalidChars) >= 0)
                 {
                     result.AddError(ValidationType.Templates,
@@ -412,7 +412,7 @@ namespace UnityProjectArchitect.Services
                     $"Template requires {template.RequiredPackages.Count} Unity packages to be installed");
 
                 // Check for potentially conflicting packages
-                var heavyPackages = template.RequiredPackages
+                List<string> heavyPackages = template.RequiredPackages
                     .Where(p => IsHeavyPackage(p))
                     .ToList();
 
@@ -441,7 +441,7 @@ namespace UnityProjectArchitect.Services
                     continue;
                 }
 
-                var invalidChars = Path.GetInvalidFileNameChars();
+                char[] invalidChars = Path.GetInvalidFileNameChars();
                 if (subFolder.Name.IndexOfAny(invalidChars) >= 0)
                 {
                     result.AddError(ValidationType.Templates,
@@ -460,7 +460,7 @@ namespace UnityProjectArchitect.Services
             if (string.IsNullOrWhiteSpace(version))
                 return false;
 
-            var parts = version.Split('.');
+            string[] parts = version.Split('.');
             if (parts.Length != 3)
                 return false;
 
@@ -469,7 +469,7 @@ namespace UnityProjectArchitect.Services
 
         private bool IsKnownUnityPackage(string packageName)
         {
-            var knownPackages = new[]
+            string[] knownPackages = new[]
             {
                 "com.unity.render-pipelines",
                 "com.unity.ui",
@@ -491,7 +491,7 @@ namespace UnityProjectArchitect.Services
 
         private bool IsHeavyPackage(string packageName)
         {
-            var heavyPackages = new[]
+            string[] heavyPackages = new[]
             {
                 "com.unity.render-pipelines.high-definition",
                 "com.unity.render-pipelines.universal",

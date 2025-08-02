@@ -36,7 +36,7 @@ namespace UnityProjectArchitect.Services
                 {
                     if (folder.CreateOnApply)
                     {
-                        var folderResult = await CreateFolderRecursiveAsync(folder, basePath);
+                        FolderOperationResult folderResult = await CreateFolderRecursiveAsync(folder, basePath);
                         if (folderResult.Success)
                         {
                             createdPaths.AddRange(folderResult.AffectedPaths);
@@ -83,7 +83,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for duplicate folder names
-                var duplicates = folderStructure.Folders
+                List<string> duplicates = folderStructure.Folders
                     .GroupBy(f => f.Name.ToLowerInvariant())
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key)
@@ -109,7 +109,7 @@ namespace UnityProjectArchitect.Services
                         continue;
                     }
 
-                    var invalidChars = Path.GetInvalidFileNameChars();
+                    char[] invalidChars = Path.GetInvalidFileNameChars();
                     if (folder.Name.IndexOfAny(invalidChars) >= 0)
                     {
                         validationResult.AddError(ValidationType.ProjectStructure,
@@ -123,7 +123,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for recommended Unity folder structure
-                var hasScriptsFolder = folderStructure.Folders.Any(f => 
+                bool hasScriptsFolder = folderStructure.Folders.Any(f => 
                     f.Name.Equals("Scripts", StringComparison.OrdinalIgnoreCase));
                 
                 if (!hasScriptsFolder)
@@ -133,7 +133,7 @@ namespace UnityProjectArchitect.Services
                         "Consider adding a Scripts folder for better organization");
                 }
 
-                var hasScenesFolder = folderStructure.Folders.Any(f => 
+                bool hasScenesFolder = folderStructure.Folders.Any(f => 
                     f.Name.Equals("Scenes", StringComparison.OrdinalIgnoreCase));
                 
                 if (!hasScenesFolder)
@@ -166,14 +166,14 @@ namespace UnityProjectArchitect.Services
                     return folderStructure;
                 }
 
-                var directories = Directory.GetDirectories(projectPath, "*", SearchOption.TopDirectoryOnly);
+                string[] directories = Directory.GetDirectories(projectPath, "*", SearchOption.TopDirectoryOnly);
                 
                 foreach (string directory in directories)
                 {
                     DirectoryInfo dirInfo = new DirectoryInfo(directory);
-                    var folderType = DetermineFolderType(dirInfo.Name);
+                    FolderType folderType = DetermineFolderType(dirInfo.Name);
                     
-                    var folderDefinition = new FolderDefinition(dirInfo.Name, folderType)
+                    FolderDefinition folderDefinition = new FolderDefinition(dirInfo.Name, folderType)
                     {
                         RelativePath = Path.GetRelativePath(projectPath, directory),
                         CreateOnApply = true
@@ -206,7 +206,7 @@ namespace UnityProjectArchitect.Services
             FolderStructureData structure = new FolderStructureData();
             
             // Base folders for all project types
-            var baseFolders = new[]
+            FolderDefinition[] baseFolders = new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts, "Game logic and components"),
                 new FolderDefinition("Prefabs", FolderType.Prefabs, "Reusable game objects"),
@@ -374,7 +374,7 @@ namespace UnityProjectArchitect.Services
             
             try
             {
-                var fullPath = Path.Combine(basePath, folder.RelativePath);
+                string fullPath = Path.Combine(basePath, folder.RelativePath);
                 
                 if (!Directory.Exists(fullPath))
                 {
@@ -387,7 +387,7 @@ namespace UnityProjectArchitect.Services
                 {
                     if (subFolder.CreateOnApply)
                     {
-                        var subFolderResult = await CreateFolderRecursiveAsync(subFolder, fullPath);
+                        FolderOperationResult subFolderResult = await CreateFolderRecursiveAsync(subFolder, fullPath);
                         if (subFolderResult.Success)
                         {
                             createdPaths.AddRange(subFolderResult.AffectedPaths);
@@ -417,12 +417,12 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var fileName = GetTemplateFileName(templateName);
-                var filePath = Path.Combine(folderPath, fileName);
+                string fileName = GetTemplateFileName(templateName);
+                string filePath = Path.Combine(folderPath, fileName);
                 
                 if (!File.Exists(filePath))
                 {
-                    var content = GetTemplateContent(templateName);
+                    string content = GetTemplateContent(templateName);
                     await File.WriteAllTextAsync(filePath, content);
                 }
             }
@@ -592,14 +592,14 @@ public class PlayerController : MonoBehaviour
         {
             try
             {
-                var subdirectories = Directory.GetDirectories(parentPath, "*", SearchOption.TopDirectoryOnly);
+                string[] subdirectories = Directory.GetDirectories(parentPath, "*", SearchOption.TopDirectoryOnly);
                 
                 foreach (string subdirectory in subdirectories)
                 {
                     DirectoryInfo dirInfo = new DirectoryInfo(subdirectory);
-                    var folderType = DetermineFolderType(dirInfo.Name);
+                    FolderType folderType = DetermineFolderType(dirInfo.Name);
                     
-                    var subFolderDefinition = new FolderDefinition(dirInfo.Name, folderType)
+                    FolderDefinition subFolderDefinition = new FolderDefinition(dirInfo.Name, folderType)
                     {
                         RelativePath = Path.GetRelativePath(projectRootPath, subdirectory),
                         CreateOnApply = true
@@ -633,7 +633,7 @@ public class PlayerController : MonoBehaviour
                     continue;
                 }
 
-                var invalidChars = Path.GetInvalidFileNameChars();
+                char[] invalidChars = Path.GetInvalidFileNameChars();
                 if (subFolder.Name.IndexOfAny(invalidChars) >= 0)
                 {
                     validationResult.AddError(ValidationType.ProjectStructure,

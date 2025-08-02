@@ -40,12 +40,12 @@ namespace UnityProjectArchitect.Services
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Project Overview", 2));
 
-                var projectName = GetProjectName();
+                string projectName = GetProjectName();
                 sb.AppendLine($"**Project Name:** {projectName}");
 
                 if (analysisResult.Structure != null)
                 {
-                    var projectTypeDesc = GetProjectTypeDescription(analysisResult.Structure.DetectedProjectType);
+                    string projectTypeDesc = GetProjectTypeDescription(analysisResult.Structure.DetectedProjectType);
                     sb.AppendLine($"**Project Type:** {projectTypeDesc}");
 
                     if (analysisResult.Structure.DetectedUnityVersion != UnityVersion.Unknown)
@@ -79,7 +79,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Structure != null)
                 {
-                    var projectType = analysisResult.Structure.DetectedProjectType;
+                    ProjectType projectType = analysisResult.Structure.DetectedProjectType;
                     sb.AppendLine($"**Detected Project Type:** {projectType}");
                     sb.AppendLine($"{GetProjectTypeDescription(projectType)}");
                     sb.AppendLine();
@@ -91,9 +91,9 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine();
                     }
 
-                    var folders = analysisResult.Structure.Folders?.Count ?? 0;
-                    var files = analysisResult.Structure.Files?.Count ?? 0;
-                    var scenes = analysisResult.Structure.Scenes?.Count ?? 0;
+                    int folders = analysisResult.Structure.Folders?.Count ?? 0;
+                    int files = analysisResult.Structure.Files?.Count ?? 0;
+                    int scenes = analysisResult.Structure.Scenes?.Count ?? 0;
 
                     sb.AppendLine("**Project Scope:**");
                     sb.AppendLine($"- **Folders:** {folders} directories organizing project assets");
@@ -118,7 +118,7 @@ namespace UnityProjectArchitect.Services
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Key Features & Components", 2));
 
-                var features = ExtractKeyFeatures();
+                List<string> features = ExtractKeyFeatures();
                 if (features.Any())
                 {
                     sb.AppendLine("Based on project analysis, the following key features and components were identified:");
@@ -134,7 +134,7 @@ namespace UnityProjectArchitect.Services
                 if (analysisResult.Scripts?.DetectedPatterns?.Any() == true)
                 {
                     sb.AppendLine("**Implemented Design Patterns:**");
-                    var patterns = analysisResult.Scripts.DetectedPatterns
+                    List<string> patterns = analysisResult.Scripts.DetectedPatterns
                         .Where(p => p.Confidence > 0.7f)
                         .Select(p => $"{p.Name} - {p.Evidence}")
                         .ToList();
@@ -158,7 +158,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Metrics != null)
                 {
-                    var metrics = analysisResult.Scripts.Metrics;
+                    ScriptMetrics metrics = analysisResult.Scripts.Metrics;
                     
                     sb.AppendLine("**Code Quality Metrics:**");
                     sb.AppendLine($"- **Complexity:** Average cyclomatic complexity of {metrics.AverageCyclomaticComplexity:F1}");
@@ -173,7 +173,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Performance?.Metrics != null)
                 {
-                    var perfMetrics = analysisResult.Performance.Metrics;
+                    PerformanceMetrics perfMetrics = analysisResult.Performance.Metrics;
                     sb.AppendLine("**Performance Characteristics:**");
                     
                     if (perfMetrics.TextureMemoryMB > 0)
@@ -217,12 +217,12 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Assets?.Metrics != null)
                 {
-                    var assetMetrics = analysisResult.Assets.Metrics;
+                    AssetMetrics assetMetrics = analysisResult.Assets.Metrics;
                     sb.AppendLine("**Asset Distribution:**");
                     
                     if (assetMetrics.AssetCountByType.Any())
                     {
-                        foreach (string assetType in assetMetrics.AssetCountByType.OrderByDescending(kvp => kvp.Value).Take(5))
+                        foreach (KeyValuePair<string, int> assetType in assetMetrics.AssetCountByType.OrderByDescending(kvp => kvp.Value).Take(5))
                         {
                             sb.AppendLine($"- **{assetType.Key}:** {assetType.Value} files");
                         }
@@ -242,7 +242,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Insights?.Any() == true)
                 {
-                    var importantInsights = analysisResult.Insights
+                    List<ProjectInsight> importantInsights = analysisResult.Insights
                         .Where(i => i.Severity >= InsightSeverity.Medium)
                         .OrderByDescending(i => i.Severity)
                         .ThenByDescending(i => i.Confidence)
@@ -257,7 +257,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Recommendations?.Any() == true)
                 {
-                    var topRecommendations = analysisResult.Recommendations
+                    List<ProjectRecommendation> topRecommendations = analysisResult.Recommendations
                         .Where(r => r.Priority >= RecommendationPriority.Medium)
                         .OrderByDescending(r => r.Priority)
                         .Take(3)
@@ -289,31 +289,31 @@ namespace UnityProjectArchitect.Services
 
             if (analysisResult.Structure?.Scenes?.Any() == true)
             {
-                var sceneCount = analysisResult.Structure.Scenes.Count;
+                int sceneCount = analysisResult.Structure.Scenes.Count;
                 features.Add($"Multi-scene architecture with {sceneCount} game scenes");
             }
 
             if (analysisResult.Scripts?.Classes?.Any(c => c.IsMonoBehaviour) == true)
             {
-                var gameplayScripts = analysisResult.Scripts.Classes.Count(c => c.IsMonoBehaviour);
+                int gameplayScripts = analysisResult.Scripts.Classes.Count(c => c.IsMonoBehaviour);
                 features.Add($"Interactive gameplay with {gameplayScripts} MonoBehaviour components");
             }
 
             if (analysisResult.Scripts?.Classes?.Any(c => c.IsScriptableObject) == true)
             {
-                var dataObjects = analysisResult.Scripts.Classes.Count(c => c.IsScriptableObject);
+                int dataObjects = analysisResult.Scripts.Classes.Count(c => c.IsScriptableObject);
                 features.Add($"Data-driven design with {dataObjects} ScriptableObject configurations");
             }
 
             if (analysisResult.Assets?.Assets?.Any(a => a.AssetType == "Prefab") == true)
             {
-                var prefabCount = analysisResult.Assets.Assets.Count(a => a.AssetType == "Prefab");
+                int prefabCount = analysisResult.Assets.Assets.Count(a => a.AssetType == "Prefab");
                 features.Add($"Modular design with {prefabCount} reusable prefab components");
             }
 
             if (analysisResult.Assets?.Assets?.Any(a => a.AssetType == "Material") == true)
             {
-                var materialCount = analysisResult.Assets.Assets.Count(a => a.AssetType == "Material");
+                int materialCount = analysisResult.Assets.Assets.Count(a => a.AssetType == "Material");
                 features.Add($"Custom visual styling with {materialCount} material definitions");
             }
 

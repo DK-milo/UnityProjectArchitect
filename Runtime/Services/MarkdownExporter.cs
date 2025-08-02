@@ -29,20 +29,20 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ExportOperationResult> FormatAsync(ExportContent content, ExportOptions options)
         {
-            var result = new ExportOperationResult(ExportFormat.Markdown, "");
-            var startTime = DateTime.Now;
+            ExportOperationResult result = new ExportOperationResult(ExportFormat.Markdown, "");
+            DateTime startTime = DateTime.Now;
 
             try
             {
                 _builder.Clear();
                 
                 // Apply template or use default
-                var templateId = options.FormatSpecificOptions?.ContainsKey("TemplateId") == true 
+                string templateId = options.FormatSpecificOptions?.ContainsKey("TemplateId") == true 
                     ? options.FormatSpecificOptions["TemplateId"].ToString() 
                     : "default";
                 
-                var template = GetTemplate(templateId);
-                var markdownContent = await ApplyTemplateAsync(content, template, options);
+                MarkdownTemplate template = GetTemplate(templateId);
+                string markdownContent = await ApplyTemplateAsync(content, template, options);
                 
                 result.Success = true;
                 result.GeneratedFiles.Add($"{content.Title}.md");
@@ -122,8 +122,8 @@ namespace UnityProjectArchitect.Services
         {
             _builder.Clear();
 
-            var variables = CreateTemplateVariables(content, options);
-            var processedTemplate = await ProcessTemplateVariables(template.Content, variables);
+            Dictionary<string, object> variables = CreateTemplateVariables(content, options);
+            string processedTemplate = await ProcessTemplateVariables(template.Content, variables);
             
             // Process sections
             if (content.Sections?.Count > 0)
@@ -139,7 +139,7 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> CreateTemplateVariables(ExportContent content, ExportOptions options)
         {
-            Dictionary variables = new Dictionary<string, object>();
+            Dictionary<string, object> variables = new Dictionary<string, object>();
             
             // Project variables
             if (content.ProjectData != null)
@@ -186,11 +186,11 @@ namespace UnityProjectArchitect.Services
 
         private async Task<string> ProcessTemplateVariables(string template, Dictionary<string, object> variables)
         {
-            var processed = template;
+            string processed = template;
             
             foreach (string variable in variables)
             {
-                var placeholder = $"{{{{{variable.Key}}}}}";
+                string placeholder = $"{{{{{variable.Key}}}}}";
                 processed = processed.Replace(placeholder, variable.Value?.ToString() ?? "");
             }
 
@@ -201,8 +201,8 @@ namespace UnityProjectArchitect.Services
         {
             if (!section.HasContent) return;
 
-            var useEmoji = GetOption<bool>(options, "UseEmoji", true);
-            var emoji = useEmoji ? GetSectionEmoji(section.SectionType) : "";
+            bool useEmoji = GetOption<bool>(options, "UseEmoji", true);
+            string emoji = useEmoji ? GetSectionEmoji(section.SectionType) : "";
             
             _builder.AppendLine();
             _builder.AppendLine($"## {emoji}{section.Title}");
@@ -218,7 +218,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Process content with markdown formatting
-            var processedContent = ProcessMarkdownContent(section.Content, options);
+            string processedContent = ProcessMarkdownContent(section.Content, options);
             _builder.AppendLine(processedContent);
         }
 
@@ -226,8 +226,8 @@ namespace UnityProjectArchitect.Services
         {
             if (string.IsNullOrEmpty(content)) return "";
 
-            var processed = content;
-            var includeCodeBlocks = GetOption<bool>(options, "IncludeCodeBlocks", true);
+            string processed = content;
+            bool includeCodeBlocks = GetOption<bool>(options, "IncludeCodeBlocks", true);
 
             // Ensure proper line endings
             processed = processed.Replace("\r\n", "\n").Replace("\r", "\n");
@@ -244,13 +244,13 @@ namespace UnityProjectArchitect.Services
         private string FormatCodeBlocks(string content)
         {
             // Simple code block detection and formatting
-            var lines = content.Split('\n');
+            string[] lines = content.Split('\n');
             StringBuilder result = new StringBuilder();
             bool inCodeBlock = false;
 
             foreach (string line in lines)
             {
-                var trimmed = line.Trim();
+                string trimmed = line.Trim();
                 
                 // Detect code patterns
                 if (IsCodeLine(trimmed) && !inCodeBlock)
@@ -318,7 +318,7 @@ namespace UnityProjectArchitect.Services
 
         private ExportStatistics GenerateStatistics(ExportContent content, string markdownContent)
         {
-            var stats = new ExportStatistics();
+            ExportStatistics stats = new ExportStatistics();
             
             if (content.Sections != null)
             {

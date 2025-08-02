@@ -33,11 +33,11 @@ namespace UnityProjectArchitect.Services
             if (items == null || !items.Any()) return "";
 
             StringBuilder sb = new StringBuilder();
-            var itemsList = items.ToList();
+            List<string> itemsList = items.ToList();
 
             for (int i = 0; i < itemsList.Count; i++)
             {
-                var prefix = numbered ? $"{i + 1}. " : "- ";
+                string prefix = numbered ? $"{i + 1}. " : "- ";
                 sb.AppendLine($"{prefix}{itemsList[i]}");
             }
 
@@ -74,11 +74,11 @@ namespace UnityProjectArchitect.Services
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(GetSectionHeader(title, 3));
 
-            var groupedInsights = insights.GroupBy(i => i.Severity).OrderByDescending(g => g.Key);
+            IOrderedEnumerable<IGrouping<InsightSeverity, ProjectInsight>> groupedInsights = insights.GroupBy(i => i.Severity).OrderByDescending(g => g.Key);
             
             foreach (string group in groupedInsights)
             {
-                var severityIcon = group.Key switch
+                string severityIcon = group.Key switch
                 {
                     InsightSeverity.Critical => "🔴",
                     InsightSeverity.High => "🟠",
@@ -103,12 +103,12 @@ namespace UnityProjectArchitect.Services
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(GetSectionHeader(title, 3));
 
-            List<string> highPriorityRecs = recommendations.Where(r => r.Priority == RecommendationPriority.High || r.Priority == RecommendationPriority.Critical)
+            List<ProjectRecommendation> highPriorityRecs = recommendations.Where(r => r.Priority == RecommendationPriority.High || r.Priority == RecommendationPriority.Critical)
                                                  .Take(5).ToList();
 
             foreach (string rec in highPriorityRecs)
             {
-                var priorityIcon = rec.Priority switch
+                string priorityIcon = rec.Priority switch
                 {
                     RecommendationPriority.Critical => "🚨",
                     RecommendationPriority.High => "⚠️",
@@ -133,7 +133,7 @@ namespace UnityProjectArchitect.Services
         {
             if (metrics == null) return "";
 
-            Dictionary metricsData = new Dictionary<string, string>
+            Dictionary<string, string> metricsData = new Dictionary<string, string>
             {
                 ["Total Files"] = metrics.TotalFiles.ToString("N0"),
                 ["Total Size"] = metrics.FormattedSize,

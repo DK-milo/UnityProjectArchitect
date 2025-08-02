@@ -12,7 +12,7 @@ namespace UnityProjectArchitect.Services
     {
         public async Task<List<ProjectRecommendation>> GenerateRecommendationsAsync(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             await Task.Run(() =>
             {
@@ -46,7 +46,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateStructureRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Structure == null) return recommendations;
 
@@ -78,7 +78,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var missingFolders = analysisResult.Structure.Issues
+            List<StructureIssue> missingFolders = analysisResult.Structure.Issues
                 .Where(i => i.Type == StructureIssueType.MissingFolder && i.Severity >= StructureIssueSeverity.Warning)
                 .ToList();
 
@@ -104,7 +104,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var largeFiles = analysisResult.Structure.Issues
+            List<StructureIssue> largeFiles = analysisResult.Structure.Issues
                 .Where(i => i.Type == StructureIssueType.LargeFile)
                 .ToList();
 
@@ -133,11 +133,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GeneratePerformanceRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Performance == null) return recommendations;
 
-            var criticalIssues = analysisResult.Performance.Issues
+            List<PerformanceIssue> criticalIssues = analysisResult.Performance.Issues
                 .Where(i => i.Impact == PerformanceImpact.Critical)
                 .ToList();
 
@@ -164,7 +164,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var metrics = analysisResult.Performance.Metrics;
+            PerformanceMetrics metrics = analysisResult.Performance.Metrics;
             if (metrics != null)
             {
                 if (metrics.TextureMemoryMB > 500)
@@ -212,11 +212,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateArchitectureRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Architecture == null) return recommendations;
 
-            var godClassIssues = analysisResult.Architecture.Issues
+            List<ArchitectureIssue> godClassIssues = analysisResult.Architecture.Issues
                 .Where(i => i.Type == ArchitectureIssueType.GodClass)
                 .ToList();
 
@@ -248,7 +248,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var tightCouplingIssues = analysisResult.Architecture.Issues
+            List<ArchitectureIssue> tightCouplingIssues = analysisResult.Architecture.Issues
                 .Where(i => i.Type == ArchitectureIssueType.TightCoupling)
                 .ToList();
 
@@ -295,11 +295,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateCodeQualityRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts == null) return recommendations;
 
-            var criticalIssues = analysisResult.Scripts.Issues
+            List<CodeIssue> criticalIssues = analysisResult.Scripts.Issues
                 .Where(i => i.Severity == CodeIssueSeverity.Critical)
                 .ToList();
 
@@ -368,11 +368,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateDependencyRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts?.Dependencies == null) return recommendations;
 
-            var circularDependencies = analysisResult.Scripts.Dependencies.GetCircularDependencies();
+            List<string> circularDependencies = analysisResult.Scripts.Dependencies.GetCircularDependencies();
             if (circularDependencies.Count > 0)
             {
                 recommendations.Add(new ProjectRecommendation(RecommendationType.Dependencies,
@@ -406,11 +406,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateSecurityRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts == null) return recommendations;
 
-            var securityIssues = analysisResult.Scripts.Issues
+            List<CodeIssue> securityIssues = analysisResult.Scripts.Issues
                 .Where(i => i.Type == CodeIssueType.SecurityIssue)
                 .ToList();
 
@@ -458,7 +458,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateDocumentationRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             recommendations.Add(new ProjectRecommendation(RecommendationType.Documentation,
                 "Create Comprehensive Project Documentation")
@@ -490,11 +490,11 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateTestingRecommendations(ProjectAnalysisResult analysisResult)
         {
-            List<string> recommendations = new List<ProjectRecommendation>();
+            List<ProjectRecommendation> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Structure == null) return recommendations;
 
-            var hasTestInfrastructure = analysisResult.Structure.Folders
+            bool hasTestInfrastructure = analysisResult.Structure.Folders
                 .Any(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase)) ||
                 analysisResult.Structure.Files
                 .Any(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase));
@@ -528,15 +528,15 @@ namespace UnityProjectArchitect.Services
             }
             else
             {
-                var testFiles = analysisResult.Structure.Files
+                int testFiles = analysisResult.Structure.Files
                     .Count(f => f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase) && f.Extension == ".cs");
                 
-                var scriptFiles = analysisResult.Structure.Files
+                int scriptFiles = analysisResult.Structure.Files
                     .Count(f => f.Extension == ".cs" && !f.Name.Contains("Test", StringComparison.OrdinalIgnoreCase));
 
                 if (scriptFiles > 0)
                 {
-                    var testCoverage = (float)testFiles / scriptFiles;
+                    float testCoverage = (float)testFiles / scriptFiles;
                     
                     if (testCoverage < 0.3f)
                     {
