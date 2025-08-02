@@ -17,7 +17,7 @@ namespace UnityProjectArchitect.Services
 
         public override async Task<string> GenerateContentAsync()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(GetSectionHeader("System Architecture"));
             sb.AppendLine(AddTimestamp());
@@ -38,7 +38,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Architecture Overview", 2));
 
                 if (analysisResult.Architecture?.DetectedPattern != ArchitecturePattern.None)
@@ -56,9 +56,9 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Architecture != null)
                 {
-                    var totalComponents = analysisResult.Architecture.Components?.Count ?? 0;
-                    var totalConnections = analysisResult.Architecture.Connections?.Count ?? 0;
-                    var totalLayers = analysisResult.Architecture.Layers?.Count ?? 0;
+                    int totalComponents = analysisResult.Architecture.Components?.Count ?? 0;
+                    int totalConnections = analysisResult.Architecture.Connections?.Count ?? 0;
+                    int totalLayers = analysisResult.Architecture.Layers?.Count ?? 0;
 
                     sb.AppendLine("**Architecture Metrics:**");
                     sb.AppendLine($"- **Components:** {totalComponents} architectural components");
@@ -67,7 +67,7 @@ namespace UnityProjectArchitect.Services
                     
                     if (analysisResult.Architecture.Metrics != null)
                     {
-                        var metrics = analysisResult.Architecture.Metrics;
+                        ArchitectureMetrics metrics = analysisResult.Architecture.Metrics;
                         sb.AppendLine($"- **Average Coupling:** {metrics.AverageCoupling:F2} (lower is better)");
                         sb.AppendLine($"- **Average Cohesion:** {metrics.AverageCohesion:F2} (higher is better)");
                         sb.AppendLine($"- **Distance from Main Sequence:** {metrics.DistanceFromMainSequence:F2}");
@@ -83,7 +83,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Component Architecture", 2));
 
                 if (analysisResult.Architecture?.Components?.Any() == true)
@@ -93,19 +93,19 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("    %% Component Architecture Diagram");
                     sb.AppendLine();
 
-                    var componentsByCategory = analysisResult.Architecture.Components
+                    List<IGrouping<ComponentCategory, ArchitectureComponent>> componentsByCategory = analysisResult.Architecture.Components
                         .GroupBy(c => c.Category)
                         .OrderBy(g => g.Key)
                         .ToList();
 
-                    foreach (var categoryGroup in componentsByCategory)
+                    foreach (IGrouping<ComponentCategory, ArchitectureComponent> categoryGroup in componentsByCategory)
                     {
                         sb.AppendLine($"    %% {categoryGroup.Key} Components");
                         
-                        foreach (var component in categoryGroup.Take(10)) // Limit for readability
+                        foreach (ArchitectureComponent component in categoryGroup.Take(10)) // Limit for readability
                         {
-                            var nodeId = GetSafeNodeId(component.Name);
-                            var nodeStyle = GetComponentNodeStyle(component.Category);
+                            string nodeId = GetSafeNodeId(component.Name);
+                            string nodeStyle = GetComponentNodeStyle(component.Category);
                             sb.AppendLine($"    {nodeId}[\"{component.Name}\"]");
                             sb.AppendLine($"    {nodeId} --> {nodeId}_type{{\"Type: {component.Type}\"}}");
                             sb.AppendLine($"    class {nodeId} {nodeStyle}");
@@ -117,11 +117,11 @@ namespace UnityProjectArchitect.Services
                     if (analysisResult.Architecture.Connections?.Any() == true)
                     {
                         sb.AppendLine("    %% Component Connections");
-                        foreach (var connection in analysisResult.Architecture.Connections.Take(20))
+                        foreach (ArchitectureConnection connection in analysisResult.Architecture.Connections.Take(20))
                         {
-                            var fromId = GetSafeNodeId(connection.FromComponent);
-                            var toId = GetSafeNodeId(connection.ToComponent);
-                            var connectionStyle = GetConnectionStyle(connection.Type);
+                            string fromId = GetSafeNodeId(connection.FromComponent);
+                            string toId = GetSafeNodeId(connection.ToComponent);
+                            string connectionStyle = GetConnectionStyle(connection.Type);
                             sb.AppendLine($"    {fromId} {connectionStyle} {toId}");
                         }
                     }
@@ -137,10 +137,10 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine();
 
                     sb.AppendLine("**Component Categories:**");
-                    foreach (var categoryGroup in componentsByCategory)
+                    foreach (IGrouping<ComponentCategory, ArchitectureComponent> categoryGroup in componentsByCategory)
                     {
                         sb.AppendLine($"- **{categoryGroup.Key}:** {categoryGroup.Count()} components");
-                        var topComponents = categoryGroup.Take(5).Select(c => c.Name);
+                        IEnumerable<string> topComponents = categoryGroup.Take(5).Select(c => c.Name);
                         sb.AppendLine($"  - {string.Join(", ", topComponents)}");
                     }
                     sb.AppendLine();
@@ -159,12 +159,12 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Layer Architecture", 2));
 
                 if (analysisResult.Architecture?.Layers?.Any() == true)
                 {
-                    var layersByLevel = analysisResult.Architecture.Layers
+                    List<ArchitectureLayer> layersByLevel = analysisResult.Architecture.Layers
                         .OrderBy(l => l.Level)
                         .ToList();
 
@@ -173,16 +173,16 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("    %% Layered Architecture");
                     sb.AppendLine();
 
-                    foreach (var layer in layersByLevel)
+                    foreach (ArchitectureLayer layer in layersByLevel)
                     {
-                        var layerId = GetSafeNodeId(layer.Name);
+                        string layerId = GetSafeNodeId(layer.Name);
                         sb.AppendLine($"    {layerId}[\"{layer.Name} Layer\"]");
                         sb.AppendLine($"    {layerId}_desc[\"{layer.Description ?? $"Level {layer.Level}"}\"]");
                         sb.AppendLine($"    {layerId} --> {layerId}_desc");
                         
                         if (layer.Components.Any())
                         {
-                            var componentCount = layer.Components.Count;
+                            int componentCount = layer.Components.Count;
                             sb.AppendLine($"    {layerId}_count[\"{componentCount} Components\"]");
                             sb.AppendLine($"    {layerId} --> {layerId}_count");
                         }
@@ -191,8 +191,8 @@ namespace UnityProjectArchitect.Services
                     // Add layer dependencies
                     for (int i = 0; i < layersByLevel.Count - 1; i++)
                     {
-                        var currentLayer = GetSafeNodeId(layersByLevel[i].Name);
-                        var nextLayer = GetSafeNodeId(layersByLevel[i + 1].Name);
+                        string currentLayer = GetSafeNodeId(layersByLevel[i].Name);
+                        string nextLayer = GetSafeNodeId(layersByLevel[i + 1].Name);
                         sb.AppendLine($"    {currentLayer} --> {nextLayer}");
                     }
 
@@ -200,7 +200,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine();
 
                     sb.AppendLine("**Layer Details:**");
-                    foreach (var layer in layersByLevel)
+                    foreach (ArchitectureLayer layer in layersByLevel)
                     {
                         sb.AppendLine($"- **{layer.Name} (Level {layer.Level}):** {layer.Components.Count} components");
                         if (!string.IsNullOrEmpty(layer.Description))
@@ -209,7 +209,7 @@ namespace UnityProjectArchitect.Services
                         }
                         if (layer.Components.Any())
                         {
-                            var topComponents = layer.Components.Take(5);
+                            IEnumerable<string> topComponents = layer.Components.Take(5);
                             sb.AppendLine($"  - Components: {string.Join(", ", topComponents)}");
                         }
                         sb.AppendLine();
@@ -229,12 +229,12 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Dependency Analysis", 2));
 
                 if (analysisResult.Scripts?.Dependencies != null)
                 {
-                    var dependencies = analysisResult.Scripts.Dependencies;
+                    DependencyGraph dependencies = analysisResult.Scripts.Dependencies;
                     
                     sb.AppendLine("**Dependency Overview:**");
                     sb.AppendLine($"- **Total Nodes:** {dependencies.Nodes.Count} code elements");
@@ -243,11 +243,11 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine();
 
                     // Check for circular dependencies
-                    var circularDeps = dependencies.GetCircularDependencies();
+                    IEnumerable<string> circularDeps = dependencies.GetCircularDependencies();
                     if (circularDeps.Any())
                     {
                         sb.AppendLine("⚠️ **Circular Dependencies Detected:**");
-                        foreach (var cycle in circularDeps.Take(5))
+                        foreach (string cycle in circularDeps.Take(5))
                         {
                             sb.AppendLine($"- {cycle}");
                         }
@@ -267,11 +267,11 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("graph LR");
                         sb.AppendLine("    %% Dependency Relationships");
                         
-                        foreach (var edge in dependencies.Edges.Take(15))
+                        foreach (DependencyEdge edge in dependencies.Edges.Take(15))
                         {
-                            var fromId = GetSafeNodeId(edge.FromId);
-                            var toId = GetSafeNodeId(edge.ToId);
-                            var arrow = edge.DependencyType == DependencyType.Inheritance ? "==> |inherits|" : "--> |uses|";
+                            string fromId = GetSafeNodeId(edge.FromId);
+                            string toId = GetSafeNodeId(edge.ToId);
+                            string arrow = edge.DependencyType == DependencyType.Inheritance ? "==> |inherits|" : "--> |uses|";
                             sb.AppendLine($"    {fromId} {arrow} {toId}");
                         }
                         
@@ -282,9 +282,9 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Assets?.Dependencies?.Any() == true)
                 {
-                    var assetDeps = analysisResult.Assets.Dependencies;
-                    var unusedAssets = assetDeps.Where(d => d.Type == AssetDependencyType.Unused).Count();
-                    var missingAssets = assetDeps.Where(d => d.Type == AssetDependencyType.Missing).Count();
+                    List<AssetDependency> assetDeps = analysisResult.Assets.Dependencies;
+                    int unusedAssets = assetDeps.Where(d => d.Type == AssetDependencyType.Unused).Count();
+                    int missingAssets = assetDeps.Where(d => d.Type == AssetDependencyType.Missing).Count();
 
                     sb.AppendLine("**Asset Dependencies:**");
                     sb.AppendLine($"- **Total Asset Dependencies:** {assetDeps.Count}");
@@ -309,12 +309,12 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Architectural Patterns", 2));
 
                 if (analysisResult.Scripts?.DetectedPatterns?.Any() == true)
                 {
-                    var patterns = analysisResult.Scripts.DetectedPatterns
+                    List<DetectedPattern> patterns = analysisResult.Scripts.DetectedPatterns
                         .Where(p => p.Confidence > 0.6f)
                         .OrderByDescending(p => p.Confidence)
                         .ToList();
@@ -322,9 +322,9 @@ namespace UnityProjectArchitect.Services
                     if (patterns.Any())
                     {
                         sb.AppendLine("**Detected Design Patterns:**");
-                        foreach (var pattern in patterns)
+                        foreach (DetectedPattern pattern in patterns)
                         {
-                            var confidenceBar = new string('█', (int)(pattern.Confidence * 10));
+                            string confidenceBar = new string('█', (int)(pattern.Confidence * 10));
                             sb.AppendLine($"- **{pattern.Name}** (Confidence: {pattern.Confidence:P0}) `{confidenceBar}`");
                             sb.AppendLine($"  - Evidence: {pattern.Evidence}");
                             sb.AppendLine($"  - Classes: {string.Join(", ", pattern.InvolvedClasses)}");
@@ -338,7 +338,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("**Modular Architecture:**");
                     sb.AppendLine($"The project uses {analysisResult.Structure.AssemblyDefinitions.Count} assembly definitions for modular organization:");
                     
-                    foreach (var assembly in analysisResult.Structure.AssemblyDefinitions.Take(10))
+                    foreach (AssemblyDefinitionInfo assembly in analysisResult.Structure.AssemblyDefinitions.Take(10))
                     {
                         sb.AppendLine($"- **{assembly.Name}**");
                         if (assembly.References.Any())
@@ -351,8 +351,8 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Classes?.Any(c => c.IsMonoBehaviour) == true)
                 {
-                    var monoBehaviours = analysisResult.Scripts.Classes.Count(c => c.IsMonoBehaviour);
-                    var scriptableObjects = analysisResult.Scripts.Classes.Count(c => c.IsScriptableObject);
+                    int monoBehaviours = analysisResult.Scripts.Classes.Count(c => c.IsMonoBehaviour);
+                    int scriptableObjects = analysisResult.Scripts.Classes.Count(c => c.IsScriptableObject);
                     
                     sb.AppendLine("**Unity-Specific Patterns:**");
                     sb.AppendLine($"- **Component Pattern:** {monoBehaviours} MonoBehaviour components");
@@ -368,11 +368,11 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
 
                 if (analysisResult.Architecture?.Issues?.Any() == true)
                 {
-                    var criticalIssues = analysisResult.Architecture.Issues
+                    List<ArchitectureIssue> criticalIssues = analysisResult.Architecture.Issues
                         .Where(i => i.Severity == ArchitectureIssueSeverity.Critical || i.Severity == ArchitectureIssueSeverity.Major)
                         .OrderByDescending(i => i.Severity)
                         .Take(5)
@@ -381,9 +381,9 @@ namespace UnityProjectArchitect.Services
                     if (criticalIssues.Any())
                     {
                         sb.AppendLine(GetSectionHeader("Architectural Issues", 3));
-                        foreach (var issue in criticalIssues)
+                        foreach (ArchitectureIssue issue in criticalIssues)
                         {
-                            var severityIcon = issue.Severity switch
+                            string severityIcon = issue.Severity switch
                             {
                                 ArchitectureIssueSeverity.Critical => "🔴",
                                 ArchitectureIssueSeverity.Major => "🟠",
@@ -401,7 +401,7 @@ namespace UnityProjectArchitect.Services
                     }
                 }
 
-                var architectureInsights = analysisResult.Insights?
+                List<ProjectInsight> architectureInsights = analysisResult.Insights?
                     .Where(i => i.Type == InsightType.Architecture)
                     .OrderByDescending(i => i.Severity)
                     .Take(3)
@@ -412,7 +412,7 @@ namespace UnityProjectArchitect.Services
                     sb.Append(FormatInsightsList(architectureInsights, "Architecture Insights"));
                 }
 
-                var architectureRecommendations = analysisResult.Recommendations?
+                List<ProjectRecommendation> architectureRecommendations = analysisResult.Recommendations?
                     .Where(r => r.Type == RecommendationType.Architecture)
                     .OrderByDescending(r => r.Priority)
                     .Take(3)

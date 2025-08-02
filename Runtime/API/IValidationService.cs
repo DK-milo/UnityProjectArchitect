@@ -283,7 +283,7 @@ namespace UnityProjectArchitect.API
             string projectPath)
         {
             var operationResult = new ValidationOperationResult();
-            var results = new List<ValidationResult>();
+            List<string> results = new List<ValidationResult>();
 
             try
             {
@@ -332,8 +332,8 @@ namespace UnityProjectArchitect.API
 
         public static List<ValidationIssue> GetAllIssues(this ValidationOperationResult result)
         {
-            var allIssues = new List<ValidationIssue>();
-            foreach (var validationResult in result.Results)
+            List<string> allIssues = new List<ValidationIssue>();
+            foreach (string validationResult in result.Results)
             {
                 allIssues.AddRange(validationResult.Issues);
             }
@@ -355,7 +355,7 @@ namespace UnityProjectArchitect.API
             report += $"🚫 Blockers: {result.TotalBlockers}\n";
             report += $"⚠️ Warnings: {result.TotalWarnings}\n\n";
 
-            foreach (var kvp in result.ResultsByType)
+            foreach (string kvp in result.ResultsByType)
             {
                 var validationType = kvp.Key;
                 var validationResult = kvp.Value;
@@ -367,7 +367,7 @@ namespace UnityProjectArchitect.API
                 if (validationResult.BlockerCount > 0)
                 {
                     var blockers = validationResult.GetBlockers().Take(3);
-                    foreach (var blocker in blockers)
+                    foreach (string blocker in blockers)
                     {
                         report += $"    🚫 {blocker.Message}\n";
                     }

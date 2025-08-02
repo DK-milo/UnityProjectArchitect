@@ -13,7 +13,7 @@ namespace UnityProjectArchitect.Services
     {
         public List<TemplateConflict> DetectConflicts(ProjectData projectData, ProjectTemplate template)
         {
-            var conflicts = new List<TemplateConflict>();
+            List<string> conflicts = new List<TemplateConflict>();
 
             // Detect folder conflicts
             DetectFolderConflicts(template, conflicts);
@@ -36,11 +36,11 @@ namespace UnityProjectArchitect.Services
         public async Task<TemplateOperationResult> ResolveConflictsAsync(List<TemplateConflict> conflicts, ConflictResolution defaultResolution)
         {
             var result = new TemplateOperationResult("conflict-resolution", "Conflict Resolution");
-            var resolvedConflicts = new List<TemplateConflict>();
+            List<string> resolvedConflicts = new List<TemplateConflict>();
 
             try
             {
-                foreach (var conflict in conflicts)
+                foreach (string conflict in conflicts)
                 {
                     var resolution = conflict.RecommendedResolution != ConflictResolution.Skip 
                         ? conflict.RecommendedResolution 
@@ -70,7 +70,7 @@ namespace UnityProjectArchitect.Services
             if (template.FolderStructure?.Folders == null)
                 return;
 
-            foreach (var folder in template.FolderStructure.Folders)
+            foreach (string folder in template.FolderStructure.Folders)
             {
                 var folderPath = Path.Combine(Application.dataPath, folder.RelativePath);
                 
@@ -96,7 +96,7 @@ namespace UnityProjectArchitect.Services
 
         private void DetectSubFolderConflicts(FolderDefinition folder, string basePath, List<TemplateConflict> conflicts)
         {
-            foreach (var subFolder in folder.SubFolders)
+            foreach (string subFolder in folder.SubFolders)
             {
                 var subFolderPath = Path.Combine(basePath, subFolder.RelativePath);
                 
@@ -125,7 +125,7 @@ namespace UnityProjectArchitect.Services
             if (template.SceneTemplates?.Count == 0)
                 return;
 
-            foreach (var sceneTemplate in template.SceneTemplates)
+            foreach (string sceneTemplate in template.SceneTemplates)
             {
                 if (!sceneTemplate.CreateOnApply)
                     continue;
@@ -154,7 +154,7 @@ namespace UnityProjectArchitect.Services
             if (template.AssemblyDefinitions?.Count == 0)
                 return;
 
-            foreach (var asmdef in template.AssemblyDefinitions)
+            foreach (string asmdef in template.AssemblyDefinitions)
             {
                 var asmdefPath = Path.Combine(Application.dataPath, "Scripts", $"{asmdef}.asmdef");
                 
@@ -182,18 +182,18 @@ namespace UnityProjectArchitect.Services
 
             // Read existing packages from manifest.json
             var manifestPath = Path.Combine(Application.dataPath, "../Packages/manifest.json");
-            var existingPackages = new HashSet<string>();
+            HashSet existingPackages = new HashSet<string>();
 
             try
             {
                 if (File.Exists(manifestPath))
                 {
-                    var manifestContent = File.ReadAllText(manifestPath);
+                    string manifestContent = File.ReadAllText(manifestPath);
                     var manifest = JsonUtility.FromJson<PackageManifest>(manifestContent);
                     
                     if (manifest?.dependencies != null)
                     {
-                        foreach (var package in manifest.dependencies.Keys)
+                        foreach (string package in manifest.dependencies.Keys)
                         {
                             existingPackages.Add(package);
                         }
@@ -205,7 +205,7 @@ namespace UnityProjectArchitect.Services
                 Debug.LogWarning($"Failed to read package manifest: {ex.Message}");
             }
 
-            foreach (var requiredPackage in template.RequiredPackages)
+            foreach (string requiredPackage in template.RequiredPackages)
             {
                 if (existingPackages.Contains(requiredPackage))
                 {
@@ -262,7 +262,7 @@ namespace UnityProjectArchitect.Services
             // Check documentation section conflicts
             if (template.DefaultDocumentationSections?.Count > 0)
             {
-                foreach (var templateSection in template.DefaultDocumentationSections)
+                foreach (string templateSection in template.DefaultDocumentationSections)
                 {
                     var existingSection = projectData.GetDocumentationSection(templateSection.SectionType);
                     if (existingSection != null && existingSection.HasContent)
@@ -476,14 +476,14 @@ namespace UnityProjectArchitect.Services
         {
             Directory.CreateDirectory(destDir);
             
-            foreach (var file in Directory.GetFiles(sourceDir))
+            foreach (string file in Directory.GetFiles(sourceDir))
             {
                 var fileName = Path.GetFileName(file);
                 var destFile = Path.Combine(destDir, fileName);
                 File.Copy(file, destFile, true);
             }
             
-            foreach (var dir in Directory.GetDirectories(sourceDir))
+            foreach (string dir in Directory.GetDirectories(sourceDir))
             {
                 var dirName = Path.GetFileName(dir);
                 var destSubDir = Path.Combine(destDir, dirName);

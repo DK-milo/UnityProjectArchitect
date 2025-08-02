@@ -258,7 +258,7 @@ namespace UnityProjectArchitect.Core
             }
 
             float penalty = 0f;
-            foreach (var issue in issues)
+            foreach (string issue in issues)
             {
                 penalty += issue.Severity switch
                 {
@@ -298,9 +298,9 @@ namespace UnityProjectArchitect.Core
 
         public static ValidationResult Combine(params ValidationResult[] results)
         {
-            var combined = new ValidationResult("Combined Validation");
+            ValidationResult combined = new ValidationResult("Combined Validation");
             
-            foreach (var result in results)
+            foreach (string result in results)
             {
                 if (result != null)
                 {
@@ -354,7 +354,7 @@ namespace UnityProjectArchitect.Core
             if (result.HasBlockers)
             {
                 report += "🚫 **BLOCKERS:**\n";
-                foreach (var blocker in result.GetBlockers())
+                foreach (string blocker in result.GetBlockers())
                 {
                     report += $"  • {blocker.Message}\n";
                     if (!string.IsNullOrEmpty(blocker.SuggestedFix))
@@ -366,7 +366,7 @@ namespace UnityProjectArchitect.Core
             if (result.HasWarnings)
             {
                 report += "⚠️  **WARNINGS:**\n";
-                foreach (var warning in result.GetIssuesBySeverity(ValidationSeverity.Warning))
+                foreach (string warning in result.GetIssuesBySeverity(ValidationSeverity.Warning))
                 {
                     report += $"  • {warning.Message}\n";
                 }
@@ -377,7 +377,7 @@ namespace UnityProjectArchitect.Core
             if (infoIssues.Count > 0)
             {
                 report += "ℹ️  **INFO:**\n";
-                foreach (var info in infoIssues)
+                foreach (string info in infoIssues)
                 {
                     report += $"  • {info.Message}\n";
                 }

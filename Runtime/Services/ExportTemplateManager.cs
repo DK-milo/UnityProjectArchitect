@@ -90,7 +90,7 @@ namespace UnityProjectArchitect.Services
             // Merge custom variables
             if (variables != null)
             {
-                foreach (var kvp in variables)
+                foreach (string kvp in variables)
                 {
                     allVariables[kvp.Key] = kvp.Value;
                 }
@@ -99,7 +99,7 @@ namespace UnityProjectArchitect.Services
             // Merge content variables
             if (content.Variables != null)
             {
-                foreach (var kvp in content.Variables)
+                foreach (string kvp in content.Variables)
                 {
                     allVariables[kvp.Key] = kvp.Value;
                 }
@@ -110,7 +110,7 @@ namespace UnityProjectArchitect.Services
 
         public ValidationResult ValidateTemplate(ExportTemplate template)
         {
-            var validation = new ValidationResult { IsValid = true };
+            ValidationResult validation = new ValidationResult { IsValid = true };
 
             if (template == null)
             {
@@ -139,7 +139,7 @@ namespace UnityProjectArchitect.Services
             // Validate template variables
             if (template.Variables != null)
             {
-                foreach (var variable in template.Variables)
+                foreach (string variable in template.Variables)
                 {
                     if (string.IsNullOrEmpty(variable.Name))
                     {
@@ -479,7 +479,7 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> CreateDefaultVariables(ExportContent content)
         {
-            var variables = new Dictionary<string, object>();
+            Dictionary variables = new Dictionary<string, object>();
 
             // Project variables
             if (content.ProjectData != null)
@@ -522,7 +522,7 @@ namespace UnityProjectArchitect.Services
         {
             var processed = template;
 
-            foreach (var variable in variables)
+            foreach (string variable in variables)
             {
                 var placeholder = $"{{{{{variable.Key}}}}}";
                 var value = variable.Value?.ToString() ?? "";
@@ -545,7 +545,7 @@ namespace UnityProjectArchitect.Services
 
         private ValidationResult ValidateTemplateSyntax(string templateContent)
         {
-            var validation = new ValidationResult { IsValid = true };
+            ValidationResult validation = new ValidationResult { IsValid = true };
 
             if (string.IsNullOrEmpty(templateContent))
             {
@@ -562,7 +562,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for valid variable syntax
-            var variablePattern = new System.Text.RegularExpressions.Regex(@"\{\{(\w+)\}\}");
+            System.Text.RegularExpressions.Regex variablePattern = new System.Text.RegularExpressions.Regex(@"\{\{(\w+)\}\}");
             var matches = variablePattern.Matches(templateContent);
 
             foreach (System.Text.RegularExpressions.Match match in matches)
@@ -580,7 +580,7 @@ namespace UnityProjectArchitect.Services
         private ExportTemplate ParseTemplateFromContent(string content, string templateId)
         {
             // Simple template parsing - in a real implementation, this would be more sophisticated
-            var template = new ExportTemplate(templateId, templateId, ExportFormat.Markdown)
+            ExportTemplate template = new ExportTemplate(templateId, templateId, ExportFormat.Markdown)
             {
                 TemplateContent = content,
                 Author = "Custom",
@@ -594,7 +594,7 @@ namespace UnityProjectArchitect.Services
         private string SerializeTemplate(ExportTemplate template)
         {
             // Simple serialization - in a real implementation, this would use JSON or XML
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             sb.AppendLine($"# Template: {template.TemplateName}");
             sb.AppendLine($"# ID: {template.TemplateId}");
             sb.AppendLine($"# Format: {template.Format}");

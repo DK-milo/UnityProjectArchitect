@@ -11,7 +11,7 @@ namespace UnityProjectArchitect.Services
     {
         public async Task<ValidationResult> ValidateAsync(ProjectTemplate template)
         {
-            var result = new ValidationResult($"Template Validation: {template?.TemplateName ?? "Unknown"}");
+            ValidationResult result = new ValidationResult($"Template Validation: {template?.TemplateName ?? "Unknown"}");
             
             if (template == null)
             {
@@ -33,7 +33,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ValidationResult> ValidateCompatibilityAsync(ProjectTemplate template, ProjectData projectData)
         {
-            var result = new ValidationResult($"Compatibility Validation: {template?.TemplateName ?? "Unknown"}");
+            ValidationResult result = new ValidationResult($"Compatibility Validation: {template?.TemplateName ?? "Unknown"}");
             
             if (template == null)
             {
@@ -148,7 +148,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for invalid folder names
-            foreach (var folder in template.FolderStructure.Folders)
+            foreach (string folder in template.FolderStructure.Folders)
             {
                 if (string.IsNullOrWhiteSpace(folder.Name))
                 {
@@ -213,7 +213,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Validate each section
-            foreach (var section in template.DefaultDocumentationSections)
+            foreach (string section in template.DefaultDocumentationSections)
             {
                 if (section.WordCountTarget <= 0)
                 {
@@ -243,7 +243,7 @@ namespace UnityProjectArchitect.Services
                 return; // No packages to validate
             }
 
-            foreach (var package in template.RequiredPackages)
+            foreach (string package in template.RequiredPackages)
             {
                 if (string.IsNullOrWhiteSpace(package))
                 {
@@ -282,7 +282,7 @@ namespace UnityProjectArchitect.Services
                 return; // No scene templates to validate
             }
 
-            foreach (var sceneTemplate in template.SceneTemplates)
+            foreach (string sceneTemplate in template.SceneTemplates)
             {
                 if (string.IsNullOrWhiteSpace(sceneTemplate.SceneName))
                 {
@@ -323,7 +323,7 @@ namespace UnityProjectArchitect.Services
                 return; // No assembly definitions to validate
             }
 
-            foreach (var asmdef in template.AssemblyDefinitions)
+            foreach (string asmdef in template.AssemblyDefinitions)
             {
                 if (string.IsNullOrWhiteSpace(asmdef))
                 {
@@ -430,7 +430,7 @@ namespace UnityProjectArchitect.Services
 
         private void ValidateSubFolders(FolderDefinition folder, ValidationResult result)
         {
-            foreach (var subFolder in folder.SubFolders)
+            foreach (string subFolder in folder.SubFolders)
             {
                 if (string.IsNullOrWhiteSpace(subFolder.Name))
                 {

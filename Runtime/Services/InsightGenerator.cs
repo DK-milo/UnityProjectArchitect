@@ -12,7 +12,7 @@ namespace UnityProjectArchitect.Services
     {
         public async Task<List<ProjectInsight>> GenerateInsightsAsync(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             await Task.Run(() =>
             {
@@ -45,7 +45,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateStructureInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Structure == null) return insights;
 
@@ -112,7 +112,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateCodeQualityInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Scripts == null) return insights;
 
@@ -186,7 +186,7 @@ namespace UnityProjectArchitect.Services
             var patterns = analysisResult.Scripts.DetectedPatterns;
             if (patterns.Count > 0)
             {
-                var strongPatterns = patterns.Where(p => p.Confidence > 0.8f).ToList();
+                List<string> strongPatterns = patterns.Where(p => p.Confidence > 0.8f).ToList();
                 if (strongPatterns.Count > 0)
                 {
                     insights.Add(new ProjectInsight(InsightType.CodeQuality,
@@ -206,7 +206,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GeneratePerformanceInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Performance == null) return insights;
 
@@ -263,7 +263,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateArchitectureInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Architecture == null) return insights;
 
@@ -281,7 +281,7 @@ namespace UnityProjectArchitect.Services
             }
 
             var architectureIssues = analysisResult.Architecture.Issues;
-            var godClassIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.GodClass).ToList();
+            List<string> godClassIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.GodClass).ToList();
             
             if (godClassIssues.Count > 0)
             {
@@ -296,7 +296,7 @@ namespace UnityProjectArchitect.Services
                 });
             }
 
-            var tightCouplingIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.TightCoupling).ToList();
+            List<string> tightCouplingIssues = architectureIssues.Where(i => i.Type == ArchitectureIssueType.TightCoupling).ToList();
             if (tightCouplingIssues.Count > 0)
             {
                 insights.Add(new ProjectInsight(InsightType.Architecture,
@@ -348,7 +348,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateDependencyInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Scripts?.Dependencies == null) return insights;
 
@@ -392,7 +392,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateMaintainabilityInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Metrics == null) return insights;
 
@@ -455,7 +455,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectInsight> GenerateTestingInsights(ProjectAnalysisResult analysisResult)
         {
-            var insights = new List<ProjectInsight>();
+            List<string> insights = new List<ProjectInsight>();
 
             if (analysisResult.Structure == null) return insights;
 

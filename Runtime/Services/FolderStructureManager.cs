@@ -19,7 +19,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<FolderOperationResult> CreateFolderStructureAsync(FolderStructureData folderStructure, string basePath)
         {
-            var result = new FolderOperationResult(FolderOperationType.Create, basePath);
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Create, basePath);
             
             try
             {
@@ -30,9 +30,9 @@ namespace UnityProjectArchitect.Services
                     return result;
                 }
 
-                var createdPaths = new List<string>();
+                List<string> createdPaths = new List<string>();
                 
-                foreach (var folder in folderStructure.Folders)
+                foreach (string folder in folderStructure.Folders)
                 {
                     if (folder.CreateOnApply)
                     {
@@ -70,7 +70,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ValidationResult> ValidateFolderStructureAsync(FolderStructureData folderStructure)
         {
-            var validationResult = new ValidationResult("Folder Structure Validation");
+            ValidationResult validationResult = new ValidationResult("Folder Structure Validation");
             
             try
             {
@@ -98,7 +98,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for invalid characters in folder names
-                foreach (var folder in folderStructure.Folders)
+                foreach (string folder in folderStructure.Folders)
                 {
                     if (string.IsNullOrWhiteSpace(folder.Name))
                     {
@@ -156,7 +156,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<FolderStructureData> AnalyzeExistingStructureAsync(string projectPath)
         {
-            var folderStructure = new FolderStructureData();
+            FolderStructureData folderStructure = new FolderStructureData();
             
             try
             {
@@ -168,9 +168,9 @@ namespace UnityProjectArchitect.Services
 
                 var directories = Directory.GetDirectories(projectPath, "*", SearchOption.TopDirectoryOnly);
                 
-                foreach (var directory in directories)
+                foreach (string directory in directories)
                 {
-                    var dirInfo = new DirectoryInfo(directory);
+                    DirectoryInfo dirInfo = new DirectoryInfo(directory);
                     var folderType = DetermineFolderType(dirInfo.Name);
                     
                     var folderDefinition = new FolderDefinition(dirInfo.Name, folderType)
@@ -203,7 +203,7 @@ namespace UnityProjectArchitect.Services
 
         public FolderStructureData CreateStandardStructure(ProjectType projectType)
         {
-            var structure = new FolderStructureData();
+            FolderStructureData structure = new FolderStructureData();
             
             // Base folders for all project types
             var baseFolders = new[]
@@ -215,7 +215,7 @@ namespace UnityProjectArchitect.Services
                 new FolderDefinition("Audio", FolderType.Audio, "Sound effects and music")
             };
 
-            foreach (var folder in baseFolders)
+            foreach (string folder in baseFolders)
             {
                 structure.AddFolder(folder);
             }
@@ -279,7 +279,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<FolderOperationResult> CreateFolderAsync(string path)
         {
-            var result = new FolderOperationResult(FolderOperationType.Create, path);
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Create, path);
             
             try
             {
@@ -307,7 +307,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<FolderOperationResult> MoveFolderAsync(string sourcePath, string destinationPath)
         {
-            var result = new FolderOperationResult(FolderOperationType.Move, sourcePath);
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Move, sourcePath);
             
             try
             {
@@ -341,7 +341,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<FolderOperationResult> DeleteFolderAsync(string path)
         {
-            var result = new FolderOperationResult(FolderOperationType.Delete, path);
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Delete, path);
             
             try
             {
@@ -369,8 +369,8 @@ namespace UnityProjectArchitect.Services
 
         private async Task<FolderOperationResult> CreateFolderRecursiveAsync(FolderDefinition folder, string basePath)
         {
-            var result = new FolderOperationResult(FolderOperationType.Create, folder.RelativePath);
-            var createdPaths = new List<string>();
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Create, folder.RelativePath);
+            List<string> createdPaths = new List<string>();
             
             try
             {
@@ -383,7 +383,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Create subfolders recursively
-                foreach (var subFolder in folder.SubFolders)
+                foreach (string subFolder in folder.SubFolders)
                 {
                     if (subFolder.CreateOnApply)
                     {
@@ -396,7 +396,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Create template files if specified
-                foreach (var template in folder.FileTemplates)
+                foreach (string template in folder.FileTemplates)
                 {
                     await CreateTemplateFile(fullPath, template);
                 }
@@ -594,9 +594,9 @@ public class PlayerController : MonoBehaviour
             {
                 var subdirectories = Directory.GetDirectories(parentPath, "*", SearchOption.TopDirectoryOnly);
                 
-                foreach (var subdirectory in subdirectories)
+                foreach (string subdirectory in subdirectories)
                 {
-                    var dirInfo = new DirectoryInfo(subdirectory);
+                    DirectoryInfo dirInfo = new DirectoryInfo(subdirectory);
                     var folderType = DetermineFolderType(dirInfo.Name);
                     
                     var subFolderDefinition = new FolderDefinition(dirInfo.Name, folderType)
@@ -622,7 +622,7 @@ public class PlayerController : MonoBehaviour
 
         private async Task ValidateSubFolders(FolderDefinition folder, ValidationResult validationResult)
         {
-            foreach (var subFolder in folder.SubFolders)
+            foreach (string subFolder in folder.SubFolders)
             {
                 if (string.IsNullOrWhiteSpace(subFolder.Name))
                 {

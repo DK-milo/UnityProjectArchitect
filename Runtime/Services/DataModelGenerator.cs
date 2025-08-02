@@ -17,7 +17,7 @@ namespace UnityProjectArchitect.Services
 
         public override async Task<string> GenerateContentAsync()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(GetSectionHeader("Data Model"));
             sb.AppendLine(AddTimestamp());
@@ -96,7 +96,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("ScriptableObject Data Containers", 2));
 
                 if (analysisResult.Scripts?.Classes != null)
@@ -111,7 +111,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("ScriptableObjects provide persistent, asset-based data storage for configuration and game data:");
                         sb.AppendLine();
 
-                        foreach (var so in scriptableObjects)
+                        foreach (string so in scriptableObjects)
                         {
                             sb.AppendLine($"### {so.Name}");
                             sb.AppendLine($"**Namespace:** `{so.Namespace}`");
@@ -121,7 +121,7 @@ namespace UnityProjectArchitect.Services
                             if (so.Properties.Any())
                             {
                                 sb.AppendLine("**Properties:**");
-                                foreach (var prop in so.Properties.Take(10))
+                                foreach (string prop in so.Properties.Take(10))
                                 {
                                     var accessModifier = prop.AccessModifier == AccessModifier.Public ? "" : $"{prop.AccessModifier.ToString().ToLower()} ";
                                     sb.AppendLine($"- `{accessModifier}{prop.Type} {prop.Name}` - {GetPropertyDescription(prop)}");
@@ -137,7 +137,7 @@ namespace UnityProjectArchitect.Services
                             if (so.Fields.Any())
                             {
                                 sb.AppendLine("**Fields:**");
-                                foreach (var field in so.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(5))
+                                foreach (string field in so.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(5))
                                 {
                                     var modifiers = GetFieldModifiers(field);
                                     sb.AppendLine($"- `{modifiers}{field.Type} {field.Name}` - {GetFieldDescription(field)}");
@@ -175,7 +175,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Data Classes", 2));
 
                 if (analysisResult.Scripts?.Classes != null)
@@ -190,7 +190,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Runtime data structures for managing application state and temporary data:");
                         sb.AppendLine();
 
-                        foreach (var dataClass in dataClasses.Take(10))
+                        foreach (string dataClass in dataClasses.Take(10))
                         {
                             sb.AppendLine($"### {dataClass.Name}");
                             sb.AppendLine($"**Type:** {dataClass.Type}");
@@ -210,9 +210,9 @@ namespace UnityProjectArchitect.Services
                             if (dataClass.Properties.Any())
                             {
                                 sb.AppendLine("**Data Properties:**");
-                                var propertiesTable = new Dictionary<string, string>();
+                                Dictionary propertiesTable = new Dictionary<string, string>();
                                 
-                                foreach (var prop in dataClass.Properties.Take(8))
+                                foreach (string prop in dataClass.Properties.Take(8))
                                 {
                                     var accessInfo = GetPropertyAccessInfo(prop);
                                     propertiesTable[prop.Name] = $"{prop.Type} {accessInfo}";
@@ -227,7 +227,7 @@ namespace UnityProjectArchitect.Services
                                 if (publicFields.Any())
                                 {
                                     sb.AppendLine("**Public Fields:**");
-                                    foreach (var field in publicFields.Take(5))
+                                    foreach (string field in publicFields.Take(5))
                                     {
                                         var modifiers = GetFieldModifiers(field);
                                         sb.AppendLine($"- `{modifiers}{field.Type} {field.Name}`");
@@ -262,7 +262,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Enumerations & Value Types", 2));
 
                 if (analysisResult.Scripts?.Classes != null)
@@ -276,7 +276,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Defining discrete states and categories within the application:");
                         sb.AppendLine();
 
-                        foreach (var enumClass in enums.Take(8))
+                        foreach (string enumClass in enums.Take(8))
                         {
                             sb.AppendLine($"- **{enumClass.Name}** (`{enumClass.Namespace}`) - {GetEnumDescription(enumClass)}");
                         }
@@ -294,7 +294,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("Lightweight data structures for performance-critical scenarios:");
                         sb.AppendLine();
 
-                        foreach (var structClass in structs.Take(5))
+                        foreach (string structClass in structs.Take(5))
                         {
                             sb.AppendLine($"### {structClass.Name}");
                             sb.AppendLine($"**Namespace:** `{structClass.Namespace}`");
@@ -333,7 +333,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Data Relationships", 2));
 
                 if (analysisResult.Scripts?.Dependencies != null)
@@ -345,12 +345,12 @@ namespace UnityProjectArchitect.Services
                     {
                         sb.AppendLine("**Data Inheritance Hierarchy:**");
                         
-                        var inheritanceRelations = new List<string>();
-                        foreach (var dataClass in dataClasses)
+                        List<string> inheritanceRelations = new List<string>();
+                        foreach (string dataClass in dataClasses)
                         {
                             if (dataClass.BaseClasses.Any())
                             {
-                                foreach (var baseClass in dataClass.BaseClasses)
+                                foreach (string baseClass in dataClass.BaseClasses)
                                 {
                                     if (dataClasses.Any(dc => dc.Name == baseClass))
                                     {
@@ -371,15 +371,15 @@ namespace UnityProjectArchitect.Services
                         }
 
                         sb.AppendLine("**Data Composition:**");
-                        var compositionRelations = new List<string>();
+                        List<string> compositionRelations = new List<string>();
                         
-                        foreach (var dataClass in dataClasses)
+                        foreach (string dataClass in dataClasses)
                         {
                             var complexProperties = dataClass.Properties
                                 .Where(p => dataClasses.Any(dc => dc.Name == p.Type || p.Type.Contains(dc.Name)))
                                 .ToList();
 
-                            foreach (var prop in complexProperties.Take(3))
+                            foreach (string prop in complexProperties.Take(3))
                             {
                                 compositionRelations.Add($"{dataClass.Name}.{prop.Name} : {prop.Type}");
                             }
@@ -405,7 +405,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Data Model Diagram", 2));
 
                 if (analysisResult.Scripts?.Classes != null)
@@ -422,19 +422,19 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine("    %% Data Model Class Diagram");
                         sb.AppendLine();
 
-                        foreach (var dataClass in dataClasses)
+                        foreach (string dataClass in dataClasses)
                         {
                             sb.AppendLine($"    class {dataClass.Name} {{");
                             
                             // Add key properties
-                            foreach (var prop in dataClass.Properties.Take(5))
+                            foreach (string prop in dataClass.Properties.Take(5))
                             {
                                 var visibility = GetVisibilitySymbol(prop.AccessModifier);
                                 sb.AppendLine($"        {visibility}{prop.Type} {prop.Name}");
                             }
                             
                             // Add key fields
-                            foreach (var field in dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(3))
+                            foreach (string field in dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(3))
                             {
                                 var visibility = GetVisibilitySymbol(field.AccessModifier);
                                 sb.AppendLine($"        {visibility}{field.Type} {field.Name}");
@@ -445,9 +445,9 @@ namespace UnityProjectArchitect.Services
                         }
 
                         // Add relationships
-                        foreach (var dataClass in dataClasses)
+                        foreach (string dataClass in dataClasses)
                         {
-                            foreach (var baseClass in dataClass.BaseClasses)
+                            foreach (string baseClass in dataClass.BaseClasses)
                             {
                                 if (dataClasses.Any(dc => dc.Name == baseClass))
                                 {
@@ -456,7 +456,7 @@ namespace UnityProjectArchitect.Services
                             }
 
                             // Show composition relationships
-                            foreach (var prop in dataClass.Properties.Take(2))
+                            foreach (string prop in dataClass.Properties.Take(2))
                             {
                                 var relatedClass = dataClasses.FirstOrDefault(dc => dc.Name == prop.Type || prop.Type.Contains(dc.Name));
                                 if (relatedClass != null && relatedClass.Name != dataClass.Name)
@@ -469,7 +469,7 @@ namespace UnityProjectArchitect.Services
                         // Add styling
                         sb.AppendLine();
                         sb.AppendLine("    %% Styling");
-                        foreach (var so in dataClasses.Where(c => c.IsScriptableObject))
+                        foreach (string so in dataClasses.Where(c => c.IsScriptableObject))
                         {
                             sb.AppendLine($"    class {so.Name} {{");
                             sb.AppendLine("        <<ScriptableObject>>");
@@ -513,7 +513,7 @@ namespace UnityProjectArchitect.Services
             if (property.IsAutoProperty)
                 return "Auto-property";
             
-            var accessors = new List<string>();
+            List<string> accessors = new List<string>();
             if (property.HasGetter) accessors.Add("get");
             if (property.HasSetter) accessors.Add("set");
             
@@ -522,7 +522,7 @@ namespace UnityProjectArchitect.Services
 
         private string GetFieldDescription(FieldDefinition field)
         {
-            var descriptors = new List<string>();
+            List<string> descriptors = new List<string>();
             
             if (field.IsStatic) descriptors.Add("static");
             if (field.IsReadOnly) descriptors.Add("readonly");
@@ -535,7 +535,7 @@ namespace UnityProjectArchitect.Services
 
         private string GetFieldModifiers(FieldDefinition field)
         {
-            var modifiers = new List<string>();
+            List<string> modifiers = new List<string>();
             
             if (field.AccessModifier != AccessModifier.Private)
                 modifiers.Add(field.AccessModifier.ToString().ToLower());
@@ -549,7 +549,7 @@ namespace UnityProjectArchitect.Services
 
         private string GetPropertyAccessInfo(PropertyDefinition property)
         {
-            var info = new List<string>();
+            List<string> info = new List<string>();
             
             if (property.HasGetter && property.HasSetter)
                 info.Add("{ get; set; }");

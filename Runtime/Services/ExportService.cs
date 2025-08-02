@@ -251,7 +251,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ValidationResult> ValidateExportRequestAsync(ExportRequest exportRequest)
         {
-            var validation = new ValidationResult { IsValid = true };
+            ValidationResult validation = new ValidationResult { IsValid = true };
 
             if (exportRequest == null)
             {
@@ -428,7 +428,7 @@ namespace UnityProjectArchitect.Services
 
         private ExportContent BuildExportContent(ProjectData projectData, ExportRequest exportRequest)
         {
-            var content = new ExportContent(projectData);
+            ExportContent content = new ExportContent(projectData);
 
             // Filter sections based on scope
             switch (exportRequest.Scope)
@@ -455,7 +455,7 @@ namespace UnityProjectArchitect.Services
             // Add custom variables
             if (exportRequest.CustomVariables != null)
             {
-                foreach (var kvp in exportRequest.CustomVariables)
+                foreach (string kvp in exportRequest.CustomVariables)
                 {
                     content.Variables[kvp.Key] = kvp.Value;
                 }
@@ -516,7 +516,7 @@ namespace UnityProjectArchitect.Services
 
         private List<string> BuildFileStructurePreview(ProjectData projectData, ExportFormat format)
         {
-            var structure = new List<string>();
+            List<string> structure = new List<string>();
             var extension = GetFileExtension(format);
             
             structure.Add($"{projectData.ProjectName}.{extension}");
@@ -526,7 +526,7 @@ namespace UnityProjectArchitect.Services
                 structure.Add($"  ├── {projectData.ProjectName}_ProjectData.asset");
                 structure.Add("  ├── Sections/");
                 
-                foreach (var section in projectData.DocumentationSections.Where(s => s.IsEnabled))
+                foreach (string section in projectData.DocumentationSections.Where(s => s.IsEnabled))
                 {
                     structure.Add($"  │   ├── {section.SectionType}_Section.asset");
                 }

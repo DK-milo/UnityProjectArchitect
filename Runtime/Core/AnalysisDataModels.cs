@@ -309,11 +309,11 @@ namespace UnityProjectArchitect.Core
 
         public List<string> GetCircularDependencies()
         {
-            var cycles = new List<string>();
-            var visited = new HashSet<string>();
-            var recursionStack = new HashSet<string>();
+            List<string> cycles = new List<string>();
+            HashSet visited = new HashSet<string>();
+            HashSet recursionStack = new HashSet<string>();
 
-            foreach (var node in Nodes)
+            foreach (string node in Nodes)
             {
                 if (!visited.Contains(node.Id))
                 {
@@ -333,7 +333,7 @@ namespace UnityProjectArchitect.Core
 
             if (DirectDependencies.ContainsKey(nodeId))
             {
-                foreach (var dependency in DirectDependencies[nodeId])
+                foreach (string dependency in DirectDependencies[nodeId])
                 {
                     if (!visited.Contains(dependency))
                     {

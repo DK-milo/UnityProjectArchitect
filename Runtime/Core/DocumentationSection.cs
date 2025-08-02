@@ -256,7 +256,7 @@ namespace UnityProjectArchitect.Core
             if (!MeetsWordTarget) return false;
             
             // Check if required elements are mentioned in content
-            foreach (var element in RequiredElements)
+            foreach (string element in RequiredElements)
             {
                 if (!content.Contains(element, StringComparison.OrdinalIgnoreCase))
                 {

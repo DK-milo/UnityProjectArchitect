@@ -197,7 +197,7 @@ namespace UnityProjectArchitect.API
             ProjectTemplate template, 
             ProjectData projectData)
         {
-            var validationResult = await templateManager.ValidateTemplateCompatibilityAsync(template, projectData);
+            ValidationResult validationResult = await templateManager.ValidateTemplateCompatibilityAsync(template, projectData);
             return validationResult.IsValid;
         }
 
@@ -223,7 +223,7 @@ namespace UnityProjectArchitect.API
             if (result.HasConflicts)
             {
                 report += $"⚠️ Resolved Conflicts: {result.ResolvedConflicts.Count}\n";
-                foreach (var conflict in result.ResolvedConflicts)
+                foreach (string conflict in result.ResolvedConflicts)
                 {
                     report += $"  • {conflict.ConflictType}: {conflict.ResourcePath}\n";
                 }
@@ -241,14 +241,14 @@ namespace UnityProjectArchitect.API
             this ITemplateManager templateManager,
             ProjectData projectData)
         {
-            var allTemplates = await templateManager.GetAvailableTemplatesAsync();
-            var recommended = new List<ProjectTemplate>();
+            List<ProjectTemplate> allTemplates = await templateManager.GetAvailableTemplatesAsync();
+            List<ProjectTemplate> recommended = new List<ProjectTemplate>();
 
-            foreach (var template in allTemplates)
+            foreach (string template in allTemplates)
             {
                 if (template.HasProjectType(projectData.ProjectType))
                 {
-                    var validationResult = await templateManager.ValidateTemplateCompatibilityAsync(template, projectData);
+                    ValidationResult validationResult = await templateManager.ValidateTemplateCompatibilityAsync(template, projectData);
                     if (validationResult.IsValid || validationResult.WarningCount <= 2)
                     {
                         recommended.Add(template);

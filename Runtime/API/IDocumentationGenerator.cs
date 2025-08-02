@@ -169,7 +169,7 @@ namespace UnityProjectArchitect.API
 
         public static string GetFormattedReport(this DocumentationGenerationResult result)
         {
-            var report = $"📊 Documentation Generation Report\n";
+            string report = $"📊 Documentation Generation Report\n";
             report += $"🎯 Success: {result.Success}\n";
             report += $"📄 Completed: {result.CompletedSections}/{result.Statistics.TotalSections} sections\n";
             report += $"⏱️ Time: {result.GenerationTime.TotalSeconds:F1}s\n";
@@ -178,7 +178,7 @@ namespace UnityProjectArchitect.API
             if (result.FailedSections > 0)
             {
                 report += $"❌ Failed: {result.FailedSections} sections\n";
-                foreach (var failed in result.SectionResults.Where(r => !r.Success))
+                foreach (string failed in result.SectionResults.Where(r => !r.Success))
                 {
                     report += $"  • {failed.SectionType}: {failed.ErrorMessage}\n";
                 }

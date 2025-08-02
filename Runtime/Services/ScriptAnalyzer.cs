@@ -16,7 +16,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ScriptAnalysisResult> AnalyzeScriptAsync(string scriptPath)
         {
-            var result = new ScriptAnalysisResult();
+            ScriptAnalysisResult result = new ScriptAnalysisResult();
             
             if (File.Exists(scriptPath))
             {
@@ -41,20 +41,20 @@ namespace UnityProjectArchitect.Services
 
         public async Task<List<ClassDefinition>> ExtractClassDefinitionsAsync(string scriptPath)
         {
-            var classes = new List<ClassDefinition>();
+            List<string> classes = new List<ClassDefinition>();
             
             if (File.Exists(scriptPath))
             {
-                var content = await File.ReadAllTextAsync(scriptPath);
+                string content = await File.ReadAllTextAsync(scriptPath);
                 classes.AddRange(ExtractClassesFromContent(content, scriptPath));
             }
             else if (Directory.Exists(scriptPath))
             {
-                var scriptFiles = Directory.GetFiles(scriptPath, "*.cs", SearchOption.AllDirectories);
+                string[] scriptFiles = Directory.GetFiles(scriptPath, "*.cs", SearchOption.AllDirectories);
                 
-                foreach (var file in scriptFiles)
+                foreach (string file in scriptFiles)
                 {
-                    var content = await File.ReadAllTextAsync(file);
+                    string content = await File.ReadAllTextAsync(file);
                     classes.AddRange(ExtractClassesFromContent(content, file));
                 }
             }
@@ -64,10 +64,10 @@ namespace UnityProjectArchitect.Services
 
         public async Task<List<MethodDefinition>> ExtractMethodDefinitionsAsync(string scriptPath)
         {
-            var methods = new List<MethodDefinition>();
-            var classes = await ExtractClassDefinitionsAsync(scriptPath);
+            List<string> methods = new List<MethodDefinition>();
+            List<ClassDefinition> classes = await ExtractClassDefinitionsAsync(scriptPath);
             
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 methods.AddRange(classDefinition.Methods);
             }
@@ -80,7 +80,7 @@ namespace UnityProjectArchitect.Services
             var dependencyGraph = new DependencyGraph();
             var classes = await ExtractClassDefinitionsAsync(scriptsPath);
 
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 var node = new DependencyNode(classDefinition.FullName, classDefinition.Name, "Class")
                 {
@@ -88,19 +88,19 @@ namespace UnityProjectArchitect.Services
                 };
                 dependencyGraph.Nodes.Add(node);
 
-                var dependencies = new List<string>();
+                List<string> dependencies = new List<string>();
                 
                 dependencies.AddRange(classDefinition.BaseClasses);
                 dependencies.AddRange(classDefinition.Interfaces);
                 
-                foreach (var method in classDefinition.Methods)
+                foreach (string method in classDefinition.Methods)
                 {
                     dependencies.AddRange(ExtractTypeDependenciesFromMethod(method));
                 }
 
                 dependencyGraph.DirectDependencies[classDefinition.FullName] = dependencies.Distinct().ToList();
 
-                foreach (var dependency in dependencies.Distinct())
+                foreach (string dependency in dependencies.Distinct())
                 {
                     var edge = new DependencyEdge(classDefinition.FullName, dependency, DetermineDependencyType(dependency, classDefinition));
                     dependencyGraph.Edges.Add(edge);
@@ -143,7 +143,7 @@ namespace UnityProjectArchitect.Services
             var interfaces = ExtractInterfacesFromContent(content, filePath);
             result.Interfaces.AddRange(interfaces);
 
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 result.Methods.AddRange(classDefinition.Methods);
             }
@@ -153,7 +153,7 @@ namespace UnityProjectArchitect.Services
         {
             var scriptFiles = Directory.GetFiles(directoryPath, "*.cs", SearchOption.AllDirectories);
             
-            foreach (var file in scriptFiles)
+            foreach (string file in scriptFiles)
             {
                 await AnalyzeSingleScriptAsync(file, result);
             }
@@ -161,7 +161,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ClassDefinition> ExtractClassesFromContent(string content, string filePath)
         {
-            var classes = new List<ClassDefinition>();
+            List<string> classes = new List<ClassDefinition>();
             var lines = content.Split('\n');
             
             var namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
@@ -191,7 +191,7 @@ namespace UnityProjectArchitect.Services
                 if (!string.IsNullOrEmpty(match.Groups[5].Value))
                 {
                     var inheritance = match.Groups[5].Value.Split(',').Select(s => s.Trim()).ToArray();
-                    foreach (var item in inheritance)
+                    foreach (string item in inheritance)
                     {
                         if (item.StartsWith("I") && char.IsUpper(item[1]))
                         {
@@ -221,7 +221,7 @@ namespace UnityProjectArchitect.Services
 
         private List<InterfaceDefinition> ExtractInterfacesFromContent(string content, string filePath)
         {
-            var interfaces = new List<InterfaceDefinition>();
+            List<string> interfaces = new List<InterfaceDefinition>();
             
             var namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
             var interfacePattern = @"(public|private|protected|internal)?\s*interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^{]+))?\s*{";
@@ -264,7 +264,7 @@ namespace UnityProjectArchitect.Services
 
         private List<MethodDefinition> ExtractMethodsFromClass(string content, string className)
         {
-            var methods = new List<MethodDefinition>();
+            List<string> methods = new List<MethodDefinition>();
             
             var methodPattern = @"(public|private|protected|internal)?\s*(static|virtual|override|abstract)?\s*(async)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*{";
             var matches = Regex.Matches(content, methodPattern);
@@ -299,7 +299,7 @@ namespace UnityProjectArchitect.Services
 
         private List<PropertyDefinition> ExtractPropertiesFromClass(string content, string className)
         {
-            var properties = new List<PropertyDefinition>();
+            List<string> properties = new List<PropertyDefinition>();
             
             var propertyPattern = @"(public|private|protected|internal)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*})?[^}]*(set[^}]*})?";
             var matches = Regex.Matches(content, propertyPattern);
@@ -324,7 +324,7 @@ namespace UnityProjectArchitect.Services
 
         private List<FieldDefinition> ExtractFieldsFromClass(string content, string className)
         {
-            var fields = new List<FieldDefinition>();
+            List<string> fields = new List<FieldDefinition>();
             
             var fieldPattern = @"(public|private|protected|internal)?\s*(static|readonly|const)?\s*([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:=\s*([^;]+))?\s*;";
             var matches = Regex.Matches(content, fieldPattern);
@@ -350,7 +350,7 @@ namespace UnityProjectArchitect.Services
 
         private List<string> ExtractAttributesFromClass(string content, string className)
         {
-            var attributes = new List<string>();
+            List<string> attributes = new List<string>();
             
             var attributePattern = @"\[([^\]]+)\]";
             var matches = Regex.Matches(content, attributePattern);
@@ -365,7 +365,7 @@ namespace UnityProjectArchitect.Services
 
         private List<MethodSignature> ExtractMethodSignaturesFromInterface(string content)
         {
-            var methods = new List<MethodSignature>();
+            List<string> methods = new List<MethodSignature>();
             
             var methodPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*;";
             var matches = Regex.Matches(content, methodPattern);
@@ -391,7 +391,7 @@ namespace UnityProjectArchitect.Services
 
         private List<PropertySignature> ExtractPropertySignaturesFromInterface(string content)
         {
-            var properties = new List<PropertySignature>();
+            List<string> properties = new List<PropertySignature>();
             
             var propertyPattern = @"([A-Za-z_][A-Za-z0-9_<>,\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*{\s*(get[^}]*;)?[^}]*(set[^}]*;)?";
             var matches = Regex.Matches(content, propertyPattern);
@@ -414,14 +414,14 @@ namespace UnityProjectArchitect.Services
 
         private List<ParameterDefinition> ParseParameters(string parametersString)
         {
-            var parameters = new List<ParameterDefinition>();
+            List<string> parameters = new List<ParameterDefinition>();
             
             if (string.IsNullOrWhiteSpace(parametersString))
                 return parameters;
 
             var paramParts = parametersString.Split(',');
             
-            foreach (var part in paramParts)
+            foreach (string part in paramParts)
             {
                 var trimmed = part.Trim();
                 var words = trimmed.Split(' ');
@@ -492,7 +492,7 @@ namespace UnityProjectArchitect.Services
             var complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
             var complexity = 1f;
 
-            foreach (var keyword in complexityKeywords)
+            foreach (string keyword in complexityKeywords)
             {
                 complexity += Regex.Matches(classContent, $@"\b{keyword}\b").Count;
             }
@@ -505,7 +505,7 @@ namespace UnityProjectArchitect.Services
             var complexityKeywords = new[] { "if", "else", "while", "for", "foreach", "switch", "case", "catch", "&&", "||" };
             var complexity = 1f;
 
-            foreach (var keyword in complexityKeywords)
+            foreach (string keyword in complexityKeywords)
             {
                 complexity += Regex.Matches(methodContent, $@"\b{keyword}\b").Count;
             }
@@ -515,7 +515,7 @@ namespace UnityProjectArchitect.Services
 
         private List<string> ExtractTypeDependenciesFromMethod(MethodDefinition method)
         {
-            var dependencies = new List<string>();
+            List<string> dependencies = new List<string>();
             
             dependencies.Add(method.ReturnType);
             dependencies.AddRange(method.Parameters.Select(p => p.Type));
@@ -542,7 +542,7 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectDesignPatterns(List<ClassDefinition> classes)
         {
-            var patterns = new List<DesignPattern>();
+            List<string> patterns = new List<DesignPattern>();
 
             patterns.AddRange(DetectSingletonPattern(classes));
             patterns.AddRange(DetectFactoryPattern(classes));
@@ -553,9 +553,9 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectSingletonPattern(List<ClassDefinition> classes)
         {
-            var patterns = new List<DesignPattern>();
+            List<string> patterns = new List<DesignPattern>();
 
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 var hasStaticInstance = classDefinition.Fields.Any(f => f.IsStatic && f.Type == classDefinition.Name);
                 var hasPrivateConstructor = classDefinition.Methods.Any(m => m.Name == classDefinition.Name && m.AccessModifier == AccessModifier.Private);
@@ -576,9 +576,9 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectFactoryPattern(List<ClassDefinition> classes)
         {
-            var patterns = new List<DesignPattern>();
+            List<string> patterns = new List<DesignPattern>();
 
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 if (classDefinition.Name.Contains("Factory"))
                 {
@@ -601,9 +601,9 @@ namespace UnityProjectArchitect.Services
 
         private List<DesignPattern> DetectObserverPattern(List<ClassDefinition> classes)
         {
-            var patterns = new List<DesignPattern>();
+            List<string> patterns = new List<DesignPattern>();
 
-            foreach (var classDefinition in classes)
+            foreach (string classDefinition in classes)
             {
                 var hasEventFields = classDefinition.Fields.Any(f => f.Type.Contains("Action") || f.Type.Contains("Event"));
                 var hasNotifyMethod = classDefinition.Methods.Any(m => m.Name.Contains("Notify") || m.Name.Contains("Update"));
@@ -624,9 +624,9 @@ namespace UnityProjectArchitect.Services
 
         private List<CodeIssue> DetectCodeIssues(ScriptAnalysisResult result)
         {
-            var issues = new List<CodeIssue>();
+            List<string> issues = new List<CodeIssue>();
 
-            foreach (var classDefinition in result.Classes)
+            foreach (string classDefinition in result.Classes)
             {
                 if (classDefinition.Methods.Count > 20)
                 {
@@ -652,7 +652,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                foreach (var method in classDefinition.Methods)
+                foreach (string method in classDefinition.Methods)
                 {
                     if (method.CyclomaticComplexity > 10)
                     {

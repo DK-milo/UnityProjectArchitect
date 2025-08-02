@@ -384,19 +384,19 @@ namespace UnityProjectArchitect.API
             List<ExportFormat> formats,
             string basePath)
         {
-            var combinedResult = new ExportOperationResult();
-            var allFiles = new List<string>();
+            ExportOperationResult combinedResult = new ExportOperationResult();
+            List<string> allFiles = new List<string>();
             long totalSize = 0;
-            var totalTime = TimeSpan.Zero;
+            TimeSpan totalTime = TimeSpan.Zero;
 
-            foreach (var format in formats)
+            foreach (string format in formats)
             {
-                var request = new ExportRequest(format, basePath)
+                ExportRequest request = new ExportRequest(format, basePath)
                 {
                     FileName = $"{projectData.ProjectName}.{GetFileExtension(format)}"
                 };
 
-                var result = await exportService.ExportProjectDocumentationAsync(projectData, request);
+                ExportOperationResult result = await exportService.ExportProjectDocumentationAsync(projectData, request);
                 
                 if (result.Success)
                 {

@@ -67,7 +67,7 @@ namespace UnityProjectArchitect.Services
 
         public ValidationResult ValidateContent(ExportContent content)
         {
-            var validation = new ValidationResult { IsValid = true };
+            ValidationResult validation = new ValidationResult { IsValid = true };
 
             if (content == null)
             {
@@ -128,7 +128,7 @@ namespace UnityProjectArchitect.Services
             // Process sections
             if (content.Sections?.Count > 0)
             {
-                foreach (var section in content.Sections.Where(s => s.IsEnabled))
+                foreach (string section in content.Sections.Where(s => s.IsEnabled))
                 {
                     await AppendSectionAsync(section, options);
                 }
@@ -139,7 +139,7 @@ namespace UnityProjectArchitect.Services
 
         private Dictionary<string, object> CreateTemplateVariables(ExportContent content, ExportOptions options)
         {
-            var variables = new Dictionary<string, object>();
+            Dictionary variables = new Dictionary<string, object>();
             
             // Project variables
             if (content.ProjectData != null)
@@ -175,7 +175,7 @@ namespace UnityProjectArchitect.Services
             // Add custom variables
             if (content.Variables != null)
             {
-                foreach (var kvp in content.Variables)
+                foreach (string kvp in content.Variables)
                 {
                     variables[kvp.Key] = kvp.Value;
                 }
@@ -188,7 +188,7 @@ namespace UnityProjectArchitect.Services
         {
             var processed = template;
             
-            foreach (var variable in variables)
+            foreach (string variable in variables)
             {
                 var placeholder = $"{{{{{variable.Key}}}}}";
                 processed = processed.Replace(placeholder, variable.Value?.ToString() ?? "");
@@ -245,10 +245,10 @@ namespace UnityProjectArchitect.Services
         {
             // Simple code block detection and formatting
             var lines = content.Split('\n');
-            var result = new StringBuilder();
+            StringBuilder result = new StringBuilder();
             bool inCodeBlock = false;
 
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
                 var trimmed = line.Trim();
                 

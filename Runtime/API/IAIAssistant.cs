@@ -274,7 +274,7 @@ namespace UnityProjectArchitect.API
             ProjectData projectData,
             DocumentationSectionData sectionData)
         {
-            var request = new AIRequest(sectionData.CustomPrompt, projectData)
+            AIRequest request = new AIRequest(sectionData.CustomPrompt, projectData)
             {
                 SectionType = sectionData.SectionType,
                 TargetWordCount = sectionData.WordCountTarget,
@@ -288,17 +288,17 @@ namespace UnityProjectArchitect.API
             this IAIAssistant aiAssistant,
             AIProvider provider)
         {
-            var supportedProviders = aiAssistant.GetSupportedProviders();
+            List<AIProvider> supportedProviders = aiAssistant.GetSupportedProviders();
             if (!supportedProviders.Contains(provider))
                 return false;
 
-            var defaultConfig = aiAssistant.GetDefaultConfiguration(provider);
+            AIConfiguration defaultConfig = aiAssistant.GetDefaultConfiguration(provider);
             return await aiAssistant.TestConnectionAsync(defaultConfig);
         }
-
+        
         public static string GetFormattedReport(this AIOperationResult result)
         {
-            var report = $"🤖 AI Operation Report\n";
+            string report = $"🤖 AI Operation Report\n";
             report += $"✅ Success: {result.Success}\n";
             report += $"🔮 Provider: {result.Provider}\n";
             report += $"⏱️ Time: {result.ProcessingTime.TotalSeconds:F1}s\n";
@@ -318,13 +318,13 @@ namespace UnityProjectArchitect.API
             this IAIAssistant aiAssistant,
             ProjectData projectData)
         {
-            var results = new List<AIOperationResult>();
+            List<AIOperationResult> results = new List<AIOperationResult>();
             
-            foreach (var section in projectData.DocumentationSections)
+            foreach (string section in projectData.DocumentationSections)
             {
                 if (section.IsEnabled && section.AIMode != AIGenerationMode.Disabled)
                 {
-                    var result = await aiAssistant.GenerateDocumentationSection(projectData, section);
+                    AIOperationResult result = await aiAssistant.GenerateDocumentationSection(projectData, section);
                     results.Add(result);
                     
                     if (result.Success && section.AIMode == AIGenerationMode.FullGeneration)

@@ -410,9 +410,9 @@ namespace UnityProjectArchitect.API
             if (result.Insights.Count > 0)
             {
                 report += $"\n🔍 Insights ({result.Insights.Count}):\n";
-                foreach (var insight in result.Insights.Take(5))
+                foreach (string insight in result.Insights.Take(5))
                 {
-                    var severityIcon = insight.Severity switch
+                    string severityIcon = insight.Severity switch
                     {
                         InsightSeverity.Critical => "🔴",
                         InsightSeverity.High => "🟠",
@@ -426,11 +426,11 @@ namespace UnityProjectArchitect.API
 
             if (result.Recommendations.Count > 0)
             {
-                var highPriorityRecs = result.GetRecommendationsByPriority(RecommendationPriority.High);
+                List<ProjectRecommendation> highPriorityRecs = result.GetRecommendationsByPriority(RecommendationPriority.High);
                 if (highPriorityRecs.Count > 0)
                 {
                     report += $"\n💡 High Priority Recommendations:\n";
-                    foreach (var rec in highPriorityRecs.Take(3))
+                    foreach (string rec in highPriorityRecs.Take(3))
                     {
                         report += $"  • {rec.Title}\n";
                     }

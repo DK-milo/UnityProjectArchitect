@@ -28,14 +28,14 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ExportOperationResult> FormatAsync(ExportContent content, ExportOptions options)
         {
-            var result = new ExportOperationResult(ExportFormat.PDF, "");
-            var startTime = DateTime.Now;
+            ExportOperationResult result = new ExportOperationResult(ExportFormat.PDF, "");
+            DateTime startTime = DateTime.Now;
 
             try
             {
                 // Step 1: Generate Markdown content
-                var markdownOptions = CreateMarkdownOptions(options);
-                var markdownResult = await _markdownExporter.FormatAsync(content, markdownOptions);
+                ExportOptions markdownOptions = CreateMarkdownOptions(options);
+                ExportOperationResult markdownResult = await _markdownExporter.FormatAsync(content, markdownOptions);
                 
                 if (!markdownResult.Success)
                 {
@@ -44,16 +44,16 @@ namespace UnityProjectArchitect.Services
                     return result;
                 }
 
-                var markdownContent = markdownResult.Metadata["content"] as string;
+                string markdownContent = markdownResult.Metadata["content"] as string;
                 
                 // Step 2: Convert Markdown to HTML
-                var htmlContent = await ConvertMarkdownToHtmlAsync(markdownContent, options);
+                string htmlContent = await ConvertMarkdownToHtmlAsync(markdownContent, options);
                 
                 // Step 3: Apply PDF-specific formatting and styling
-                var styledHtml = await ApplyPDFStylingAsync(htmlContent, content, options);
+                string styledHtml = await ApplyPDFStylingAsync(htmlContent, content, options);
                 
                 // Step 4: Generate PDF metadata
-                var pdfMetadata = GeneratePDFMetadata(content, options);
+                PDFMetadata pdfMetadata = GeneratePDFMetadata(content, options);
                 
                 result.Success = true;
                 result.GeneratedFiles.Add($"{content.Title}.pdf");
@@ -80,7 +80,7 @@ namespace UnityProjectArchitect.Services
 
         public ValidationResult ValidateContent(ExportContent content)
         {
-            var validation = new ValidationResult { IsValid = true };
+            ValidationResult validation = new ValidationResult { IsValid = true };
 
             if (content == null)
             {
@@ -105,10 +105,10 @@ namespace UnityProjectArchitect.Services
             }
 
             // PDF-specific validations
-            var totalWordCount = 0;
+            int totalWordCount = 0;
             if (content.Sections != null)
             {
-                foreach (var section in content.Sections)
+                foreach (DocumentationSection section in content.Sections)
                 {
                     totalWordCount += section.CurrentWordCount;
                 }
@@ -157,7 +157,7 @@ namespace UnityProjectArchitect.Services
 
         private ExportOptions CreateMarkdownOptions(ExportOptions pdfOptions)
         {
-            var markdownOptions = new ExportOptions
+            ExportOptions markdownOptions = new ExportOptions
             {
                 IncludeTableOfContents = pdfOptions.IncludeTableOfContents,
                 IncludeTimestamp = pdfOptions.IncludeTimestamp,
@@ -183,14 +183,14 @@ namespace UnityProjectArchitect.Services
                 return "<html><body><p>No content to export</p></body></html>";
 
             // Basic Markdown to HTML conversion
-            var html = new StringBuilder();
-            var lines = markdownContent.Split('\n');
+            StringBuilder html = new StringBuilder();
+            string[] lines = markdownContent.Split('\n');
             bool inCodeBlock = false;
             bool inList = false;
 
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
-                var trimmed = line.Trim();
+                string trimmed = line.Trim();
                 
                 if (string.IsNullOrEmpty(trimmed))
                 {
@@ -220,7 +220,7 @@ namespace UnityProjectArchitect.Services
                     }
                     else
                     {
-                        var lang = trimmed.Length > 3 ? trimmed.Substring(3) : "";
+                        string lang = trimmed.Length > 3 ? trimmed.Substring(3) : "";
                         html.AppendLine($"<pre class=\"code-block\"><code class=\"language-{lang}\">");
                         inCodeBlock = true;
                     }
@@ -323,10 +323,10 @@ namespace UnityProjectArchitect.Services
 
         private async Task<string> ApplyPDFStylingAsync(string htmlContent, ExportContent content, ExportOptions options)
         {
-            var templateId = GetOption<string>(options, "TemplateId", "default");
-            var template = GetTemplate(templateId);
+            string templateId = GetOption<string>(options, "TemplateId", "default");
+            PDFTemplate template = GetTemplate(templateId);
             
-            var styledHtml = new StringBuilder();
+            StringBuilder styledHtml = new StringBuilder();
             
             // HTML document structure
             styledHtml.AppendLine("<!DOCTYPE html>");
@@ -355,7 +355,7 @@ namespace UnityProjectArchitect.Services
             // Table of Contents
             if (GetOption<bool>(options, "IncludeTOC", true))
             {
-                var toc = GenerateTableOfContents(htmlContent);
+                string toc = GenerateTableOfContents(htmlContent);
                 if (!string.IsNullOrEmpty(toc))
                 {
                     styledHtml.AppendLine("<div class=\"toc\">");
@@ -387,16 +387,16 @@ namespace UnityProjectArchitect.Services
 
         private async Task<string> GenerateCSSAsync(ExportOptions options, PDFTemplate template)
         {
-            var css = new StringBuilder();
+            StringBuilder css = new StringBuilder();
             
-            var pageSize = GetOption<string>(options, "PageSize", "A4");
-            var orientation = GetOption<string>(options, "Orientation", "Portrait");
-            var fontFamily = GetOption<string>(options, "FontFamily", "Arial");
-            var fontSize = GetOption<string>(options, "FontSize", "11");
-            var marginTop = GetOption<string>(options, "MarginTop", "1in");
-            var marginBottom = GetOption<string>(options, "MarginBottom", "1in");
-            var marginLeft = GetOption<string>(options, "MarginLeft", "1in");
-            var marginRight = GetOption<string>(options, "MarginRight", "1in");
+            string pageSize = GetOption<string>(options, "PageSize", "A4");
+            string orientation = GetOption<string>(options, "Orientation", "Portrait");
+            string fontFamily = GetOption<string>(options, "FontFamily", "Arial");
+            string fontSize = GetOption<string>(options, "FontSize", "11");
+            string marginTop = GetOption<string>(options, "MarginTop", "1in");
+            string marginBottom = GetOption<string>(options, "MarginBottom", "1in");
+            string marginLeft = GetOption<string>(options, "MarginLeft", "1in");
+            string marginRight = GetOption<string>(options, "MarginRight", "1in");
 
             css.AppendLine("@page {");
             css.AppendLine($"  size: {pageSize} {orientation.ToLower()};");
@@ -460,9 +460,9 @@ namespace UnityProjectArchitect.Services
         {
             if (string.IsNullOrEmpty(htmlContent)) return "";
 
-            var toc = new StringBuilder();
-            var headerRegex = new System.Text.RegularExpressions.Regex(@"<h([1-6])>(.*?)</h[1-6]>");
-            var matches = headerRegex.Matches(htmlContent);
+            StringBuilder toc = new StringBuilder();
+            System.Text.RegularExpressions.Regex headerRegex = new System.Text.RegularExpressions.Regex(@"<h([1-6])>(.*?)</h[1-6]>");
+            System.Text.RegularExpressions.MatchCollection matches = headerRegex.Matches(htmlContent);
 
             if (matches.Count == 0) return "";
 
@@ -470,9 +470,9 @@ namespace UnityProjectArchitect.Services
             
             foreach (System.Text.RegularExpressions.Match match in matches)
             {
-                var level = int.Parse(match.Groups[1].Value);
-                var text = match.Groups[2].Value;
-                var indent = new string(' ', (level - 1) * 2);
+                int level = int.Parse(match.Groups[1].Value);
+                string text = match.Groups[2].Value;
+                string indent = new string(' ', (level - 1) * 2);
                 
                 toc.AppendLine($"{indent}<li>{text}</li>");
             }
@@ -498,7 +498,7 @@ namespace UnityProjectArchitect.Services
 
         private ExportStatistics GenerateStatistics(ExportContent content, string markdownContent, string htmlContent)
         {
-            var stats = new ExportStatistics();
+            ExportStatistics stats = new ExportStatistics();
             
             if (content.Sections != null)
             {

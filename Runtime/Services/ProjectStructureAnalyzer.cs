@@ -30,14 +30,14 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ProjectStructureAnalysis> AnalyzeAsync(string projectPath)
         {
-            var analysis = new ProjectStructureAnalysis();
+            ProjectStructureAnalysis analysis = new ProjectStructureAnalysis();
 
             await Task.Run(() =>
             {
                 try
                 {
-                    var assetsPath = Path.Combine(projectPath, "Assets");
-                    var projectSettingsPath = Path.Combine(projectPath, "ProjectSettings");
+                    string assetsPath = Path.Combine(projectPath, "Assets");
+                    string projectSettingsPath = Path.Combine(projectPath, "ProjectSettings");
 
                     if (!Directory.Exists(assetsPath))
                     {
@@ -69,16 +69,16 @@ namespace UnityProjectArchitect.Services
 
         private List<FolderInfo> AnalyzeFolderStructure(string assetsPath)
         {
-            var folders = new List<FolderInfo>();
+            List<FolderInfo> folders = new List<FolderInfo>();
 
             try
             {
-                var directories = Directory.GetDirectories(assetsPath, "*", SearchOption.AllDirectories);
+                string[] directories = Directory.GetDirectories(assetsPath, "*", SearchOption.AllDirectories);
                 
-                foreach (var directory in directories)
+                foreach (string directory in directories)
                 {
-                    var dirInfo = new DirectoryInfo(directory);
-                    var folderInfo = new FolderInfo(directory, dirInfo.Name)
+                    DirectoryInfo dirInfo = new DirectoryInfo(directory);
+                    FolderInfo folderInfo = new FolderInfo(directory, dirInfo.Name)
                     {
                         FileCount = Directory.GetFiles(directory, "*", SearchOption.TopDirectoryOnly).Length,
                         SubfolderCount = Directory.GetDirectories(directory, "*", SearchOption.TopDirectoryOnly).Length,
@@ -91,7 +91,7 @@ namespace UnityProjectArchitect.Services
                     folders.Add(folderInfo);
                 }
 
-                var rootFolder = new FolderInfo(assetsPath, "Assets")
+                FolderInfo rootFolder = new FolderInfo(assetsPath, "Assets")
                 {
                     FileCount = Directory.GetFiles(assetsPath, "*", SearchOption.TopDirectoryOnly).Length,
                     SubfolderCount = Directory.GetDirectories(assetsPath, "*", SearchOption.TopDirectoryOnly).Length,
@@ -112,18 +112,18 @@ namespace UnityProjectArchitect.Services
 
         private List<Core.FileInfo> AnalyzeFiles(string assetsPath)
         {
-            var files = new List<Core.FileInfo>();
+            List<Core.FileInfo> files = new List<Core.FileInfo>();
 
             try
             {
-                var allFiles = Directory.GetFiles(assetsPath, "*", SearchOption.AllDirectories)
+                string[] allFiles = Directory.GetFiles(assetsPath, "*", SearchOption.AllDirectories)
                     .Where(f => !f.EndsWith(".meta"))
                     .ToArray();
 
-                foreach (var filePath in allFiles)
+                foreach (string filePath in allFiles)
                 {
-                    var systemFileInfo = new System.IO.FileInfo(filePath);
-                    var fileInfo = new Core.FileInfo(filePath)
+                    System.IO.FileInfo systemFileInfo = new System.IO.FileInfo(filePath);
+                    Core.FileInfo fileInfo = new Core.FileInfo(filePath)
                     {
                         SizeBytes = systemFileInfo.Length,
                         CreatedDate = systemFileInfo.CreationTime,
@@ -150,18 +150,18 @@ namespace UnityProjectArchitect.Services
 
         private List<AssemblyDefinitionInfo> AnalyzeAssemblyDefinitions(string assetsPath)
         {
-            var assemblyDefinitions = new List<AssemblyDefinitionInfo>();
+            List<AssemblyDefinitionInfo> assemblyDefinitions = new List<AssemblyDefinitionInfo>();
 
             try
             {
-                var asmdefFiles = Directory.GetFiles(assetsPath, "*.asmdef", SearchOption.AllDirectories);
+                string[] asmdefFiles = Directory.GetFiles(assetsPath, "*.asmdef", SearchOption.AllDirectories);
 
-                foreach (var asmdefFile in asmdefFiles)
+                foreach (string asmdefFile in asmdefFiles)
                 {
                     try
                     {
-                        var content = File.ReadAllText(asmdefFile);
-                        var asmdefInfo = ParseAssemblyDefinition(asmdefFile, content);
+                        string content = File.ReadAllText(asmdefFile);
+                        AssemblyDefinitionInfo asmdefInfo = ParseAssemblyDefinition(asmdefFile, content);
                         assemblyDefinitions.Add(asmdefInfo);
                     }
                     catch (Exception ex)
@@ -180,22 +180,22 @@ namespace UnityProjectArchitect.Services
 
         private List<SceneInfo> AnalyzeScenes(string assetsPath)
         {
-            var scenes = new List<SceneInfo>();
+            List<SceneInfo> scenes = new List<SceneInfo>();
 
             try
             {
-                var sceneFiles = Directory.GetFiles(assetsPath, "*.unity", SearchOption.AllDirectories);
+                string[] sceneFiles = Directory.GetFiles(assetsPath, "*.unity", SearchOption.AllDirectories);
 
-                foreach (var sceneFile in sceneFiles)
+                foreach (string sceneFile in sceneFiles)
                 {
-                    var sceneInfo = new SceneInfo(sceneFile)
+                    SceneInfo sceneInfo = new SceneInfo(sceneFile)
                     {
                         FileSizeBytes = new System.IO.FileInfo(sceneFile).Length
                     };
 
                     try
                     {
-                        var sceneData = AnalyzeSceneContent(sceneFile);
+                        (int GameObjectCount, List<string> ComponentTypes) sceneData = AnalyzeSceneContent(sceneFile);
                         sceneInfo.GameObjectCount = sceneData.GameObjectCount;
                         sceneInfo.ComponentTypes = sceneData.ComponentTypes;
                     }
@@ -219,9 +219,9 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var projectName = Path.GetFileName(projectPath).ToLower();
+                string projectName = Path.GetFileName(projectPath).ToLower();
                 
-                foreach (var pattern in projectTypePatterns)
+                foreach (KeyValuePair<string, ProjectType> pattern in projectTypePatterns)
                 {
                     if (projectName.Contains(pattern.Key.ToLower()))
                     {
@@ -229,20 +229,20 @@ namespace UnityProjectArchitect.Services
                     }
                 }
 
-                var hasVrFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("vr") || f.Name.ToLower().Contains("xr"));
+                bool hasVrFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("vr") || f.Name.ToLower().Contains("xr"));
                 if (hasVrFolders)
                     return ProjectType.VR;
 
-                var hasArFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("ar"));
+                bool hasArFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("ar"));
                 if (hasArFolders)
                     return ProjectType.AR;
 
-                var hasMobileFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("mobile"));
+                bool hasMobileFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("mobile"));
                 if (hasMobileFolders)
                     return ProjectType.Mobile;
 
-                var has3DAssets = analysis.Files.Any(f => f.Extension == ".fbx" || f.Extension == ".obj");
-                var has2DAssets = analysis.Files.Any(f => f.Extension == ".png" || f.Extension == ".jpg") && 
+                bool has3DAssets = analysis.Files.Any(f => f.Extension == ".fbx" || f.Extension == ".obj");
+                bool has2DAssets = analysis.Files.Any(f => f.Extension == ".png" || f.Extension == ".jpg") && 
                                  !has3DAssets;
                 
                 if (has3DAssets)
@@ -262,18 +262,18 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var versionFilePath = Path.Combine(projectSettingsPath, "ProjectVersion.txt");
+                string versionFilePath = Path.Combine(projectSettingsPath, "ProjectVersion.txt");
                 
                 if (!File.Exists(versionFilePath))
                     return UnityVersion.Unknown;
 
-                var content = File.ReadAllText(versionFilePath);
-                var versionMatch = Regex.Match(content, @"m_EditorVersion:\s*(\d+)\.(\d+)\.(\d+)");
+                string content = File.ReadAllText(versionFilePath);
+                Match versionMatch = Regex.Match(content, @"m_EditorVersion:\s*(\d+)\.(\d+)\.(\d+)");
                 
                 if (versionMatch.Success)
                 {
-                    var major = int.Parse(versionMatch.Groups[1].Value);
-                    var minor = int.Parse(versionMatch.Groups[2].Value);
+                    int major = int.Parse(versionMatch.Groups[1].Value);
+                    int minor = int.Parse(versionMatch.Groups[2].Value);
                     
                     return (major, minor) switch
                     {
@@ -298,15 +298,15 @@ namespace UnityProjectArchitect.Services
 
         private bool CheckStandardStructure(List<FolderInfo> folders)
         {
-            var folderNames = folders.Select(f => f.Name).ToList();
-            var standardFoldersFound = standardFolders.Count(sf => folderNames.Contains(sf));
+            List<string> folderNames = folders.Select(f => f.Name).ToList();
+            int standardFoldersFound = standardFolders.Count(sf => folderNames.Contains(sf));
             
             return standardFoldersFound >= (standardFolders.Count * 0.6f);
         }
 
         private List<StructureIssue> DetectStructureIssues(ProjectStructureAnalysis analysis)
         {
-            var issues = new List<StructureIssue>();
+            List<StructureIssue> issues = new List<StructureIssue>();
 
             issues.AddRange(DetectMissingStandardFolders(analysis.Folders));
             issues.AddRange(DetectNamingIssues(analysis.Folders, analysis.Files));
@@ -319,13 +319,13 @@ namespace UnityProjectArchitect.Services
 
         private List<StructureIssue> DetectMissingStandardFolders(List<FolderInfo> folders)
         {
-            var issues = new List<StructureIssue>();
-            var folderNames = folders.Select(f => f.Name).ToHashSet();
+            List<StructureIssue> issues = new List<StructureIssue>();
+            HashSet<string> folderNames = folders.Select(f => f.Name).ToHashSet();
 
-            var criticalFolders = new[] { "Scripts", "Scenes" };
-            var recommendedFolders = new[] { "Prefabs", "Materials", "Textures" };
+            string[] criticalFolders = new[] { "Scripts", "Scenes" };
+            string[] recommendedFolders = new[] { "Prefabs", "Materials", "Textures" };
 
-            foreach (var criticalFolder in criticalFolders)
+            foreach (string criticalFolder in criticalFolders)
             {
                 if (!folderNames.Contains(criticalFolder))
                 {
@@ -339,7 +339,7 @@ namespace UnityProjectArchitect.Services
                 }
             }
 
-            foreach (var recommendedFolder in recommendedFolders)
+            foreach (string recommendedFolder in recommendedFolders)
             {
                 if (!folderNames.Contains(recommendedFolder))
                 {
@@ -358,9 +358,9 @@ namespace UnityProjectArchitect.Services
 
         private List<StructureIssue> DetectNamingIssues(List<FolderInfo> folders, List<Core.FileInfo> files)
         {
-            var issues = new List<StructureIssue>();
+            List<StructureIssue> issues = new List<StructureIssue>();
 
-            foreach (var folder in folders)
+            foreach (FolderInfo folder in folders)
             {
                 if (HasNamingIssues(folder.Name))
                 {
@@ -374,7 +374,7 @@ namespace UnityProjectArchitect.Services
                 }
             }
 
-            foreach (var file in files)
+            foreach (Core.FileInfo file in files)
             {
                 if (HasNamingIssues(file.Name))
                 {
@@ -393,11 +393,11 @@ namespace UnityProjectArchitect.Services
 
         private List<StructureIssue> DetectDeepNesting(List<FolderInfo> folders)
         {
-            var issues = new List<StructureIssue>();
+            List<StructureIssue> issues = new List<StructureIssue>();
 
-            foreach (var folder in folders)
+            foreach (FolderInfo folder in folders)
             {
-                var depth = folder.Path.Split(Path.DirectorySeparatorChar).Length - 1;
+                int depth = folder.Path.Split(Path.DirectorySeparatorChar).Length - 1;
                 if (depth > 6)
                 {
                     issues.Add(new StructureIssue(StructureIssueType.DeepNesting,
@@ -415,9 +415,9 @@ namespace UnityProjectArchitect.Services
 
         private List<StructureIssue> DetectLargeFiles(List<Core.FileInfo> files)
         {
-            var issues = new List<StructureIssue>();
+            List<StructureIssue> issues = new List<StructureIssue>();
 
-            foreach (var file in files)
+            foreach (Core.FileInfo file in files)
             {
                 if (file.SizeBytes > 50 * 1024 * 1024) // 50 MB
                 {
@@ -436,12 +436,12 @@ namespace UnityProjectArchitect.Services
 
         private List<StructureIssue> DetectMisplacedFiles(List<Core.FileInfo> files)
         {
-            var issues = new List<StructureIssue>();
+            List<StructureIssue> issues = new List<StructureIssue>();
 
-            foreach (var file in files)
+            foreach (Core.FileInfo file in files)
             {
-                var expectedFolder = GetExpectedFolderForFileType(file.Type);
-                var actualFolder = Path.GetDirectoryName(file.Path);
+                string expectedFolder = GetExpectedFolderForFileType(file.Type);
+                string actualFolder = Path.GetDirectoryName(file.Path);
                 
                 if (!string.IsNullOrEmpty(expectedFolder) && 
                     !actualFolder.Contains(expectedFolder, StringComparison.OrdinalIgnoreCase))
@@ -463,7 +463,7 @@ namespace UnityProjectArchitect.Services
         {
             try
             {
-                var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
+                string[] files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
                 return files.Sum(file => new System.IO.FileInfo(file).Length);
             }
             catch
@@ -474,7 +474,7 @@ namespace UnityProjectArchitect.Services
 
         private List<string> DetermineFolderTags(string folderName, string folderPath)
         {
-            var tags = new List<string>();
+            List<string> tags = new List<string>();
 
             if (standardFolders.Contains(folderName))
                 tags.Add("Standard");
@@ -496,7 +496,7 @@ namespace UnityProjectArchitect.Services
 
         private FileType DetermineFileType(string filePath)
         {
-            var extension = Path.GetExtension(filePath).ToLower();
+            string extension = Path.GetExtension(filePath).ToLower();
             
             return extension switch
             {
@@ -528,12 +528,12 @@ namespace UnityProjectArchitect.Services
 
         private List<string> ExtractScriptDependencies(string scriptPath)
         {
-            var dependencies = new List<string>();
+            List<string> dependencies = new List<string>();
 
             try
             {
-                var content = File.ReadAllText(scriptPath);
-                var usingMatches = Regex.Matches(content, @"using\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;");
+                string content = File.ReadAllText(scriptPath);
+                MatchCollection usingMatches = Regex.Matches(content, @"using\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;");
                 
                 foreach (Match match in usingMatches)
                 {
@@ -550,7 +550,7 @@ namespace UnityProjectArchitect.Services
 
         private AssemblyDefinitionInfo ParseAssemblyDefinition(string filePath, string content)
         {
-            var asmdefInfo = new AssemblyDefinitionInfo
+            AssemblyDefinitionInfo asmdefInfo = new AssemblyDefinitionInfo
             {
                 Path = filePath,
                 Name = Path.GetFileNameWithoutExtension(filePath)
@@ -558,7 +558,7 @@ namespace UnityProjectArchitect.Services
 
             try
             {
-                var json = JsonUtility.FromJson<AssemblyDefinitionJson>(content);
+                AssemblyDefinitionJson json = JsonUtility.FromJson<AssemblyDefinitionJson>(content);
                 
                 if (json != null)
                 {
@@ -595,24 +595,24 @@ namespace UnityProjectArchitect.Services
 
         private (int GameObjectCount, List<string> ComponentTypes) AnalyzeSceneContent(string sceneFile)
         {
-            var gameObjectCount = 0;
-            var componentTypes = new HashSet<string>();
+            int gameObjectCount = 0;
+            HashSet<string> componentTypes = new HashSet<string>();
 
             try
             {
-                var content = File.ReadAllText(sceneFile);
+                string content = File.ReadAllText(sceneFile);
                 
-                var gameObjectMatches = Regex.Matches(content, @"GameObject:");
+                MatchCollection gameObjectMatches = Regex.Matches(content, @"GameObject:");
                 gameObjectCount = gameObjectMatches.Count;
                 
-                var componentMatches = Regex.Matches(content, @"MonoBehaviour:\s*.*\n.*m_Script:.*guid:\s*([a-f0-9]+)");
+                MatchCollection componentMatches = Regex.Matches(content, @"MonoBehaviour:\s*.*\n.*m_Script:.*guid:\s*([a-f0-9]+)");
                 foreach (Match match in componentMatches)
                 {
                     componentTypes.Add("MonoBehaviour");
                 }
                 
-                var builtInComponents = new[] { "Transform", "Camera", "Light", "MeshRenderer", "Collider", "Rigidbody", "AudioSource" };
-                foreach (var component in builtInComponents)
+                string[] builtInComponents = new[] { "Transform", "Camera", "Light", "MeshRenderer", "Collider", "Rigidbody", "AudioSource" };
+                foreach (string component in builtInComponents)
                 {
                     if (content.Contains($"{component}:"))
                     {

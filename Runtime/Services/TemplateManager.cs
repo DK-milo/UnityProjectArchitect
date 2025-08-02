@@ -53,14 +53,14 @@ namespace UnityProjectArchitect.Services
 
         public async Task<TemplateOperationResult> ApplyTemplateAsync(ProjectData projectData, ProjectTemplate template)
         {
-            var result = new TemplateOperationResult(template.TemplateId, template.TemplateName);
-            var startTime = DateTime.Now;
+            TemplateOperationResult result = new TemplateOperationResult(template.TemplateId, template.TemplateName);
+            DateTime startTime = DateTime.Now;
             
             try
             {
                 OnTemplateProgress?.Invoke("Validating template compatibility...", 0.1f);
                 
-                var validationResult = await ValidateTemplateCompatibilityAsync(template, projectData);
+                ValidationResult validationResult = await ValidateTemplateCompatibilityAsync(template, projectData);
                 if (!validationResult.IsValid)
                 {
                     result.Success = false;
@@ -71,12 +71,12 @@ namespace UnityProjectArchitect.Services
 
                 OnTemplateProgress?.Invoke("Detecting conflicts...", 0.2f);
                 
-                var conflicts = DetectConflicts(projectData, template);
+                List<TemplateConflict> conflicts = DetectConflicts(projectData, template);
                 if (conflicts.Count > 0)
                 {
                     OnTemplateProgress?.Invoke("Resolving conflicts...", 0.3f);
                     
-                    var conflictResult = await ResolveConflictsAsync(conflicts, ConflictResolution.Skip);
+                    TemplateOperationResult conflictResult = await ResolveConflictsAsync(conflicts, ConflictResolution.Skip);
                     result.ResolvedConflicts = conflicts;
                     
                     if (!conflictResult.Success)
@@ -89,7 +89,7 @@ namespace UnityProjectArchitect.Services
 
                 OnTemplateProgress?.Invoke("Creating folder structure...", 0.5f);
                 
-                var folderResult = await _folderManager.CreateFolderStructureAsync(
+                TemplateOperationResult folderResult = await _folderManager.CreateFolderStructureAsync(
                     template.FolderStructure, 
                     Application.dataPath
                 );
@@ -137,19 +137,19 @@ namespace UnityProjectArchitect.Services
 
         public async Task<TemplateOperationResult> ApplyMultipleTemplatesAsync(ProjectData projectData, List<ProjectTemplate> templates)
         {
-            var combinedResult = new TemplateOperationResult("multiple", "Multiple Templates");
-            var startTime = DateTime.Now;
+            TemplateOperationResult combinedResult = new TemplateOperationResult("multiple", "Multiple Templates");
+            DateTime startTime = DateTime.Now;
 
             try
             {
                 for (int i = 0; i < templates.Count; i++)
                 {
-                    var template = templates[i];
-                    var progress = (float)i / templates.Count;
+                    ProjectTemplate template = templates[i];
+                    float progress = (float)i / templates.Count;
                     
                     OnTemplateProgress?.Invoke($"Applying template {i + 1}/{templates.Count}: {template.TemplateName}", progress);
                     
-                    var result = await ApplyTemplateAsync(projectData, template);
+                    TemplateOperationResult result = await ApplyTemplateAsync(projectData, template);
                     
                     if (result.Success)
                     {
@@ -192,7 +192,7 @@ namespace UnityProjectArchitect.Services
 
         public async Task<ProjectTemplate> CreateTemplateFromProjectAsync(ProjectData projectData, string templateName)
         {
-            var template = ScriptableObject.CreateInstance<ProjectTemplate>();
+            ProjectTemplate template = ScriptableObject.CreateInstance<ProjectTemplate>();
             template.name = templateName;
             template.TemplateName = templateName;
             template.TemplateId = Guid.NewGuid().ToString();
@@ -201,14 +201,14 @@ namespace UnityProjectArchitect.Services
             template.TemplateDescription = $"Template created from {projectData.ProjectName}";
 
             // Analyze current project structure
-            var currentStructure = await _folderManager.AnalyzeExistingStructureAsync(Application.dataPath);
+            FolderStructureData currentStructure = await _folderManager.AnalyzeExistingStructureAsync(Application.dataPath);
             template.FolderStructure.Folders = currentStructure.Folders;
 
             // Copy documentation sections as defaults
             template.DefaultDocumentationSections.Clear();
-            foreach (var section in projectData.DocumentationSections)
+            foreach (DocumentationSection section in projectData.DocumentationSections)
             {
-                var templateSection = new DocumentationSectionData(section.SectionType)
+                DocumentationSectionData templateSection = new DocumentationSectionData(section.SectionType)
                 {
                     IsEnabled = section.IsEnabled,
                     AIMode = section.AIMode,
@@ -223,13 +223,13 @@ namespace UnityProjectArchitect.Services
 
         public async Task<TemplateOperationResult> SaveTemplateAsync(ProjectTemplate template)
         {
-            var result = new TemplateOperationResult(template.TemplateId, template.TemplateName);
+            TemplateOperationResult result = new TemplateOperationResult(template.TemplateId, template.TemplateName);
             
             try
             {
 #if UNITY_EDITOR
-                var path = $"Assets/ProjectTemplates/{template.TemplateName}.asset";
-                var directory = Path.GetDirectoryName(path);
+                string path = $"Assets/ProjectTemplates/{template.TemplateName}.asset";
+                string directory = Path.GetDirectoryName(path);
                 
                 if (!Directory.Exists(directory))
                 {
@@ -261,17 +261,17 @@ namespace UnityProjectArchitect.Services
 
         public async Task<TemplateOperationResult> DeleteTemplateAsync(string templateId)
         {
-            var result = new TemplateOperationResult(templateId, "");
+            TemplateOperationResult result = new TemplateOperationResult(templateId, "");
             
             try
             {
-                var template = _availableTemplates.FirstOrDefault(t => t.TemplateId == templateId);
+                ProjectTemplate template = _availableTemplates.FirstOrDefault(t => t.TemplateId == templateId);
                 if (template != null)
                 {
                     _availableTemplates.Remove(template);
                     
 #if UNITY_EDITOR
-                    var assetPath = UnityEditor.AssetDatabase.GetAssetPath(template);
+                    string assetPath = UnityEditor.AssetDatabase.GetAssetPath(template);
                     if (!string.IsNullOrEmpty(assetPath))
                     {
                         UnityEditor.AssetDatabase.DeleteAsset(assetPath);
@@ -339,18 +339,18 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectTemplate> CreateBuiltInTemplates()
         {
-            var templates = new List<ProjectTemplate>();
+            List<ProjectTemplate> templates = new List<ProjectTemplate>();
 
             // General Template
-            var generalTemplate = CreateGeneralTemplate();
+            ProjectTemplate generalTemplate = CreateGeneralTemplate();
             templates.Add(generalTemplate);
 
             // Mobile 2D Template
-            var mobile2DTemplate = CreateMobile2DTemplate();
+            ProjectTemplate mobile2DTemplate = CreateMobile2DTemplate();
             templates.Add(mobile2DTemplate);
 
             // PC 3D Template
-            var pc3DTemplate = CreatePC3DTemplate();
+            ProjectTemplate pc3DTemplate = CreatePC3DTemplate();
             templates.Add(pc3DTemplate);
 
             return templates;
@@ -358,7 +358,7 @@ namespace UnityProjectArchitect.Services
 
         private ProjectTemplate CreateGeneralTemplate()
         {
-            var template = ScriptableObject.CreateInstance<ProjectTemplate>();
+            ProjectTemplate template = ScriptableObject.CreateInstance<ProjectTemplate>();
             template.name = "GeneralTemplate";
             template.TemplateId = "general-unity-template";
             template.TemplateName = "General Unity Project";
@@ -367,7 +367,7 @@ namespace UnityProjectArchitect.Services
             template.Author = "Unity Project Architect";
             
             // Create standard folder structure
-            var folderStructure = new FolderStructureData();
+            FolderStructureData folderStructure = new FolderStructureData();
             folderStructure.Folders.AddRange(new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts, "Game logic and components"),
@@ -388,7 +388,7 @@ namespace UnityProjectArchitect.Services
 
         private ProjectTemplate CreateMobile2DTemplate()
         {
-            var template = ScriptableObject.CreateInstance<ProjectTemplate>();
+            ProjectTemplate template = ScriptableObject.CreateInstance<ProjectTemplate>();
             template.name = "Mobile2DTemplate";
             template.TemplateId = "mobile-2d-template";
             template.TemplateName = "Mobile 2D Game";
@@ -397,7 +397,7 @@ namespace UnityProjectArchitect.Services
             template.Author = "Unity Project Architect";
 
             // Mobile-specific folder structure
-            var folderStructure = new FolderStructureData();
+            FolderStructureData folderStructure = new FolderStructureData();
             folderStructure.Folders.AddRange(new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts),
@@ -424,7 +424,7 @@ namespace UnityProjectArchitect.Services
 
         private ProjectTemplate CreatePC3DTemplate()
         {
-            var template = ScriptableObject.CreateInstance<ProjectTemplate>();
+            ProjectTemplate template = ScriptableObject.CreateInstance<ProjectTemplate>();
             template.name = "PC3DTemplate";
             template.TemplateId = "pc-3d-template";
             template.TemplateName = "PC 3D Game";
@@ -433,7 +433,7 @@ namespace UnityProjectArchitect.Services
             template.Author = "Unity Project Architect";
 
             // 3D-specific folder structure
-            var folderStructure = new FolderStructureData();
+            FolderStructureData folderStructure = new FolderStructureData();
             folderStructure.Folders.AddRange(new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts),
@@ -462,15 +462,15 @@ namespace UnityProjectArchitect.Services
 
         private async Task CreateScenesFromTemplate(ProjectTemplate template, TemplateOperationResult result)
         {
-            foreach (var sceneTemplate in template.SceneTemplates)
+            foreach (SceneTemplateData sceneTemplate in template.SceneTemplates)
             {
                 if (sceneTemplate.CreateOnApply)
                 {
                     try
                     {
 #if UNITY_EDITOR
-                        var scenePath = $"Assets/Scenes/{sceneTemplate.SceneName}.unity";
-                        var sceneDirectory = Path.GetDirectoryName(scenePath);
+                        string scenePath = $"Assets/Scenes/{sceneTemplate.SceneName}.unity";
+                        string sceneDirectory = Path.GetDirectoryName(scenePath);
                         
                         if (!Directory.Exists(sceneDirectory))
                         {
@@ -478,15 +478,15 @@ namespace UnityProjectArchitect.Services
                             result.CreatedFolders.Add(sceneDirectory);
                         }
 
-                        var newScene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                        UnityEngine.SceneManagement.Scene newScene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
                             UnityEditor.SceneManagement.NewSceneSetup.DefaultGameObjects,
                             UnityEditor.SceneManagement.NewSceneMode.Single
                         );
 
                         // Add required GameObjects
-                        foreach (var gameObjectName in sceneTemplate.RequiredGameObjects)
+                        foreach (string gameObjectName in sceneTemplate.RequiredGameObjects)
                         {
-                            var go = new GameObject(gameObjectName);
+                            GameObject go = new GameObject(gameObjectName);
                         }
 
                         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(newScene, scenePath);
@@ -505,13 +505,13 @@ namespace UnityProjectArchitect.Services
 
         private async Task CreateAssemblyDefinitions(ProjectTemplate template, TemplateOperationResult result)
         {
-            foreach (var asmdefName in template.AssemblyDefinitions)
+            foreach (string asmdefName in template.AssemblyDefinitions)
             {
                 try
                 {
 #if UNITY_EDITOR
-                    var asmdefPath = $"Assets/Scripts/{asmdefName}.asmdef";
-                    var asmdefDirectory = Path.GetDirectoryName(asmdefPath);
+                    string asmdefPath = $"Assets/Scripts/{asmdefName}.asmdef";
+                    string asmdefDirectory = Path.GetDirectoryName(asmdefPath);
                     
                     if (!Directory.Exists(asmdefDirectory))
                     {
@@ -519,7 +519,7 @@ namespace UnityProjectArchitect.Services
                         result.CreatedFolders.Add(asmdefDirectory);
                     }
 
-                    var asmdefContent = new
+                    object asmdefContent = new
                     {
                         name = asmdefName,
                         references = new string[0],
@@ -534,7 +534,7 @@ namespace UnityProjectArchitect.Services
                         noEngineReferences = false
                     };
 
-                    var json = JsonUtility.ToJson(asmdefContent, true);
+                    string json = JsonUtility.ToJson(asmdefContent, true);
                     File.WriteAllText(asmdefPath, json);
                     result.CreatedFiles.Add(asmdefPath);
 #endif
@@ -551,22 +551,22 @@ namespace UnityProjectArchitect.Services
         private void UpdateProjectDataFromTemplate(ProjectData projectData, ProjectTemplate template)
         {
             // Add template reference to project data
-            var templateRef = template.CreateReference();
+            TemplateReference templateRef = template.CreateReference();
             projectData.AddTemplate(templateRef);
 
             // Update folder structure
             if (template.FolderStructure.Folders.Count > 0)
             {
-                foreach (var folder in template.FolderStructure.Folders)
+                foreach (FolderDefinition folder in template.FolderStructure.Folders)
                 {
                     projectData.FolderStructure.AddFolder(folder);
                 }
             }
 
             // Update documentation sections if they're not already configured
-            foreach (var defaultSection in template.DefaultDocumentationSections)
+            foreach (DocumentationSectionData defaultSection in template.DefaultDocumentationSections)
             {
-                var existingSection = projectData.GetDocumentationSection(defaultSection.SectionType);
+                DocumentationSection existingSection = projectData.GetDocumentationSection(defaultSection.SectionType);
                 if (existingSection != null && string.IsNullOrEmpty(existingSection.CustomPrompt))
                 {
                     existingSection.CustomPrompt = defaultSection.CustomPrompt;

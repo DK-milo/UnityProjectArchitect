@@ -12,7 +12,7 @@ namespace UnityProjectArchitect.Services
     {
         public async Task<List<ProjectRecommendation>> GenerateRecommendationsAsync(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             await Task.Run(() =>
             {
@@ -46,7 +46,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateStructureRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Structure == null) return recommendations;
 
@@ -133,7 +133,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GeneratePerformanceRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Performance == null) return recommendations;
 
@@ -212,7 +212,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateArchitectureRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Architecture == null) return recommendations;
 
@@ -295,7 +295,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateCodeQualityRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts == null) return recommendations;
 
@@ -368,7 +368,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateDependencyRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts?.Dependencies == null) return recommendations;
 
@@ -406,7 +406,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateSecurityRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Scripts == null) return recommendations;
 
@@ -458,7 +458,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateDocumentationRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             recommendations.Add(new ProjectRecommendation(RecommendationType.Documentation,
                 "Create Comprehensive Project Documentation")
@@ -490,7 +490,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ProjectRecommendation> GenerateTestingRecommendations(ProjectAnalysisResult analysisResult)
         {
-            var recommendations = new List<ProjectRecommendation>();
+            List<string> recommendations = new List<ProjectRecommendation>();
 
             if (analysisResult.Structure == null) return recommendations;
 

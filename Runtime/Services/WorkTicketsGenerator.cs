@@ -17,7 +17,7 @@ namespace UnityProjectArchitect.Services
 
         public override async Task<string> GenerateContentAsync()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(GetSectionHeader("Work Tickets"));
             sb.AppendLine(AddTimestamp());
@@ -39,13 +39,13 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Work Tickets Overview", 2));
 
                 sb.AppendLine("Development work tickets derived from project analysis, user stories, and technical requirements.");
                 sb.AppendLine();
 
-                var totalTickets = EstimateTotalTickets();
+                int totalTickets = EstimateTotalTickets();
                 sb.AppendLine($"**Estimated Ticket Count:** {totalTickets} work items across all categories");
                 sb.AppendLine();
 
@@ -73,26 +73,26 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Implementation Tickets", 2));
 
-                var implementationTickets = GenerateImplementationTickets();
+                List<WorkTicket> implementationTickets = GenerateImplementationTickets();
                 
                 if (implementationTickets.Any())
                 {
                     sb.AppendLine("Feature development tickets based on user stories and technical requirements:");
                     sb.AppendLine();
 
-                    var ticketsByPriority = implementationTickets
+                    IOrderedEnumerable<IGrouping<string, WorkTicket>> ticketsByPriority = implementationTickets
                         .GroupBy(t => t.Priority)
                         .OrderByDescending(g => GetPriorityOrder(g.Key));
 
-                    foreach (var priorityGroup in ticketsByPriority)
+                    foreach (IGrouping<string, WorkTicket> priorityGroup in ticketsByPriority)
                     {
                         sb.AppendLine($"### {priorityGroup.Key} Priority");
                         sb.AppendLine();
 
-                        foreach (var ticket in priorityGroup.Take(6))
+                        foreach (WorkTicket ticket in priorityGroup.Take(6))
                         {
                             sb.AppendLine($"**{ticket.Id}: {ticket.Title}**");
                             sb.AppendLine($"- **Type:** {ticket.Type}");
@@ -103,7 +103,7 @@ namespace UnityProjectArchitect.Services
                             if (ticket.AcceptanceCriteria.Any())
                             {
                                 sb.AppendLine("- **Acceptance Criteria:**");
-                                foreach (var criterion in ticket.AcceptanceCriteria.Take(3))
+                                foreach (string criterion in ticket.AcceptanceCriteria.Take(3))
                                 {
                                     sb.AppendLine($"  - {criterion}");
                                 }
@@ -141,26 +141,26 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Bug Fix Tickets", 2));
 
-                var bugTickets = GenerateBugFixTickets();
+                List<BugTicket> bugTickets = GenerateBugFixTickets();
                 
                 if (bugTickets.Any())
                 {
                     sb.AppendLine("Issue resolution tickets based on project analysis and potential problem areas:");
                     sb.AppendLine();
 
-                    var ticketsBySeverity = bugTickets
+                    IOrderedEnumerable<IGrouping<string, BugTicket>> ticketsBySeverity = bugTickets
                         .GroupBy(t => t.Severity)
                         .OrderByDescending(g => GetSeverityOrder(g.Key));
 
-                    foreach (var severityGroup in ticketsBySeverity)
+                    foreach (IGrouping<string, BugTicket> severityGroup in ticketsBySeverity)
                     {
                         sb.AppendLine($"### {severityGroup.Key} Severity");
                         sb.AppendLine();
 
-                        foreach (var ticket in severityGroup.Take(4))
+                        foreach (BugTicket ticket in severityGroup.Take(4))
                         {
                             sb.AppendLine($"**{ticket.Id}: {ticket.Title}**");
                             sb.AppendLine($"- **Severity:** {ticket.Severity}");
@@ -191,17 +191,17 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Refactoring Tickets", 2));
 
-                var refactoringTickets = GenerateRefactoringTickets();
+                List<RefactoringTicket> refactoringTickets = GenerateRefactoringTickets();
                 
                 if (refactoringTickets.Any())
                 {
                     sb.AppendLine("Code quality improvement tickets based on architecture analysis:");
                     sb.AppendLine();
 
-                    foreach (var ticket in refactoringTickets.Take(8))
+                    foreach (RefactoringTicket ticket in refactoringTickets.Take(8))
                     {
                         sb.AppendLine($"**{ticket.Id}: {ticket.Title}**");
                         sb.AppendLine($"- **Focus Area:** {ticket.RefactoringType}");
@@ -232,24 +232,24 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Testing Tickets", 2));
 
-                var testingTickets = GenerateTestingTickets();
+                List<TestingTicket> testingTickets = GenerateTestingTickets();
                 
                 if (testingTickets.Any())
                 {
                     sb.AppendLine("Quality assurance tickets for comprehensive testing coverage:");
                     sb.AppendLine();
 
-                    var ticketsByType = testingTickets.GroupBy(t => t.TestType);
+                    IEnumerable<IGrouping<string, TestingTicket>> ticketsByType = testingTickets.GroupBy(t => t.TestType);
 
-                    foreach (var typeGroup in ticketsByType)
+                    foreach (IGrouping<string, TestingTicket> typeGroup in ticketsByType)
                     {
                         sb.AppendLine($"### {typeGroup.Key} Testing");
                         sb.AppendLine();
 
-                        foreach (var ticket in typeGroup.Take(4))
+                        foreach (TestingTicket ticket in typeGroup.Take(4))
                         {
                             sb.AppendLine($"**{ticket.Id}: {ticket.Title}**");
                             sb.AppendLine($"- **Test Type:** {ticket.TestType}");
@@ -280,17 +280,17 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Documentation Tickets", 2));
 
-                var docTickets = GenerateDocumentationTickets();
+                List<DocumentationTicket> docTickets = GenerateDocumentationTickets();
                 
                 if (docTickets.Any())
                 {
                     sb.AppendLine("Documentation and knowledge sharing tickets:");
                     sb.AppendLine();
 
-                    foreach (var ticket in docTickets.Take(6))
+                    foreach (DocumentationTicket ticket in docTickets.Take(6))
                     {
                         sb.AppendLine($"**{ticket.Id}: {ticket.Title}**");
                         sb.AppendLine($"- **Doc Type:** {ticket.DocumentationType}");
@@ -320,10 +320,10 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Ticket Prioritization & Planning", 2));
 
-                var allTickets = new List<WorkTicket>();
+                List<WorkTicket> allTickets = new List<WorkTicket>();
                 allTickets.AddRange(GenerateImplementationTickets());
                 allTickets.AddRange(GenerateBugFixTickets().Cast<WorkTicket>());
                 allTickets.AddRange(GenerateRefactoringTickets().Cast<WorkTicket>());
@@ -339,16 +339,16 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("    dateFormat  YYYY-MM-DD");
                     sb.AppendLine("    section Sprint 1");
                     
-                    var highPriorityTickets = allTickets.Where(t => t.Priority == "High").Take(4);
-                    foreach (var ticket in highPriorityTickets)
+                    IEnumerable<WorkTicket> highPriorityTickets = allTickets.Where(t => t.Priority == "High").Take(4);
+                    foreach (WorkTicket ticket in highPriorityTickets)
                     {
                         int duration = Math.Max(ticket.EstimatedHours / 8, 1); // Convert hours to days
                         sb.AppendLine($"    {ticket.Title.Replace(" ", "_")} :active, {duration}d");
                     }
 
                     sb.AppendLine("    section Sprint 2");
-                    var mediumPriorityTickets = allTickets.Where(t => t.Priority == "Medium").Take(3);
-                    foreach (var ticket in mediumPriorityTickets)
+                    IEnumerable<WorkTicket> mediumPriorityTickets = allTickets.Where(t => t.Priority == "Medium").Take(3);
+                    foreach (WorkTicket ticket in mediumPriorityTickets)
                     {
                         int duration = Math.Max(ticket.EstimatedHours / 8, 1);
                         sb.AppendLine($"    {ticket.Title.Replace(" ", "_")} :{duration}d");
@@ -377,7 +377,7 @@ namespace UnityProjectArchitect.Services
 
         private int EstimateTotalTickets()
         {
-            var baseTickets = 15;
+            int baseTickets = 15;
             
             if (analysisResult.Scripts?.Classes != null)
             {
@@ -399,8 +399,8 @@ namespace UnityProjectArchitect.Services
 
         private List<WorkTicket> GenerateImplementationTickets()
         {
-            var tickets = new List<WorkTicket>();
-            var ticketId = 1;
+            List<WorkTicket> tickets = new List<WorkTicket>();
+            int ticketId = 1;
 
             if (analysisResult.Scripts?.Classes?.Any(c => c.IsMonoBehaviour) == true)
             {
@@ -470,8 +470,8 @@ namespace UnityProjectArchitect.Services
 
         private List<BugTicket> GenerateBugFixTickets()
         {
-            var tickets = new List<BugTicket>();
-            var ticketId = 1;
+            List<BugTicket> tickets = new List<BugTicket>();
+            int ticketId = 1;
 
             if (analysisResult.Performance?.Issues?.Any() == true)
             {
@@ -508,8 +508,8 @@ namespace UnityProjectArchitect.Services
 
         private List<RefactoringTicket> GenerateRefactoringTickets()
         {
-            var tickets = new List<RefactoringTicket>();
-            var ticketId = 1;
+            List<RefactoringTicket> tickets = new List<RefactoringTicket>();
+            int ticketId = 1;
 
             if (analysisResult.Scripts?.Metrics?.AverageCyclomaticComplexity > 10)
             {
@@ -548,8 +548,8 @@ namespace UnityProjectArchitect.Services
 
         private List<TestingTicket> GenerateTestingTickets()
         {
-            var tickets = new List<TestingTicket>();
-            var ticketId = 1;
+            List<TestingTicket> tickets = new List<TestingTicket>();
+            int ticketId = 1;
 
             if (analysisResult.Scripts?.Classes?.Any() == true)
             {
@@ -581,8 +581,8 @@ namespace UnityProjectArchitect.Services
 
         private List<DocumentationTicket> GenerateDocumentationTickets()
         {
-            var tickets = new List<DocumentationTicket>();
-            var ticketId = 1;
+            List<DocumentationTicket> tickets = new List<DocumentationTicket>();
+            int ticketId = 1;
 
             if (analysisResult.Scripts?.Interfaces?.Any() == true)
             {

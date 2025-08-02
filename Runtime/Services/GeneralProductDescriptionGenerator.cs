@@ -16,7 +16,7 @@ namespace UnityProjectArchitect.Services
 
         public override async Task<string> GenerateContentAsync()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(GetSectionHeader("General Product Description"));
             sb.AppendLine(AddTimestamp());
@@ -37,7 +37,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Project Overview", 2));
 
                 var projectName = GetProjectName();
@@ -74,7 +74,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Project Type & Scope", 2));
 
                 if (analysisResult.Structure != null)
@@ -115,7 +115,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Key Features & Components", 2));
 
                 var features = ExtractKeyFeatures();
@@ -153,7 +153,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Technical Highlights", 2));
 
                 if (analysisResult.Scripts?.Metrics != null)
@@ -207,7 +207,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 sb.AppendLine(GetSectionHeader("Project Metrics", 2));
 
                 if (analysisResult.Metrics != null)
@@ -222,7 +222,7 @@ namespace UnityProjectArchitect.Services
                     
                     if (assetMetrics.AssetCountByType.Any())
                     {
-                        foreach (var assetType in assetMetrics.AssetCountByType.OrderByDescending(kvp => kvp.Value).Take(5))
+                        foreach (string assetType in assetMetrics.AssetCountByType.OrderByDescending(kvp => kvp.Value).Take(5))
                         {
                             sb.AppendLine($"- **{assetType.Key}:** {assetType.Value} files");
                         }
@@ -238,7 +238,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
 
                 if (analysisResult.Insights?.Any() == true)
                 {
@@ -285,7 +285,7 @@ namespace UnityProjectArchitect.Services
 
         private List<string> ExtractKeyFeatures()
         {
-            var features = new List<string>();
+            List<string> features = new List<string>();
 
             if (analysisResult.Structure?.Scenes?.Any() == true)
             {
