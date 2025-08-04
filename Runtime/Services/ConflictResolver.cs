@@ -230,7 +230,7 @@ namespace UnityProjectArchitect.Services
             if (template.TargetProjectType != ProjectType.General && 
                 template.TargetProjectType != projectData.ProjectType)
             {
-                var conflict = new TemplateConflict(
+                TemplateConflict conflict = new TemplateConflict(
                     TemplateConflictType.SettingsConflict,
                     "ProjectType",
                     $"Template is for {template.TargetProjectType} but project is {projectData.ProjectType}"
@@ -246,7 +246,7 @@ namespace UnityProjectArchitect.Services
             // Check Unity version conflicts
             if (!template.IsCompatibleWith(projectData.TargetUnityVersion))
             {
-                var conflict = new TemplateConflict(
+                TemplateConflict conflict = new TemplateConflict(
                     TemplateConflictType.SettingsConflict,
                     "UnityVersion",
                     $"Template requires Unity {template.MinUnityVersion}+ but project uses {projectData.TargetUnityVersion}"

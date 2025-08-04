@@ -284,7 +284,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var materialReferences = ExtractYamlReferences(content, "Material");
+                List<string> materialReferences = ExtractYamlReferences(content, "Material");
                 foreach (string reference in materialReferences)
                 {
                     dependencies.Add(new AssetDependency(prefabPath, reference, AssetDependencyType.Direct)
@@ -318,7 +318,7 @@ namespace UnityProjectArchitect.Services
             {
                 string content = File.ReadAllText(scenePath);
                 
-                var prefabReferences = ExtractYamlReferences(content, "Prefab");
+                List<string> prefabReferences = ExtractYamlReferences(content, "Prefab");
                 foreach (string reference in prefabReferences)
                 {
                     dependencies.Add(new AssetDependency(scenePath, reference, AssetDependencyType.Direct)
@@ -327,7 +327,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var materialReferences = ExtractYamlReferences(content, "Material");
+                List<string> materialReferences = ExtractYamlReferences(content, "Material");
                 foreach (string reference in materialReferences)
                 {
                     dependencies.Add(new AssetDependency(scenePath, reference, AssetDependencyType.Direct)
@@ -336,7 +336,7 @@ namespace UnityProjectArchitect.Services
                     });
                 }
 
-                var textureReferences = ExtractYamlReferences(content, "Texture2D");
+                List<string> textureReferences = ExtractYamlReferences(content, "Texture2D");
                 foreach (string reference in textureReferences)
                 {
                     dependencies.Add(new AssetDependency(scenePath, reference, AssetDependencyType.Direct)

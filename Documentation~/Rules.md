@@ -31,10 +31,6 @@ Implement Step X: [Feature Name] - [Brief Description]
 - Add [File2.cs] [description of what it does]  
 - Add [File3.cs] [description of what it does]
 [... continue for all significant files/changes]
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 #### **Rules.md.UpdateProgress**
