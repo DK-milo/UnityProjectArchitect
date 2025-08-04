@@ -1,0 +1,6 @@
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.csproj.AssemblyReference.cache
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.GeneratedMSBuildEditorConfig.editorconfig
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.AssemblyInfoInputs.cache
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.AssemblyInfo.cs
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.csproj.CoreCompileInputs.cache
+E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.Services\obj\Debug\netstandard2.1\UnityProjectArchitect.Services.sourcelink.json

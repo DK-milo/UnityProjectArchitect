@@ -1,0 +1,23 @@
+{
+    "name": "Unity.ProjectArchitect.Tests",
+    "rootNamespace": "UnityProjectArchitect.Unity.Tests",
+    "references": [
+        "Unity.ProjectArchitect.Runtime",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "UnityProjectArchitect.Core.dll",
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

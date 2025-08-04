@@ -1,0 +1,16 @@
+{
+    "name": "Unity.ProjectArchitect.Runtime",
+    "rootNamespace": "UnityProjectArchitect.Unity",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "UnityProjectArchitect.Core.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

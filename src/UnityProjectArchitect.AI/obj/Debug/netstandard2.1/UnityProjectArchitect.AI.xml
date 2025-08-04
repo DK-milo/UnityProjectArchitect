@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>UnityProjectArchitect.AI</name>
+    </assembly>
+    <members>
+        <member name="T:UnityProjectArchitect.AI.Services.IHttpClientWrapper">
+            <summary>
+            Interface for HTTP client operations
+            Unity implementation will use UnityWebRequest, standalone uses HttpClient
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.StandardHttpClient">
+            <summary>
+            Standard HttpClient implementation for standalone scenarios
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.ILogger">
+            <summary>
+            Interface for logging operations
+            Unity implementation will use Debug.Log, standalone uses Console or other logger
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.ConsoleLogger">
+            <summary>
+            Console-based logger for standalone scenarios
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.NullLogger">
+            <summary>
+            No-op logger for scenarios where logging is not needed
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.ISettingsProvider">
+            <summary>
+            Interface for providing encrypted settings storage
+            Unity implementation will use EditorPrefs, standalone can use registry/file
+            </summary>
+        </member>
+        <member name="T:UnityProjectArchitect.AI.Services.InMemorySettingsProvider">
+            <summary>
+            Simple in-memory settings provider for testing and standalone scenarios
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -54,11 +54,62 @@ Implement Step X: [Feature Name] - [Brief Description]
 **Usage:** Simply type `Rules.md.DocumentUpdate`  
 **Output:** Updates commit history following established patterns
 
+#### **Rules.md.BuildSolution**
+**Purpose:** Build C# solution and run comprehensive tests  
+**Usage:** Simply type `Rules.md.BuildSolution`  
+**Output:** 
+- Compilation status with specific error locations if any
+- Unit test results with pass/fail counts and coverage metrics
+- Static analysis results with code quality scores
+- Performance benchmarks for key operations
+- Dependency validation and security scan results
+
+#### **Rules.md.GeneratePackage**
+**Purpose:** Generate Unity package from C# solution with validation  
+**Usage:** Simply type `Rules.md.GeneratePackage`  
+**Output:**
+- Package generation status and file copying results
+- Unity assembly definition validation
+- Package.json metadata verification
+- Unity Package Validation Suite results
+- Package structure compliance check
+
+#### **Rules.md.TestUnityIntegration**
+**Purpose:** Test generated package in Unity environment  
+**Usage:** Simply type `Rules.md.TestUnityIntegration`  
+**Output:**
+- Unity project import status and console log analysis
+- Editor window functionality testing results
+- Menu integration and workflow validation
+- Performance testing in Unity environment
+- End-to-end user workflow verification
+
+#### **Rules.md.CompileCheck**
+**Purpose:** Quick compilation verification without full build  
+**Usage:** Simply type `Rules.md.CompileCheck`  
+**Output:**
+- Fast compilation status (dotnet build --no-restore)
+- Syntax error reporting with file:line references
+- Missing dependency identification
+- Namespace conflict detection
+
+#### **Rules.md.RunTests**
+**Purpose:** Execute unit and integration tests with detailed reporting  
+**Usage:** Simply type `Rules.md.RunTests`  
+**Output:**
+- Test execution summary with pass/fail/skip counts
+- Code coverage percentage and uncovered lines
+- Performance test results and benchmarks
+- Mock integration validation results
+- Test data validation and cleanup status
+
 ### Adding New Actions
 To add new custom actions, follow this pattern:
 1. Add action name and description to this list
 2. Define clear input/output behavior
 3. Maintain consistent `Rules.md.[ActionName]` format
+4. Include expected output format for user clarity
+5. Consider integration with existing workflow pipeline
 
 ---
 
