@@ -169,6 +169,95 @@ To add new custom actions, follow this pattern:
 - Consistent with existing codebase architecture
 - Proper error handling and validation patterns implemented
 
+### 1.6. 🔍 **Validation Rules for Implementation Compatibility** *(NEW)*
+
+**Pre-Implementation Validation:**
+- **MANDATORY STEP:** Before implementing any new feature that references existing models/interfaces:
+  1. **Read all relevant model files** using Read tool to verify actual property names and types
+  2. **Check interface contracts** to ensure exact method signatures and return types
+  3. **Validate existing patterns** by searching for similar implementations in codebase
+  4. **Cross-reference dependencies** to understand data flow and expected formats
+
+**Property Name Verification Process:**
+1. **Before writing any property access** (e.g., `obj.PropertyName`):
+   - Use Read tool to check the actual class definition
+   - Verify property exists with exact spelling and casing
+   - Confirm property type matches expected usage
+2. **For new implementations of existing interfaces**:
+   - Read interface definition completely
+   - Match method signatures exactly (parameters, return types, names)
+   - Check for nullable types and optional parameters
+3. **For data model interactions**:
+   - Read the complete model class before referencing any properties
+   - Verify enum values and available options
+   - Confirm collection types and initialization patterns
+
+**Compatibility Checklist:**
+- [ ] All referenced properties exist in target classes
+- [ ] Property names match exactly (case-sensitive)
+- [ ] Return types match interface contracts
+- [ ] Method signatures are identical to interface definitions
+- [ ] Enum values are valid and current
+- [ ] Collection types match expected patterns
+- [ ] Nullable types are handled correctly
+
+**Common Data Model Property Reference Guide:**
+*Based on validated implementations - always verify current state*
+
+**ProjectData Properties:**
+- ✅ `ProjectName` (not `Name`)
+- ✅ `ProjectDescription` (not `Description`) 
+- ✅ `TargetUnityVersion` (not `UnityVersion`)
+- ✅ `TeamName`, `ContactEmail`, `ProjectVersion`
+- ✅ `DocumentationSections` - List<DocumentationSectionData>
+- ✅ `FolderStructure` - FolderStructureData with `.Folders` and `.Files`
+
+**ProjectAnalysisResult Properties:**
+- ✅ `AnalyzedAt` (not `CompletedAt`)
+- ✅ `AnalysisTime` (not `ProcessingTime`)
+- ✅ `Success`, `ErrorMessage`, `Metrics`
+- ✅ `Issues` - Returns List<object> via property aggregation
+
+**ArchitectureAnalysisResult Properties:**
+- ✅ `Components` - List<ComponentInfo> (not `DesignPatterns`)
+- ✅ `Layers` - List<LayerInfo> (not `LayerInfo`)
+- ✅ `Connections` - List<SystemConnection> (not `SystemConnections`)
+- ✅ `DetectedPattern` - ArchitecturePattern enum
+
+**ScriptAnalysisResult Properties:**
+- ✅ `TotalClasses`, `TotalInterfaces`, `TotalMethods`, `TotalLinesOfCode`
+- ✅ `DetectedPatterns` - List<DesignPattern> with `.Name` property (not `.PatternName`)
+- ✅ `Issues` - List<CodeIssue>
+
+**AssetAnalysisResult Properties:**
+- ✅ `TotalAssets`, `TotalAssetSize`
+- ✅ `AssetsByType` - Dictionary<string, int>
+- ✅ `Dependencies` - List<AssetDependency>
+
+**ProjectInsight Properties:**
+- ✅ `Type` (not `Category`) - InsightType enum
+- ✅ `Severity` (not `Impact`) - InsightSeverity enum  
+- ✅ `Confidence` (not `ConfidenceLevel`) - float property
+
+**ProjectRecommendation Properties:**
+- ✅ `Type` - RecommendationType enum
+- ✅ `Priority` - RecommendationPriority enum
+- ✅ `Effort` - EstimatedEffort with `.EstimatedTime` (not `ImplementationEffort`)
+
+**⚠️ CRITICAL:** This reference guide may become outdated. Always use Read tool to verify current property names before implementation.
+
+**Validation Actions:**
+1. **Read Model Files First:** Always use Read tool to examine actual class structures
+2. **Build Incrementally:** After each significant change, build to catch compatibility errors early
+3. **No Assumptions:** Never assume property names - verify every reference
+4. **Pattern Match:** Look for existing similar implementations to understand conventions
+
+**Success Criteria:**
+- Zero compilation errors due to property name mismatches
+- All interface implementations are fully compatible
+- New code integrates seamlessly with existing data models
+- No runtime errors from incorrect property access
+
 ### 2. 🔧 **Implementation Phase**
 
 **Process:**
