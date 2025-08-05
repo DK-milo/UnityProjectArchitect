@@ -1,6 +1,0 @@
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.csproj.AssemblyReference.cache
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.GeneratedMSBuildEditorConfig.editorconfig
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.AssemblyInfoInputs.cache
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.AssemblyInfo.cs
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.csproj.CoreCompileInputs.cache
-E:\Repositorio\Mine\UnityProjectArchitect\src\UnityProjectArchitect.AI\obj\Release\netstandard2.1\UnityProjectArchitect.AI.sourcelink.json
