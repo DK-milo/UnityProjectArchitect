@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using UnityProjectArchitect.Core;
 
 namespace UnityProjectArchitect.AI.Prompts
@@ -140,6 +141,55 @@ namespace UnityProjectArchitect.AI.Prompts
             }
 
             return context.ToString();
+        }
+
+        /// <summary>
+        /// Async wrapper for building context from project data
+        /// </summary>
+        public static async Task<string> BuildContextAsync(ProjectData projectData)
+        {
+            return await Task.FromResult(BuildProjectContext(projectData));
+        }
+
+        /// <summary>
+        /// Builds comprehensive context for project analysis
+        /// </summary>
+        public static async Task<string> BuildProjectAnalysisContextAsync(ProjectData projectData)
+        {
+            if (projectData == null)
+                throw new ArgumentNullException(nameof(projectData));
+
+            StringBuilder context = new StringBuilder();
+            
+            // Project Overview
+            AppendProjectOverview(context, projectData);
+            
+            // Technical Context  
+            AppendTechnicalContext(context, projectData);
+            
+            // Content Analysis
+            AppendContentAnalysis(context, projectData);
+            
+            // Documentation Context
+            AppendDocumentationContext(context, projectData);
+
+            // Additional analysis-specific context
+            context.AppendLine("**Analysis Focus:**");
+            context.AppendLine("- Project structure and organization");
+            context.AppendLine("- Code quality and architecture patterns");
+            context.AppendLine("- Documentation completeness");
+            context.AppendLine("- Best practice adherence");
+            context.AppendLine();
+
+            string fullContext = context.ToString();
+            
+            // Truncate if too long while preserving structure
+            if (fullContext.Length > MaxContextLength)
+            {
+                fullContext = TruncateContextIntelligently(fullContext, MaxContextLength);
+            }
+
+            return await Task.FromResult(fullContext);
         }
 
         private static void AppendProjectOverview(StringBuilder context, ProjectData projectData)

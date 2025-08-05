@@ -162,7 +162,8 @@ namespace UnityProjectArchitect.Core
         Claude,
         OpenAI,
         Gemini,
-        Local
+        Local,
+        Offline
     }
 
     public enum DocumentationSectionType

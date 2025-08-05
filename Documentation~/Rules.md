@@ -1,7 +1,7 @@
 # Unity Project Architect - Development Rules & Actions
 
-**Version:** 1.1  
-**Last Updated:** August 2, 2025  
+**Version:** 2.0  
+**Last Updated:** August 5, 2025  
 **Purpose:** Standardized development workflow and custom actions for Unity Project Architect package
 
 ---
@@ -9,6 +9,54 @@
 ## Overview
 
 This document defines the complete development pipeline for implementing features and stages in the Unity Project Architect project, plus custom actions that can be triggered instantly. This process ensures consistent quality, documentation, and progress tracking across all development phases.
+
+---
+
+## 📋 **Project Context Primer**
+*Read this section first when reopening the project for complete context*
+
+### Current Project State
+- **Unity Project Architect**: AI-powered project management and documentation tool for Unity developers
+- **Architecture**: Hybrid DLL + Unity Package (C# solution compiles to DLLs → Unity package integration)
+- **Current Progress**: Stage 2 (18h) - Steps 1A-3B complete (4h/6h), Step 3C pending
+- **Last Completed**: Step 3B: Prompt Engineering System (7edbd8b) - AI template management with caching and optimization
+- **Next Step**: Step 3C: AI Assistant Interface (2h estimated) - Conversation management and content validation
+
+### Key Project Files Reference
+- **Rules.md**: This file - development pipeline, project context, and custom actions
+- **DevelopmentRoadmapProgress.md**: Detailed progress tracking with time estimates and completion status
+- **Prompts.md**: Technical implementation prompts and complete development history
+- **ProductRequirementsDocument.md**: Complete business requirements, user personas, and specifications
+- **CodingConventions.md**: Coding standards (explicit types, no var keyword, Unity patterns)
+- **document.md**: Git commit history with hashes and descriptions (14 commits, 1 pending)
+
+### Architecture Overview
+- **Solution Structure**: `src/` with 4 C# projects (Core, Services, AI, Unity)
+- **Unity Package**: `Packages/com.unitprojectarchitect.core/` with Runtime/Editor separation
+- **Build Process**: C# solution → DLLs → Unity package integration → Testing
+- **Key Patterns**: Interface-driven services, ScriptableObject data persistence, async/await throughout
+- **Data Models**: 50+ analysis models, 6 documentation sections, comprehensive validation framework
+
+### Core Concepts
+- **Structure-Only Templates**: Creates folders, scenes, and documentation; users write their own scripts
+- **6 Documentation Sections**: GeneralProductDescription, SystemArchitecture, DataModel, APISpecification, UserStories, WorkTickets
+- **AI-Optional Design**: Full functionality without API key, enhanced with Claude API integration
+- **Unity 6+ Target**: UI Toolkit, modern Unity patterns, Package Manager distribution
+
+### Critical Implementation Rules
+1. **NEVER use `var` keyword** - Always explicit types per CodingConventions.md Section 2.2
+2. **Always Read models first** - Verify property names before coding using Read tool
+3. **Follow async patterns** - Use async/await consistently with proper error handling
+4. **Validate interfaces** - Read interface definitions completely before implementation
+5. **Build incrementally** - Build after significant changes to catch errors early
+6. **Property validation** - Use Rules.md Section 1.6 data model reference guide
+
+### Common Pitfalls Avoided
+- ❌ Property name assumptions → ✅ Read model files first using Read tool
+- ❌ Interface signature mismatches → ✅ Verify method signatures exactly
+- ❌ Using `var` keyword → ✅ Explicit types always (string, List<T>, etc.)
+- ❌ Missing error handling → ✅ Comprehensive try/catch with logging
+- ❌ Data model incompatibility → ✅ Use validated property reference guide
 
 ---
 
@@ -103,6 +151,35 @@ Implement Step X: [Feature Name] - [Brief Description]
 - Mock integration validation results
 - Test data validation and cleanup status
 
+#### **Rules.md.StartupProtocol**
+**Purpose:** Execute complete project context restoration and readiness verification  
+**Usage:** Simply type `Rules.md.StartupProtocol`  
+**Output:**
+- **Phase 1**: Current project status and recent changes summary
+- **Phase 2**: Context validation checklist with completion status
+- **Phase 3**: Implementation readiness assessment
+- **Result**: Ready/Not Ready status with specific next actions
+
+#### **Rules.md.GetCurrentStatus**
+**Purpose:** Get complete current project status and next steps  
+**Usage:** Simply type `Rules.md.GetCurrentStatus`  
+**Output:** 
+- Current completion percentage and stage progress
+- Last completed step with commit hash and description
+- Next step with time estimate and technical requirements
+- Any pending issues, blockers, or validation needs
+- Current architecture state and key metrics
+
+#### **Rules.md.ValidateContext**
+**Purpose:** Verify full project context understanding and implementation readiness  
+**Usage:** Simply type `Rules.md.ValidateContext`  
+**Output:**
+- Checklist of all mandatory documents read and understood
+- Verification of current architecture and patterns comprehension
+- Confirmation of coding standards and validation rules awareness
+- Data model compatibility validation status
+- Ready/Not Ready assessment with specific gaps identified
+
 ### Adding New Actions
 To add new custom actions, follow this pattern:
 1. Add action name and description to this list
@@ -110,6 +187,71 @@ To add new custom actions, follow this pattern:
 3. Maintain consistent `Rules.md.[ActionName]` format
 4. Include expected output format for user clarity
 5. Consider integration with existing workflow pipeline
+
+---
+
+## 🎬 **Session Startup Protocol**
+*Execute this routine every time you reopen the project for guaranteed context restoration*
+
+### Quick Start Command
+**Usage:** Type `Rules.md.StartupProtocol` to execute the complete 3-phase startup routine automatically.
+
+### Manual Execution Steps
+
+#### Phase 1: Context Restoration (3-5 minutes)
+1. **Rules.md.GetCurrentStatus** - Get immediate project state and next steps
+2. Read DevelopmentRoadmapProgress.md - Understand current progress and completion status  
+3. Check document.md last 3 commits - Recent changes and development context
+4. Review Prompts.md latest entries - Recent technical work and implementation details
+
+#### Phase 2: Implementation Readiness Validation (3-5 minutes)  
+1. **Rules.md.ValidateContext** - Ensure full understanding and readiness
+2. Review CodingConventions.md - Internalize coding standards (no var keyword, explicit types)
+3. Check Rules.md Section 1.6 - Data model property reference guide
+4. Confirm next step requirements and prerequisites
+
+#### Phase 3: Ready for Work Assessment
+**Success Criteria:**
+- ✅ Full project context restored and current status understood
+- ✅ Recent development history and changes reviewed
+- ✅ Coding standards and validation rules internalized  
+- ✅ Next step requirements and technical dependencies clear
+- ✅ Data model compatibility knowledge refreshed
+- ✅ Implementation readiness confirmed
+
+**Result:** Ready/Not Ready status with specific actions if gaps identified
+
+### 🎯 **Mandatory Pre-Work Checklist**
+*Complete ALL items before any code implementation - ensure 100% accuracy*
+
+#### Context Understanding Requirements (MANDATORY)
+- [ ] **Current Progress**: Read DevelopmentRoadmapProgress.md to understand where we are
+- [ ] **Recent Changes**: Check document.md last 3 commits for development context
+- [ ] **Technical History**: Review Prompts.md for recent implementation patterns
+- [ ] **Business Context**: Understand step requirements from ProductRequirementsDocument.md
+- [ ] **Coding Standards**: Internalize CodingConventions.md (explicit types, no var keyword)
+
+#### Codebase Familiarity Requirements (MANDATORY)
+- [ ] **Similar Patterns**: Review existing similar implementations in codebase using Read/Grep tools
+- [ ] **Interface Contracts**: Read and understand all relevant interface definitions
+- [ ] **Data Models**: Verify actual property names using Read tool before any coding
+- [ ] **Assembly Structure**: Understand project dependencies and separation of concerns
+- [ ] **Error Patterns**: Review established error handling and validation approaches
+
+#### Implementation Readiness Verification (MANDATORY)
+- [ ] **Property Validation**: Use Rules.md Section 1.6 data model reference guide
+- [ ] **Interface Compatibility**: All referenced classes/interfaces read and validated
+- [ ] **Coding Standards**: No var keyword usage, explicit types always (string, List<T>, etc.)
+- [ ] **Build Readiness**: Understand incremental build and testing approach
+- [ ] **Error Prevention**: Property name verification process internalized
+
+#### Success Validation
+**ONLY proceed with implementation when ALL checklist items are completed**
+- ✅ **Context Complete**: Full project understanding restored
+- ✅ **Standards Internalized**: Coding conventions and validation rules understood
+- ✅ **Codebase Familiar**: Existing patterns and interfaces reviewed
+- ✅ **Compatibility Verified**: Data models and dependencies validated
+- ✅ **Implementation Ready**: All prerequisites met for high-accuracy development
 
 ---
 
