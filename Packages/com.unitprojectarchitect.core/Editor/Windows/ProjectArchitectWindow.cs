@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 using UnityProjectArchitect.Unity;
 using UnityProjectArchitect.Core;
 
@@ -7,15 +9,19 @@ namespace UnityProjectArchitect.Unity.Editor
 {
     /// <summary>
     /// Main Unity Editor window for Unity Project Architect
-    /// Integrates with Core DLL services through Unity bridge
+    /// Integrates with Core DLL services through Unity bridge using UI Toolkit
     /// </summary>
     public class ProjectArchitectWindow : EditorWindow
     {
         private UnityProjectDataAsset _currentProject;
-        private Vector2 _scrollPosition;
-        private bool _showProjectSettings = true;
-        private bool _showDocumentationSections = true;
-        private bool _showExportOptions = false;
+        private VisualElement _rootElement;
+        private ScrollView _scrollView;
+        private ObjectField _projectField;
+        private Foldout _projectFoldout;
+        private Foldout _documentationFoldout;
+        private Foldout _exportFoldout;
+        private VisualElement _documentationContainer;
+        private ProgressBar _analysisProgress;
         
         [MenuItem("Window/Unity Project Architect")]
         public static void ShowWindow()
@@ -37,203 +43,284 @@ namespace UnityProjectArchitect.Unity.Editor
                 string path = AssetDatabase.GUIDToAssetPath(guids[0]);
                 _currentProject = AssetDatabase.LoadAssetAtPath<UnityProjectDataAsset>(path);
             }
+            
+            CreateUI();
         }
-        
-        private void OnGUI()
+
+        private void CreateUI()
         {
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+            // Create root visual element
+            _rootElement = rootVisualElement;
+            _rootElement.Clear();
             
-            DrawHeader();
+            // Create main scroll view
+            _scrollView = new ScrollView();
+            _rootElement.Add(_scrollView);
             
-            EditorGUILayout.Space(10);
+            // Header section
+            CreateHeaderSection();
             
-            DrawProjectSection();
+            // Project configuration section
+            CreateProjectSection();
             
-            EditorGUILayout.Space(10);
+            // Documentation section
+            CreateDocumentationSection();
             
-            if (_currentProject != null)
+            // Export section  
+            CreateExportSection();
+            
+            // Actions section
+            CreateActionsSection();
+            
+            // Refresh UI based on current project
+            RefreshUI();
+        }
+
+        private void CreateHeaderSection()
+        {
+            VisualElement headerContainer = new VisualElement();
+            headerContainer.style.flexDirection = FlexDirection.Row;
+            headerContainer.style.justifyContent = Justify.SpaceBetween;
+            headerContainer.style.alignItems = Align.Center;
+            headerContainer.style.paddingBottom = 10;
+            headerContainer.style.paddingTop = 10;
+            headerContainer.style.paddingLeft = 10;
+            headerContainer.style.paddingRight = 10;
+            
+            Label titleLabel = new Label("Unity Project Architect");
+            titleLabel.style.fontSize = 18;
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            
+            Label versionLabel = new Label("v0.3.0");
+            versionLabel.style.fontSize = 10;
+            versionLabel.style.color = Color.gray;
+            
+            headerContainer.Add(titleLabel);
+            headerContainer.Add(versionLabel);
+            
+            _scrollView.Add(headerContainer);
+            
+            // Info message
+            HelpBox infoBox = new HelpBox("AI-powered project documentation and organization tool with modern UI Toolkit interface and DLL-based architecture.", HelpBoxMessageType.Info);
+            infoBox.style.marginBottom = 10;
+            _scrollView.Add(infoBox);
+        }
+
+        private void CreateProjectSection()
+        {
+            _projectFoldout = new Foldout { text = "📁 Project Configuration", value = true };
+            _projectFoldout.style.marginBottom = 10;
+            
+            _projectField = new ObjectField("Project Data Asset")
             {
-                DrawDocumentationSection();
-                
-                EditorGUILayout.Space(10);
-                
-                DrawExportSection();
-                
-                EditorGUILayout.Space(10);
-                
-                DrawActionsSection();
+                objectType = typeof(UnityProjectDataAsset),
+                allowSceneObjects = false,
+                value = _currentProject
+            };
+            _projectField.RegisterValueChangedCallback(OnProjectChanged);
+            
+            Button createButton = new Button(CreateNewProjectAsset) { text = "Create New Project Data Asset" };
+            createButton.style.marginTop = 5;
+            
+            Button editButton = new Button(() => {
+                if (_currentProject != null)
+                {
+                    Selection.activeObject = _currentProject;
+                    EditorGUIUtility.PingObject(_currentProject);
+                }
+            }) { text = "Edit Project Settings" };
+            editButton.style.marginTop = 5;
+            
+            _projectFoldout.Add(_projectField);
+            _projectFoldout.Add(createButton);
+            _projectFoldout.Add(editButton);
+            
+            _scrollView.Add(_projectFoldout);
+        }
+
+        private void CreateDocumentationSection()
+        {
+            _documentationFoldout = new Foldout { text = "📖 Documentation Sections", value = true };
+            _documentationFoldout.style.marginBottom = 10;
+            
+            _documentationContainer = new VisualElement();
+            _documentationFoldout.Add(_documentationContainer);
+            
+            _scrollView.Add(_documentationFoldout);
+        }
+
+        private void CreateExportSection()
+        {
+            _exportFoldout = new Foldout { text = "📤 Export Options", value = false };
+            _exportFoldout.style.marginBottom = 10;
+            
+            Label exportLabel = new Label("Export Formats");
+            exportLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            exportLabel.style.marginBottom = 5;
+            
+            VisualElement buttonContainer = new VisualElement();
+            buttonContainer.style.flexDirection = FlexDirection.Row;
+            buttonContainer.style.justifyContent = Justify.SpaceBetween;
+            
+            Button markdownButton = new Button(() => ExportDocumentation(ExportFormat.Markdown)) 
+            { 
+                text = "📄 Export Markdown" 
+            };
+            markdownButton.style.flexGrow = 1;
+            markdownButton.style.marginRight = 5;
+            
+            Button pdfButton = new Button(() => ExportDocumentation(ExportFormat.PDF)) 
+            { 
+                text = "📑 Export PDF" 
+            };
+            pdfButton.style.flexGrow = 1;
+            
+            buttonContainer.Add(markdownButton);
+            buttonContainer.Add(pdfButton);
+            
+            _exportFoldout.Add(exportLabel);
+            _exportFoldout.Add(buttonContainer);
+            
+            _scrollView.Add(_exportFoldout);
+        }
+
+        private void CreateActionsSection()
+        {
+            VisualElement actionsContainer = new VisualElement();
+            actionsContainer.style.marginBottom = 10;
+            
+            Label actionsLabel = new Label("🔧 Actions");
+            actionsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            actionsLabel.style.marginBottom = 5;
+            
+            VisualElement buttonContainer = new VisualElement();
+            buttonContainer.style.flexDirection = FlexDirection.Row;
+            buttonContainer.style.justifyContent = Justify.SpaceBetween;
+            
+            Button analyzeButton = new Button(AnalyzeProject) { text = "🔍 Analyze Project" };
+            analyzeButton.style.flexGrow = 1;
+            analyzeButton.style.marginRight = 5;
+            
+            Button refreshButton = new Button(() => {
+                if (_currentProject != null)
+                {
+                    _currentProject.SaveToJson();
+                }
+                RefreshUI();
+            }) { text = "🔄 Refresh Data" };
+            refreshButton.style.flexGrow = 1;
+            
+            Button templateButton = new Button(() => {
+                TemplateCreatorWindow.ShowWindow();
+            }) { text = "🎨 Template Creator" };
+            templateButton.style.flexGrow = 1;
+            templateButton.style.marginLeft = 5;
+            
+            buttonContainer.Add(analyzeButton);
+            buttonContainer.Add(refreshButton);
+            buttonContainer.Add(templateButton);
+            
+            // Progress bar for analysis
+            _analysisProgress = new ProgressBar();
+            _analysisProgress.style.marginTop = 5;
+            _analysisProgress.style.display = DisplayStyle.None;
+            
+            actionsContainer.Add(actionsLabel);
+            actionsContainer.Add(buttonContainer);
+            actionsContainer.Add(_analysisProgress);
+            
+            _scrollView.Add(actionsContainer);
+        }
+
+        private void OnProjectChanged(ChangeEvent<UnityEngine.Object> evt)
+        {
+            _currentProject = evt.newValue as UnityProjectDataAsset;
+            RefreshUI();
+        }
+
+        private void RefreshUI()
+        {
+            RefreshDocumentationSections();
+        }
+
+        private void RefreshDocumentationSections()
+        {
+            _documentationContainer.Clear();
+            
+            if (_currentProject == null)
+            {
+                HelpBox warningBox = new HelpBox("No project data asset selected. Create or select a project data asset first.", HelpBoxMessageType.Warning);
+                _documentationContainer.Add(warningBox);
+                return;
             }
             
-            EditorGUILayout.EndScrollView();
-        }
-        
-        private void DrawHeader()
-        {
-            GUILayout.BeginHorizontal();
+            ProjectData projectData = _currentProject.ProjectData;
             
-            GUILayout.Label("Unity Project Architect", EditorStyles.largeLabel);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("v0.2.0", EditorStyles.miniLabel);
-            
-            GUILayout.EndHorizontal();
-            
-            EditorGUILayout.HelpBox(
-                "AI-powered project documentation and organization tool. Now powered by compiled DLLs for professional development workflow.",
-                MessageType.Info);
-        }
-        
-        private void DrawProjectSection()
-        {
-            _showProjectSettings = EditorGUILayout.Foldout(_showProjectSettings, "📁 Project Configuration", true);
-            
-            if (_showProjectSettings)
+            if (projectData.DocumentationSections.Count == 0)
             {
-                EditorGUI.indentLevel++;
-                
-                // Project Data Asset
-                UnityProjectDataAsset newProject = (UnityProjectDataAsset)EditorGUILayout.ObjectField(
-                    "Project Data Asset", 
-                    _currentProject, 
-                    typeof(UnityProjectDataAsset), 
-                    false);
-                
-                if (newProject != _currentProject)
-                {
-                    _currentProject = newProject;
-                }
-                
-                EditorGUILayout.Space(5);
-                
-                // Create new project button
-                if (_currentProject == null)
-                {
-                    if (GUILayout.Button("Create New Project Data Asset"))
-                    {
-                        CreateNewProjectAsset();
-                    }
-                }
-                else
-                {
-                    // Display project info
-                    EditorGUILayout.LabelField("Project Name", _currentProject.GetDisplayName());
-                    EditorGUILayout.LabelField("Summary", _currentProject.GetSummary());
-                    
-                    EditorGUILayout.Space(5);
-                    
-                    if (GUILayout.Button("Edit Project Settings"))
-                    {
-                        Selection.activeObject = _currentProject;
-                        EditorGUIUtility.PingObject(_currentProject);
-                    }
-                }
-                
-                EditorGUI.indentLevel--;
+                HelpBox warningBox = new HelpBox("No documentation sections found. Initialize project data first.", HelpBoxMessageType.Warning);
+                _documentationContainer.Add(warningBox);
+                return;
+            }
+            
+            foreach (DocumentationSectionData section in projectData.DocumentationSections)
+            {
+                CreateDocumentationSectionItem(section);
             }
         }
-        
-        private void DrawDocumentationSection()
+
+        private void CreateDocumentationSectionItem(DocumentationSectionData section)
         {
-            _showDocumentationSections = EditorGUILayout.Foldout(_showDocumentationSections, "📖 Documentation Sections", true);
+            VisualElement sectionContainer = new VisualElement();
+            sectionContainer.style.flexDirection = FlexDirection.Row;
+            sectionContainer.style.alignItems = Align.Center;
+            sectionContainer.style.paddingBottom = 5;
+            sectionContainer.style.paddingTop = 5;
+            sectionContainer.style.borderBottomWidth = 1;
+            sectionContainer.style.borderBottomColor = Color.gray;
             
-            if (_showDocumentationSections)
-            {
-                EditorGUI.indentLevel++;
-                
-                ProjectData projectData = _currentProject.ProjectData;
-                
-                if (projectData.DocumentationSections.Count == 0)
+            // Enabled toggle
+            Toggle enabledToggle = new Toggle();
+            enabledToggle.value = section.IsEnabled;
+            enabledToggle.style.marginRight = 10;
+            enabledToggle.RegisterValueChangedCallback(evt => {
+                section.IsEnabled = evt.newValue;
+                if (_currentProject != null)
                 {
-                    EditorGUILayout.HelpBox("No documentation sections found. Initialize project data first.", MessageType.Warning);
+                    _currentProject.SaveToJson();
                 }
-                else
-                {
-                    foreach (var section in projectData.DocumentationSections)
-                    {
-                        DrawDocumentationSectionItem(section);
-                    }
-                }
-                
-                EditorGUI.indentLevel--;
-            }
-        }
-        
-        private void DrawDocumentationSectionItem(DocumentationSectionData section)
-        {
-            GUILayout.BeginHorizontal();
-            
-            // Section enabled toggle
-            bool wasEnabled = section.IsEnabled;
-            section.IsEnabled = EditorGUILayout.Toggle(section.IsEnabled, GUILayout.Width(20));
+            });
             
             // Section name and status
             string statusIcon = GetStatusIcon(section.Status);
-            EditorGUILayout.LabelField($"{statusIcon} {section.SectionType}", GUILayout.ExpandWidth(true));
+            Label sectionLabel = new Label($"{statusIcon} {section.SectionType}");
+            sectionLabel.style.flexGrow = 1;
+            sectionLabel.style.marginRight = 10;
             
             // Word count
             int wordCount = string.IsNullOrEmpty(section.Content) ? 0 : section.Content.Split(' ').Length;
-            EditorGUILayout.LabelField($"{wordCount} words", EditorStyles.miniLabel, GUILayout.Width(60));
+            Label wordCountLabel = new Label($"{wordCount} words");
+            wordCountLabel.style.fontSize = 10;
+            wordCountLabel.style.color = Color.gray;
+            wordCountLabel.style.marginRight = 10;
+            wordCountLabel.style.minWidth = 60;
             
             // Generate button
-            GUI.enabled = section.IsEnabled;
-            if (GUILayout.Button("Generate", GUILayout.Width(70)))
-            {
-                GenerateDocumentationSection(section);
-            }
-            GUI.enabled = true;
+            Button generateButton = new Button(() => GenerateDocumentationSection(section)) 
+            { 
+                text = "Generate" 
+            };
+            generateButton.style.minWidth = 70;
+            generateButton.SetEnabled(section.IsEnabled);
             
-            GUILayout.EndHorizontal();
+            sectionContainer.Add(enabledToggle);
+            sectionContainer.Add(sectionLabel);
+            sectionContainer.Add(wordCountLabel);
+            sectionContainer.Add(generateButton);
             
-            // Save changes if enabled state changed
-            if (wasEnabled != section.IsEnabled)
-            {
-                _currentProject.SaveToJson();
-            }
+            _documentationContainer.Add(sectionContainer);
         }
         
-        private void DrawExportSection()
-        {
-            _showExportOptions = EditorGUILayout.Foldout(_showExportOptions, "📤 Export Options", true);
-            
-            if (_showExportOptions)
-            {
-                EditorGUI.indentLevel++;
-                
-                EditorGUILayout.LabelField("Export Formats", EditorStyles.boldLabel);
-                
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("📄 Export Markdown"))
-                {
-                    ExportDocumentation(ExportFormat.Markdown);
-                }
-                if (GUILayout.Button("📑 Export PDF"))
-                {
-                    ExportDocumentation(ExportFormat.PDF);
-                }
-                GUILayout.EndHorizontal();
-                
-                EditorGUI.indentLevel--;
-            }
-        }
-        
-        private void DrawActionsSection()
-        {
-            EditorGUILayout.LabelField("🔧 Actions", EditorStyles.boldLabel);
-            
-            GUILayout.BeginHorizontal();
-            
-            if (GUILayout.Button("🔍 Analyze Project"))
-            {
-                AnalyzeProject();
-            }
-            
-            if (GUILayout.Button("🔄 Refresh Data"))
-            {
-                _currentProject.SaveToJson();
-                Repaint();
-            }
-            
-            GUILayout.EndHorizontal();
-        }
         
         private void CreateNewProjectAsset()
         {
