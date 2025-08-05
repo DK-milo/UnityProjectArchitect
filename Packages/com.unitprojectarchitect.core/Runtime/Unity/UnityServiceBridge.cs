@@ -28,12 +28,12 @@ namespace UnityProjectArchitect.Unity
                 _projectAnalyzer = new ProjectAnalyzer();
                 _exportService = new ExportService();
                 _templateManager = new TemplateManager();
-                Debug.Log("Unity Project Architect Service Bridge initialized with DLL services");
+                UnityEngine.Debug.Log("Unity Project Architect Service Bridge initialized with DLL services");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to initialize Unity Project Architect services: {ex.Message}");
-                Debug.LogError($"Stack trace: {ex.StackTrace}");
+                UnityEngine.Debug.LogError($"Failed to initialize Unity Project Architect services: {ex.Message}");
+                UnityEngine.Debug.LogError($"Stack trace: {ex.StackTrace}");
             }
         }
         
@@ -80,14 +80,29 @@ namespace UnityProjectArchitect.Unity
         {
             if (result.IsValid)
             {
-                Debug.Log($"✅ Validation successful: {result.Summary}");
+                if (result.Issues != null && result.Issues.Count > 0)
+                {
+                    UnityEngine.Debug.Log($"✅ Validation completed with {result.Issues.Count} informational items");
+                    foreach (var issue in result.Issues)
+                    {
+                        UnityEngine.Debug.Log($"- {issue.Type}: {issue.Message}");
+                    }
+                }
+                else
+                {
+                    UnityEngine.Debug.Log("✅ Validation completed successfully - no issues found");
+                }
             }
             else
             {
-                Debug.LogWarning($"⚠️ Validation issues found: {result.Summary}");
-                foreach (var issue in result.Issues)
+                int issueCount = result.Issues?.Count ?? 0;
+                UnityEngine.Debug.LogWarning($"⚠️ Validation issues found: {issueCount} issues");
+                if (result.Issues != null)
                 {
-                    Debug.LogWarning($"- {issue.Category}: {issue.Message}");
+                    foreach (var issue in result.Issues)
+                    {
+                        UnityEngine.Debug.LogWarning($"- {issue.Type}: {issue.Message}");
+                    }
                 }
             }
         }
@@ -102,7 +117,7 @@ namespace UnityProjectArchitect.Unity
                 operation, 
                 progress))
             {
-                Debug.Log("Operation cancelled by user");
+                UnityEngine.Debug.Log("Operation cancelled by user");
             }
         }
         
@@ -115,98 +130,123 @@ namespace UnityProjectArchitect.Unity
         }
     }
     
-    #region Mock Implementations (Temporary)
+    #region Mock Implementations (Fallback Only)
     
     /// <summary>
-    /// Temporary mock implementation until DLL services are integrated
+    /// Minimal mock implementation - only used as fallback if real services fail to initialize
     /// </summary>
     internal class MockProjectAnalyzer : IProjectAnalyzer
     {
+        public event System.Action<ProjectAnalysisResult> OnAnalysisComplete;
+        public event System.Action<string, float> OnAnalysisProgress;
+        public event System.Action<string> OnError;
+
         public async Task<ProjectAnalysisResult> AnalyzeProjectAsync(string projectPath)
         {
-            Debug.Log($"Mock: Analyzing project at {projectPath}");
-            await Task.Delay(1000); // Simulate work
-            
-            return new ProjectAnalysisResult
-            {
-                Success = true,
-                ProjectPath = projectPath,
-                Structure = new StructureAnalysis(),
-                Scripts = new ScriptAnalysis(),
-                Assets = new AssetAnalysis(),
-                Architecture = new ArchitectureAnalysis(),
-                Performance = new PerformanceAnalysis()
-            };
+            UnityEngine.Debug.LogWarning("Using mock ProjectAnalyzer - real services failed to initialize");
+            await Task.Delay(100);
+            return new ProjectAnalysisResult { Success = false, ErrorMessage = "Mock implementation" };
+        }
+        
+        public Task<ProjectAnalysisResult> AnalyzeProjectDataAsync(ProjectData projectData)
+        {
+            return Task.FromResult(new ProjectAnalysisResult { Success = false, ErrorMessage = "Mock implementation" });
+        }
+        
+        public Task<ScriptAnalysisResult> AnalyzeScriptsAsync(string projectPath)
+        {
+            return Task.FromResult(new ScriptAnalysisResult());
+        }
+        
+        public Task<AssetAnalysisResult> AnalyzeAssetsAsync(string projectPath)
+        {
+            return Task.FromResult(new AssetAnalysisResult());
+        }
+        
+        public Task<ArchitectureAnalysisResult> AnalyzeArchitectureAsync(ProjectData projectData)
+        {
+            return Task.FromResult(new ArchitectureAnalysisResult());
         }
         
         public Task<ValidationResult> ValidateProjectStructureAsync(string projectPath)
         {
-            return Task.FromResult(new ValidationResult
-            {
-                IsValid = true,
-                Summary = "Mock validation - all good"
-            });
+            return Task.FromResult(new ValidationResult { IsValid = false });
         }
         
-        public Task<InsightCollection> GenerateInsightsAsync(ProjectAnalysisResult analysisResult)
+        public Task<System.Collections.Generic.List<ProjectInsight>> GetInsightsAsync(ProjectAnalysisResult analysisResult)
         {
-            return Task.FromResult(new InsightCollection());
+            return Task.FromResult(new System.Collections.Generic.List<ProjectInsight>());
+        }
+        
+        public Task<System.Collections.Generic.List<ProjectRecommendation>> GetRecommendationsAsync(ProjectAnalysisResult analysisResult)
+        {
+            return Task.FromResult(new System.Collections.Generic.List<ProjectRecommendation>());
+        }
+        
+        public ProjectAnalyzerCapabilities GetCapabilities()
+        {
+            return new ProjectAnalyzerCapabilities();
+        }
+        
+        public bool CanAnalyze(string projectPath)
+        {
+            return false;
         }
     }
     
     /// <summary>
-    /// Temporary mock implementation until DLL services are integrated
+    /// Minimal mock implementation - only used as fallback if real services fail to initialize
     /// </summary>
     internal class MockExportService : IExportService
     {
-        public event Action<ExportOperationResult> OnExportComplete;
-        public event Action<string, float> OnExportProgress;
-        public event Action<string> OnError;
+        public event System.Action<ExportOperationResult> OnExportComplete;
+        public event System.Action<string, float> OnExportProgress;
+        public event System.Action<string> OnError;
         
-        public async Task<ExportOperationResult> ExportProjectDocumentationAsync(ProjectData projectData, ExportRequest exportRequest)
+        public Task<ExportOperationResult> ExportProjectDocumentationAsync(ProjectData projectData, ExportRequest exportRequest)
         {
-            Debug.Log($"Mock: Exporting project documentation to {exportRequest.Format}");
-            OnExportProgress?.Invoke("Preparing export...", 0.1f);
-            await Task.Delay(500);
-            
-            OnExportProgress?.Invoke("Processing sections...", 0.5f);
-            await Task.Delay(500);
-            
-            OnExportProgress?.Invoke("Finalizing...", 0.9f);
-            await Task.Delay(200);
-            
+            UnityEngine.Debug.LogWarning("Using mock ExportService - real services failed to initialize");
             var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
             {
-                Success = true
+                Success = false,
+                ErrorMessage = "Mock implementation"
             };
-            
-            OnExportComplete?.Invoke(result);
-            return result;
+            return Task.FromResult(result);
         }
         
         public Task<ExportOperationResult> ExportSectionAsync(DocumentationSectionData section, ExportRequest exportRequest)
         {
-            throw new NotImplementedException("Mock implementation");
+            var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
+            {
+                Success = false,
+                ErrorMessage = "Mock implementation"
+            };
+            return Task.FromResult(result);
         }
         
         public Task<ExportOperationResult> ExportMultipleSectionsAsync(System.Collections.Generic.List<DocumentationSectionData> sections, ExportRequest exportRequest)
         {
-            throw new NotImplementedException("Mock implementation");
+            var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
+            {
+                Success = false,
+                ErrorMessage = "Mock implementation"
+            };
+            return Task.FromResult(result);
         }
         
         public Task<ValidationResult> ValidateExportRequestAsync(ExportRequest exportRequest)
         {
-            return Task.FromResult(new ValidationResult { IsValid = true });
+            return Task.FromResult(new ValidationResult { IsValid = false });
         }
         
         public Task<ExportPreview> GeneratePreviewAsync(ProjectData projectData, ExportFormat format)
         {
-            return Task.FromResult(new ExportPreview { Format = format });
+            return Task.FromResult(new ExportPreview { Format = format, PreviewText = "Mock preview" });
         }
         
         public System.Collections.Generic.List<ExportFormat> GetSupportedFormats()
         {
-            return new System.Collections.Generic.List<ExportFormat> { ExportFormat.Markdown, ExportFormat.PDF };
+            return new System.Collections.Generic.List<ExportFormat>();
         }
         
         public System.Collections.Generic.List<ExportTemplate> GetAvailableTemplates(ExportFormat format)
@@ -226,7 +266,7 @@ namespace UnityProjectArchitect.Unity
         
         public bool CanExport(ExportFormat format)
         {
-            return format == ExportFormat.Markdown || format == ExportFormat.PDF;
+            return false;
         }
     }
     

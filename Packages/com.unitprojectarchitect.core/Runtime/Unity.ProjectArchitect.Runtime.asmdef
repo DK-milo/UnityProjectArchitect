@@ -9,7 +9,8 @@
     "precompiledReferences": [
         "UnityProjectArchitect.Core.dll",
         "UnityProjectArchitect.AI.dll",
-        "UnityProjectArchitect.Services.dll"
+        "UnityProjectArchitect.Services.dll",
+        "Newtonsoft.Json.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

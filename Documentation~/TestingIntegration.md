@@ -36,10 +36,16 @@ When testing successfully, you should see:
 
 **"Service not initialized" errors:**
 - Check console for initialization error messages
+- Ensure all three DLLs are in `Runtime/Plugins/` folder
+
+**Interface implementation errors:**
+- Re-import the package if you see interface mismatch errors
+- Check that all DLL files are the latest version
 
 **DLL not found errors:**
-- Verify DLLs are in `Runtime/Plugins/` folder
-- Check assembly definition references
+- Verify DLLs are in `Runtime/Plugins/` folder: Core.dll, AI.dll, Services.dll
+- Check assembly definition references include all three DLLs
 
 **Type not found errors:**
 - Ensure assembly definitions include DLL references
+- Unity 6000.0.53+ required for .NET Standard 2.1 compatibility

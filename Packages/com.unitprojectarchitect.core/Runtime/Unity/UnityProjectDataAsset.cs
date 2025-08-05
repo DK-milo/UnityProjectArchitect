@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityProjectArchitect.Core;
+using Newtonsoft.Json;
 
 namespace UnityProjectArchitect.Unity
 {
@@ -47,7 +48,7 @@ namespace UnityProjectArchitect.Unity
         {
             if (_projectData != null)
             {
-                projectDataJson = Newtonsoft.Json.JsonConvert.SerializeObject(_projectData, Newtonsoft.Json.Formatting.Indented);
+                projectDataJson = JsonConvert.SerializeObject(_projectData, Formatting.Indented);
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
@@ -61,7 +62,7 @@ namespace UnityProjectArchitect.Unity
             {
                 try
                 {
-                    _projectData = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectData>(projectDataJson);
+                    _projectData = JsonConvert.DeserializeObject<ProjectData>(projectDataJson);
                 }
                 catch (Exception ex)
                 {
