@@ -1,104 +1,124 @@
-# Unity Project Architect - Hybrid DLL Package
+# Unity Project Architect
 
-**Version 0.2.0** - Professional Development Architecture
+**Version 0.3.0** - AI-Powered Project Documentation & Organization
 
-An AI-powered Unity Editor package for project documentation and organization, featuring a hybrid DLL architecture for professional development workflow.
-
-## 🏗️ Hybrid Architecture
-
-This package uses a **hybrid DLL + Unity package structure** for optimal development and distribution:
-
-- **Core Business Logic**: Compiled to DLLs for fast development and IP protection
-- **Unity Integration**: Native Unity Editor windows and ScriptableObject wrappers
-- **Professional Development**: Unit testing, fast compilation, and CI/CD ready
-
-## 📦 Package Contents
-
-```
-Runtime/
-├── Plugins/
-│   └── UnityProjectArchitect.Core.dll    # Core business logic
-└── Unity/
-    ├── UnityProjectDataAsset.cs           # Unity ScriptableObject wrapper
-    └── UnityServiceBridge.cs              # Bridge to DLL services
-
-Editor/
-└── Windows/
-    └── ProjectArchitectWindow.cs          # Main Unity Editor window
-
-Tests/
-└── Runtime/                               # Unity integration tests
-```
-
-## 🚀 Quick Start
-
-1. **Install Package**: Import into Unity via Package Manager
-2. **Open Window**: `Window > Unity Project Architect`
-3. **Create Project Data**: Click "Create New Project Data Asset"
-4. **Configure Project**: Set project type and enable documentation sections
-5. **Generate Documentation**: Use AI-powered generation or manual editing
-6. **Export**: Export to Markdown, PDF, or Unity assets
+An intelligent Unity Editor package that helps you create professional project documentation, organize your Unity projects with smart templates, and maintain high development standards.
 
 ## ✨ Features
 
-### 📖 **Documentation Generation**
-- 6 standard documentation sections
-- AI-powered content generation (Claude API)
-- Multiple export formats (Markdown, PDF, Unity assets)
-- Progress tracking and validation
+### 📖 **Smart Documentation Generation**
+- **6 Standard Sections**: Automatically generate complete project documentation including General Description, System Architecture, Data Model, API Specification, User Stories, and Work Tickets
+- **AI-Powered Content**: Optional Claude API integration for intelligent, context-aware documentation
+- **Multiple Export Formats**: Export to Markdown, PDF, or Unity ScriptableObjects
+- **Real-time Progress Tracking**: Visual progress indicators and status tracking
 
-### 🔍 **Project Analysis**  
-- Comprehensive project structure analysis
-- Script and asset dependency analysis
-- Architecture pattern detection
-- Performance insights and recommendations
+### 🎯 **Project Analysis & Insights**  
+- **Comprehensive Analysis**: Analyze project structure, scripts, and assets with detailed insights
+- **Smart Recommendations**: Get actionable suggestions for improving project organization
+- **Architecture Detection**: Automatically identify design patterns and architectural decisions
+- **Performance Insights**: Receive recommendations for optimization and best practices
 
-### 🏗️ **Project Organization**
-- Smart folder structure templates
-- Project type-specific configurations
-- Team collaboration standards
-- Automated organization workflows
+### 🏗️ **Project Organization Tools**
+- **Template Creator**: Design and save custom project templates for reuse
+- **Smart Folder Management**: Organize assets with intelligent folder structures
+- **Project Type Configurations**: Optimized setups for 2D, 3D, VR, Mobile, and more
+- **Team Standardization**: Maintain consistent project structures across team members
 
-## 🧩 DLL Integration
+## 🚀 Quick Start
 
-The package integrates with compiled DLLs containing the core business logic:
+### Installation
+1. Open Unity Package Manager (`Window > Package Manager`)
+2. Click the `+` button and select `Add package from git URL`
+3. Enter the package URL or import the `.unitypackage` file
+4. The package will appear in `Window > Unity Project Architect`
 
-- **UnityProjectArchitect.Core.dll**: Models, interfaces, core abstractions
-- **UnityProjectArchitect.Services.dll**: Analysis, generation, export services  
-- **UnityProjectArchitect.AI.dll**: Claude API integration and AI services
+### First Time Setup
+1. Open the main window: `Window > Unity Project Architect > Main Window`
+2. Create a new Project Data Asset for your project
+3. Configure your project type (2D Game, 3D Game, VR Experience, etc.)
+4. *Optional*: Add your Claude API key in Settings for AI-powered features
 
-This architecture provides:
-- ⚡ **Fast Development**: 2-3 second compilation vs Unity's 30+ seconds
-- 🧪 **Professional Testing**: Full unit test coverage with mocking
-- 🔒 **IP Protection**: Core logic compiled and obfuscated
-- 🎯 **Unity Native**: Seamless Unity Editor integration
+### Basic Usage
+1. **Create Documentation**: Select documentation sections and click "Generate All Enabled"
+2. **Export Documentation**: Choose Markdown or PDF export format
+3. **Analyze Project**: Click "Analyze Project" for insights and recommendations
+4. **Create Templates**: Use `Window > Unity Project Architect > Template Creator` to design custom templates
+5. **Apply Templates**: Organize your project with pre-built or custom templates
+
+## 🎮 Unity Editor Integration
+
+### Main Window (`Ctrl+Shift+P`)
+- Project configuration and settings
+- Documentation section management
+- Real-time analysis results
+- Export and generation controls
+
+### Template Creator (`Ctrl+Shift+T`)
+- Design custom folder structures
+- Configure scene templates
+- Save and load template configurations
+- Preview template layouts
+
+### Menu Integration
+- **Tools Menu**: Quick access to main features
+- **Window Menu**: Direct window access
+- **Assets Menu**: Analyze selected folders
+- **Help Menu**: Documentation and support links
 
 ## 📋 Requirements
 
-- **Unity Version**: 2023.3+ (optimized for Unity 6)
-- **Dependencies**: Newtonsoft JSON (automatically imported)
+- **Unity Version**: 2023.3 or later (optimized for Unity 6)
 - **Platform**: Windows, macOS, Linux
-- **Optional**: Claude API key for AI features
+- **Dependencies**: Automatically managed by Unity Package Manager
+- **Optional**: Claude API key for enhanced AI features
 
-## 🔧 Development
+## ⚙️ Configuration
 
-For developers extending this package:
+### Project Settings
+Configure Unity Project Architect in `Edit > Project Settings > Unity Project Architect`:
+- AI integration settings
+- Export preferences
+- Template defaults
+- Performance options
 
-1. **Core Logic**: Modify C# solution in `src/` directory
-2. **Unity Integration**: Edit Unity-specific code in package
-3. **Testing**: Use both .NET unit tests and Unity integration tests
-4. **Building**: Run `dotnet build` then copy DLLs to package
+### API Key Setup (Optional)
+For AI-powered documentation generation:
+1. Get a Claude API key from Anthropic
+2. Add it in Project Settings under AI Configuration
+3. AI features will be automatically enabled
 
-## 🤝 Support
+## 🔧 Advanced Features
 
-- **Documentation**: [Full documentation site](https://docs.unityprojectarchitect.com)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/unity-project-architect/issues)  
-- **Community**: [Discord Server](https://discord.gg/unity-project-architect)
+### Custom Templates
+Create reusable project templates:
+- Define folder structures for different project types
+- Configure scene templates and hierarchies
+- Share templates across team members
+- Import/export template configurations
+
+### Documentation Sections
+- **General Description**: Project overview and key features
+- **System Architecture**: Technical architecture and design patterns
+- **Data Model**: ScriptableObjects and data relationships
+- **API Specification**: Interface documentation and usage
+- **User Stories**: Feature requirements and acceptance criteria
+- **Work Tickets**: Implementation tasks and technical debt
+
+### Export Formats
+- **Markdown**: GitHub-ready documentation with TOC
+- **PDF**: Professional documents for stakeholders
+- **Unity Assets**: ScriptableObject integration for in-editor reference
+
+## 🤝 Support & Community
+
+- **Documentation**: Complete user guides and API reference
+- **GitHub Issues**: Report bugs and request features
+- **Community**: Join discussions and share templates
 
 ## 📄 License
 
-MIT License - See LICENSE file for details.
+MIT License - Free for commercial and personal use.
 
 ---
 
-**Transform your Unity development with professional documentation and AI-powered project management.** 🚀
+**Transform your Unity development with professional documentation and intelligent project management.** 🚀

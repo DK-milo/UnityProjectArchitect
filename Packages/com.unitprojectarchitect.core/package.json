@@ -1,13 +1,13 @@
 {
   "name": "com.unitprojectarchitect.core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Unity Project Architect",
-  "description": "AI-powered project documentation and organization tool for Unity developers.",
-  "unity": "6000.0",
-  "unityRelease": "53f1",
-  "documentationUrl": "https://github.com/your-repo/unity-project-architect/wiki",
-  "changelogUrl": "https://github.com/your-repo/unity-project-architect/blob/main/CHANGELOG.md",
-  "licensesUrl": "https://github.com/your-repo/unity-project-architect/blob/main/LICENSE.md",
+  "description": "AI-powered project documentation and organization tool with intelligent templates, real-time analysis, and professional export capabilities.",
+  "unity": "2023.3",
+  "unityRelease": "0f1",
+  "documentationUrl": "https://docs.unityprojectarchitect.com",
+  "changelogUrl": "https://github.com/unity-project-architect/releases",
+  "licensesUrl": "https://github.com/unity-project-architect/blob/main/LICENSE.md",
   "keywords": [
     "documentation",
     "ai",
@@ -16,12 +16,14 @@
     "analysis",
     "templates",
     "workflow",
-    "editor-tools"
+    "editor-tools",
+    "automation",
+    "organization"
   ],
   "author": {
     "name": "Unity Project Architect Team",
     "email": "support@unityprojectarchitect.com",
-    "url": "https://github.com/your-repo/unity-project-architect"
+    "url": "https://unityprojectarchitect.com"
   },
   "type": "tool",
   "hideInEditor": false,
@@ -31,13 +33,13 @@
   "samples": [
     {
       "displayName": "Basic Project Setup",
-      "description": "Example project structure and documentation workflow",
+      "description": "Complete example showing project documentation workflow with templates",
       "path": "Samples~/BasicSetup"
     },
     {
-      "displayName": "AI Integration Demo",
-      "description": "Claude API integration and documentation generation",
-      "path": "Samples~/AIDemo"
+      "displayName": "Template Creation Guide",
+      "description": "Step-by-step guide for creating custom project templates",
+      "path": "Samples~/TemplateGuide"
     }
   ],
   "dependencies": {
@@ -45,7 +47,7 @@
   },
   "relatedPackages": {},
   "repository": {
-    "url": "https://github.com/your-repo/unity-project-architect.git",
+    "url": "https://github.com/unity-project-architect/unity-project-architect.git",
     "type": "git",
     "revision": "main"
   }
