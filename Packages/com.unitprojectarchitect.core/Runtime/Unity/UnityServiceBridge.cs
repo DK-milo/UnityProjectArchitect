@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityProjectArchitect.Core;
+using UnityProjectArchitect.Services;
 
 namespace UnityProjectArchitect.Unity
 {
@@ -13,6 +14,7 @@ namespace UnityProjectArchitect.Unity
     {
         private static IProjectAnalyzer _projectAnalyzer;
         private static IExportService _exportService;
+        private static ITemplateManager _templateManager;
         
         /// <summary>
         /// Initialize Unity service implementations
@@ -20,9 +22,19 @@ namespace UnityProjectArchitect.Unity
         /// </summary>
         public static void Initialize()
         {
-            // TODO: Initialize with Unity-specific implementations
-            // For now, we're setting up the bridge structure
-            Debug.Log("Unity Project Architect Service Bridge initialized");
+            try
+            {
+                // Initialize real DLL services
+                _projectAnalyzer = new ProjectAnalyzer();
+                _exportService = new ExportService();
+                _templateManager = new TemplateManager();
+                Debug.Log("Unity Project Architect Service Bridge initialized with DLL services");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to initialize Unity Project Architect services: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
+            }
         }
         
         /// <summary>
@@ -32,11 +44,9 @@ namespace UnityProjectArchitect.Unity
         {
             if (_projectAnalyzer == null)
             {
-                // TODO: Create Unity-specific implementation or use DLL services
-                Debug.LogWarning("ProjectAnalyzer not yet implemented - using mock");
-                return new MockProjectAnalyzer();
+                Initialize();
             }
-            return _projectAnalyzer;
+            return _projectAnalyzer ?? new MockProjectAnalyzer();
         }
         
         /// <summary>
@@ -46,11 +56,21 @@ namespace UnityProjectArchitect.Unity
         {
             if (_exportService == null)
             {
-                // TODO: Create Unity-specific implementation or use DLL services
-                Debug.LogWarning("ExportService not yet implemented - using mock");
-                return new MockExportService();
+                Initialize();
             }
-            return _exportService;
+            return _exportService ?? new MockExportService();
+        }
+        
+        /// <summary>
+        /// Get or create template manager instance
+        /// </summary>
+        public static ITemplateManager GetTemplateManager()
+        {
+            if (_templateManager == null)
+            {
+                Initialize();
+            }
+            return _templateManager;
         }
         
         /// <summary>

@@ -7,7 +7,9 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "UnityProjectArchitect.Core.dll"
+        "UnityProjectArchitect.Core.dll",
+        "UnityProjectArchitect.AI.dll",
+        "UnityProjectArchitect.Services.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

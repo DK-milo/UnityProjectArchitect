@@ -52,7 +52,7 @@ namespace UnityProjectArchitect.Services
             sb.AppendLine($"| {keyHeader} | {valueHeader} |");
             sb.AppendLine($"|{new string('-', keyHeader.Length + 2)}|{new string('-', valueHeader.Length + 2)}|");
 
-            foreach (string kvp in data)
+            foreach (KeyValuePair<string, string> kvp in data)
             {
                 sb.AppendLine($"| {kvp.Key} | {kvp.Value} |");
             }
@@ -76,7 +76,7 @@ namespace UnityProjectArchitect.Services
 
             IOrderedEnumerable<IGrouping<InsightSeverity, ProjectInsight>> groupedInsights = insights.GroupBy(i => i.Severity).OrderByDescending(g => g.Key);
             
-            foreach (string group in groupedInsights)
+            foreach (IGrouping<InsightSeverity, ProjectInsight> group in groupedInsights)
             {
                 string severityIcon = group.Key switch
                 {
@@ -87,7 +87,7 @@ namespace UnityProjectArchitect.Services
                     _ => "ℹ️"
                 };
 
-                foreach (string insight in group.Take(5))
+                foreach (ProjectInsight insight in group.Take(5))
                 {
                     sb.AppendLine($"{severityIcon} **{insight.Title}**: {insight.Description}");
                 }
@@ -106,7 +106,7 @@ namespace UnityProjectArchitect.Services
             List<ProjectRecommendation> highPriorityRecs = recommendations.Where(r => r.Priority == RecommendationPriority.High || r.Priority == RecommendationPriority.Critical)
                                                  .Take(5).ToList();
 
-            foreach (string rec in highPriorityRecs)
+            foreach (ProjectRecommendation rec in highPriorityRecs)
             {
                 string priorityIcon = rec.Priority switch
                 {

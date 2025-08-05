@@ -170,7 +170,7 @@ namespace UnityProjectArchitect.Services
         {
             return await Task.Run(() =>
             {
-                FileInfo fileInfo = new FileInfo(filePath);
+                System.IO.FileInfo fileInfo = new System.IO.FileInfo(filePath);
                 AssetInfo assetInfo = new AssetInfo(filePath)
                 {
                     AssetType = GetAssetTypeFromPath(filePath),
@@ -312,7 +312,7 @@ namespace UnityProjectArchitect.Services
 
         private List<AssetDependency> AnalyzeSceneDependenciesFromFile(string scenePath)
         {
-            List<string> dependencies = new List<AssetDependency>();
+            List<AssetDependency> dependencies = new List<AssetDependency>();
 
             try
             {
@@ -355,7 +355,7 @@ namespace UnityProjectArchitect.Services
 
         private List<AssetDependency> AnalyzeScriptableObjectDependencies(string assetPath)
         {
-            List<string> dependencies = new List<AssetDependency>();
+            List<AssetDependency> dependencies = new List<AssetDependency>();
 
             try
             {

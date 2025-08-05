@@ -179,8 +179,7 @@ namespace UnityProjectArchitect.Services
             {
                 result.AddInfo(ValidationType.Templates,
                     "No Scripts folder",
-                    "Template doesn't include a Scripts folder",
-                    "Consider adding a Scripts folder for code organization");
+                    "Template doesn't include a Scripts folder. Consider adding a Scripts folder for code organization");
             }
 
             await Task.Delay(1);

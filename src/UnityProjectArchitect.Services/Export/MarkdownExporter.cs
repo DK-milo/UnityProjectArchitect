@@ -128,7 +128,7 @@ namespace UnityProjectArchitect.Services
             // Process sections
             if (content.Sections?.Count > 0)
             {
-                foreach (string section in content.Sections.Where(s => s.IsEnabled))
+                foreach (DocumentationSectionData section in content.Sections.Where(s => s.IsEnabled))
                 {
                     await AppendSectionAsync(section, options);
                 }
@@ -175,7 +175,7 @@ namespace UnityProjectArchitect.Services
             // Add custom variables
             if (content.Variables != null)
             {
-                foreach (string kvp in content.Variables)
+                foreach (KeyValuePair<string, object> kvp in content.Variables)
                 {
                     variables[kvp.Key] = kvp.Value;
                 }
@@ -188,7 +188,7 @@ namespace UnityProjectArchitect.Services
         {
             string processed = template;
             
-            foreach (string variable in variables)
+            foreach (KeyValuePair<string, object> variable in variables)
             {
                 string placeholder = $"{{{{{variable.Key}}}}}";
                 processed = processed.Replace(placeholder, variable.Value?.ToString() ?? "");

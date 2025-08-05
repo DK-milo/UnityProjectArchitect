@@ -76,6 +76,17 @@ namespace UnityProjectArchitect.Core
         public FileType Type { get; set; }
         public int LineCount { get; set; }
         public List<string> Dependencies { get; set; } = new List<string>();
+
+        public FileInfo()
+        {
+        }
+
+        public FileInfo(string path)
+        {
+            Path = path;
+            Name = System.IO.Path.GetFileNameWithoutExtension(path);
+            Extension = System.IO.Path.GetExtension(path);
+        }
     }
 
     public class ClassDefinition
@@ -519,6 +530,16 @@ namespace UnityProjectArchitect.Core
         public string ImporterType { get; set; } = "";
         public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
         public List<string> Labels { get; set; } = new List<string>();
+
+        public AssetInfo()
+        {
+        }
+
+        public AssetInfo(string path)
+        {
+            Path = path;
+            Name = System.IO.Path.GetFileNameWithoutExtension(path);
+        }
     }
 
     public class AssetDependency
@@ -569,6 +590,16 @@ namespace UnityProjectArchitect.Core
         public int GameObjectCount { get; set; }
         public List<string> ComponentTypes { get; set; } = new List<string>();
         public long FileSizeBytes { get; set; }
+
+        public SceneInfo()
+        {
+        }
+
+        public SceneInfo(string path)
+        {
+            Path = path;
+            Name = System.IO.Path.GetFileNameWithoutExtension(path);
+        }
     }
 
     public class ExportOption
@@ -593,6 +624,15 @@ namespace UnityProjectArchitect.Core
         public int UsageCount { get; set; }
         public List<string> UsedByAssets { get; set; } = new List<string>();
         public List<string> UsedByScenes { get; set; } = new List<string>();
+
+        public AssetUsageInfo()
+        {
+        }
+
+        public AssetUsageInfo(string assetPath)
+        {
+            AssetPath = assetPath;
+        }
     }
 
     public class ComponentInfo
@@ -603,6 +643,16 @@ namespace UnityProjectArchitect.Core
         public List<string> Dependencies { get; set; } = new List<string>();
         public List<string> Dependents { get; set; } = new List<string>();
         public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
+
+        public ComponentInfo()
+        {
+        }
+
+        public ComponentInfo(string name, string type)
+        {
+            Name = name;
+            Type = type;
+        }
     }
 
     public class SystemConnection

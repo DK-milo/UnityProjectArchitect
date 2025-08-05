@@ -31,19 +31,17 @@ namespace UnityProjectArchitect.Services
 
                 List<string> createdPaths = new List<string>();
                 
-                foreach (FolderDefinition folder in folderStructure.Folders)
+                foreach (FolderStructureData.FolderInfo folder in folderStructure.Folders)
                 {
-                    if (folder.CreateOnApply)
+                    // Create folder directly since FolderInfo doesn't have CreateOnApply
+                    FolderOperationResult folderResult = await CreateFolderFromInfoAsync(folder, basePath);
+                    if (folderResult.Success)
                     {
-                        FolderOperationResult folderResult = await CreateFolderRecursiveAsync(folder, basePath);
-                        if (folderResult.Success)
-                        {
-                            createdPaths.AddRange(folderResult.AffectedPaths);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Failed to create folder {folder.Name}: {folderResult.ErrorMessage}");
-                        }
+                        createdPaths.AddRange(folderResult.AffectedPaths);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to create folder {folder.Name}: {folderResult.ErrorMessage}");
                     }
                 }
 
@@ -97,7 +95,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for invalid characters in folder names
-                foreach (FolderDefinition folder in folderStructure.Folders)
+                foreach (FolderStructureData.FolderInfo folder in folderStructure.Folders)
                 {
                     if (string.IsNullOrWhiteSpace(folder.Name))
                     {
@@ -117,8 +115,7 @@ namespace UnityProjectArchitect.Services
                             "Remove invalid characters from folder names");
                     }
 
-                    // Validate sub-folders recursively
-                    await ValidateSubFolders(folder, validationResult);
+                    // Note: FolderStructureData.FolderInfo doesn't have SubFolders, so no recursive validation needed
                 }
 
                 // Check for recommended Unity folder structure
@@ -172,7 +169,7 @@ namespace UnityProjectArchitect.Services
                     DirectoryInfo dirInfo = new DirectoryInfo(directory);
                     FolderType folderType = DetermineFolderType(dirInfo.Name);
                     
-                    FolderDefinition folderDefinition = new FolderDefinition(dirInfo.Name, folderType)
+                    FolderDefinition folderDefinition = new FolderDefinition(dirInfo.Name, folderType, "Auto-detected folder")
                     {
                         RelativePath = Path.GetRelativePath(projectPath, directory),
                         CreateOnApply = true
@@ -412,6 +409,34 @@ namespace UnityProjectArchitect.Services
             return result;
         }
 
+        private async Task<FolderOperationResult> CreateFolderFromInfoAsync(FolderStructureData.FolderInfo folderInfo, string basePath)
+        {
+            FolderOperationResult result = new FolderOperationResult(FolderOperationType.Create, folderInfo.Path);
+            List<string> createdPaths = new List<string>();
+            
+            try
+            {
+                string fullPath = Path.Combine(basePath, folderInfo.Name);
+                
+                if (!Directory.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(fullPath);
+                    createdPaths.Add(fullPath);
+                }
+
+                result.Success = true;
+                result.AffectedPaths = createdPaths;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+            }
+
+            await Task.Delay(1); // Simulate async operation
+            return result;
+        }
+
         private async Task CreateTemplateFile(string folderPath, string templateName)
         {
             try
@@ -598,7 +623,7 @@ public class PlayerController : MonoBehaviour
                     DirectoryInfo dirInfo = new DirectoryInfo(subdirectory);
                     FolderType folderType = DetermineFolderType(dirInfo.Name);
                     
-                    FolderDefinition subFolderDefinition = new FolderDefinition(dirInfo.Name, folderType)
+                    FolderDefinition subFolderDefinition = new FolderDefinition(dirInfo.Name, folderType, "Auto-detected subfolder")
                     {
                         RelativePath = Path.GetRelativePath(projectRootPath, subdirectory),
                         CreateOnApply = true

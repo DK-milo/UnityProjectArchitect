@@ -12,6 +12,8 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "UnityProjectArchitect.Core.dll",
+        "UnityProjectArchitect.AI.dll",
+        "UnityProjectArchitect.Services.dll",
         "nunit.framework.dll"
     ],
     "autoReferenced": false,

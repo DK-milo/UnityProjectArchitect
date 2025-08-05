@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -108,7 +109,7 @@ namespace UnityProjectArchitect.Services
             int totalWordCount = 0;
             if (content.Sections != null)
             {
-                foreach (DocumentationSection section in content.Sections)
+                foreach (DocumentationSectionData section in content.Sections)
                 {
                     totalWordCount += section.CurrentWordCount;
                 }
@@ -503,7 +504,7 @@ namespace UnityProjectArchitect.Services
             if (content.Sections != null)
             {
                 stats.TotalSections = content.Sections.Count;
-                stats.ExportedSections = content.Sections.Count(s => s.IsEnabled && s.HasContent);
+                stats.ExportedSections = content.Sections.Where(s => s.IsEnabled && s.HasContent).Count();
                 stats.SkippedSections = stats.TotalSections - stats.ExportedSections;
             }
 

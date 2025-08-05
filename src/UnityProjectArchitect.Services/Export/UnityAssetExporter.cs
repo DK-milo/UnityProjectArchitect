@@ -181,7 +181,7 @@ namespace UnityProjectArchitect.Services
                 string jsonContent = JsonConvert.SerializeObject(exportedData, Formatting.Indented);
                 await File.WriteAllTextAsync(assetPath.Replace(".asset", ".json"), jsonContent);
 
-                FileInfo fileInfo = new FileInfo(assetPath);
+                System.IO.FileInfo fileInfo = new System.IO.FileInfo(assetPath);
                 return new ExportedAsset
                 {
                     AssetPath = assetPath,
@@ -219,7 +219,7 @@ namespace UnityProjectArchitect.Services
                 string jsonContent = JsonConvert.SerializeObject(sectionAsset, Formatting.Indented);
                 await File.WriteAllTextAsync(assetPath.Replace(".asset", ".json"), jsonContent);
 
-                FileInfo fileInfo = new FileInfo(assetPath);
+                System.IO.FileInfo fileInfo = new System.IO.FileInfo(assetPath);
                 return new ExportedAsset
                 {
                     AssetPath = assetPath,
@@ -257,7 +257,7 @@ namespace UnityProjectArchitect.Services
                 string jsonContent = JsonConvert.SerializeObject(collectionAsset, Formatting.Indented);
                 await File.WriteAllTextAsync(assetPath.Replace(".asset", ".json"), jsonContent);
 
-                FileInfo fileInfo = new FileInfo(assetPath);
+                System.IO.FileInfo fileInfo = new System.IO.FileInfo(assetPath);
                 return new ExportedAsset
                 {
                     AssetPath = assetPath,

@@ -53,6 +53,14 @@ namespace UnityProjectArchitect.Core
         public string CustomPrompt { get; set; } = "";
         public AIGenerationMode AIMode { get; set; } = AIGenerationMode.Disabled;
         public int CurrentWordCount => Content.Split(new char[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+        public int WordCountTarget { get; set; } = 500;
+        
+        // Alias for backwards compatibility
+        public DocumentationSectionType SectionType 
+        { 
+            get => Type; 
+            set => Type = value; 
+        }
 
         public DocumentationSection()
         {

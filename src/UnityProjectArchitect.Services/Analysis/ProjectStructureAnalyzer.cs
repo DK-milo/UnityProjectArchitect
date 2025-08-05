@@ -79,8 +79,10 @@ namespace UnityProjectArchitect.Services
                 foreach (string directory in directories)
                 {
                     DirectoryInfo dirInfo = new DirectoryInfo(directory);
-                    FolderInfo folderInfo = new FolderInfo(directory, dirInfo.Name)
+                    FolderInfo folderInfo = new FolderInfo
                     {
+                        Path = directory,
+                        Name = dirInfo.Name,
                         FileCount = Directory.GetFiles(directory, "*", SearchOption.TopDirectoryOnly).Length,
                         SubfolderCount = Directory.GetDirectories(directory, "*", SearchOption.TopDirectoryOnly).Length,
                         CreatedDate = dirInfo.CreationTime,
@@ -92,8 +94,10 @@ namespace UnityProjectArchitect.Services
                     folders.Add(folderInfo);
                 }
 
-                FolderInfo rootFolder = new FolderInfo(assetsPath, "Assets")
+                FolderInfo rootFolder = new FolderInfo
                 {
+                    Path = assetsPath,
+                    Name = "Assets",
                     FileCount = Directory.GetFiles(assetsPath, "*", SearchOption.TopDirectoryOnly).Length,
                     SubfolderCount = Directory.GetDirectories(assetsPath, "*", SearchOption.TopDirectoryOnly).Length,
                     CreatedDate = new DirectoryInfo(assetsPath).CreationTime,
