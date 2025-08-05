@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityProjectArchitect.AI.Services;
 using UnityProjectArchitect.Core;
+using UnityProjectArchitect.Services.Utilities;
 
 namespace UnityProjectArchitect.Services
 {
@@ -88,7 +89,7 @@ namespace UnityProjectArchitect.Services
 
                 OnTemplateProgress?.Invoke("Creating folder structure...", 0.5f);
                 
-                TemplateOperationResult folderResult = await _folderManager.CreateFolderStructureAsync(
+                FolderOperationResult folderResult = await _folderManager.CreateFolderStructureAsync(
                     template.FolderStructure, 
                     Application.dataPath
                 );
@@ -205,13 +206,16 @@ namespace UnityProjectArchitect.Services
 
             // Copy documentation sections as defaults
             template.DefaultDocumentationSections.Clear();
-            foreach (DocumentationSection section in projectData.DocumentationSections)
+            foreach (DocumentationSectionData section in projectData.DocumentationSections)
             {
-                DocumentationSectionData templateSection = new DocumentationSectionData(section.SectionType)
+                DocumentationSection templateSection = new DocumentationSection
                 {
+                    Type = section.SectionType,
                     IsEnabled = section.IsEnabled,
                     AIMode = section.AIMode,
-                    WordCountTarget = section.WordCountTarget
+                    Content = section.Content,
+                    Title = section.Title,
+                    CustomPrompt = section.CustomPrompt
                 };
                 template.DefaultDocumentationSections.Add(templateSection);
             }
@@ -309,7 +313,7 @@ namespace UnityProjectArchitect.Services
         {
             return new TemplateManagerCapabilities
             {
-                SupportedProjectTypes = Enum.GetValues<ProjectType>().ToList(),
+                SupportedProjectTypes = Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>().ToList(),
                 SupportsCustomTemplates = true,
                 SupportsTemplateValidation = true,
                 SupportsConflictResolution = true,
@@ -367,7 +371,7 @@ namespace UnityProjectArchitect.Services
             
             // Create standard folder structure
             FolderStructureData folderStructure = new FolderStructureData();
-            folderStructure.Folders.AddRange(new[]
+            AddFoldersToStructure(folderStructure, new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts, "Game logic and components"),
                 new FolderDefinition("Prefabs", FolderType.Prefabs, "Reusable game objects"),
@@ -380,7 +384,7 @@ namespace UnityProjectArchitect.Services
             template.FolderStructure = folderStructure;
 
             // Default documentation sections
-            template.GenerateDefaultDocumentationSections();
+            template.InitializeDefaultDocumentationSections();
 
             return template;
         }
@@ -397,7 +401,7 @@ namespace UnityProjectArchitect.Services
 
             // Mobile-specific folder structure
             FolderStructureData folderStructure = new FolderStructureData();
-            folderStructure.Folders.AddRange(new[]
+            AddFoldersToStructure(folderStructure, new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts),
                 new FolderDefinition("Sprites", FolderType.Textures, "2D sprites and textures"),
@@ -417,7 +421,7 @@ namespace UnityProjectArchitect.Services
                 "com.unity.mobile.notifications"
             });
 
-            template.GenerateDefaultDocumentationSections();
+            template.InitializeDefaultDocumentationSections();
             return template;
         }
 
@@ -433,7 +437,7 @@ namespace UnityProjectArchitect.Services
 
             // 3D-specific folder structure
             FolderStructureData folderStructure = new FolderStructureData();
-            folderStructure.Folders.AddRange(new[]
+            AddFoldersToStructure(folderStructure, new[]
             {
                 new FolderDefinition("Scripts", FolderType.Scripts),
                 new FolderDefinition("Models", FolderType.Art, "3D models and meshes"),
@@ -455,7 +459,7 @@ namespace UnityProjectArchitect.Services
                 "com.unity.cinemachine"
             });
 
-            template.GenerateDefaultDocumentationSections();
+            template.InitializeDefaultDocumentationSections();
             return template;
         }
 
@@ -504,12 +508,12 @@ namespace UnityProjectArchitect.Services
 
         private async Task CreateAssemblyDefinitions(ProjectTemplate template, TemplateOperationResult result)
         {
-            foreach (string asmdefName in template.AssemblyDefinitions)
+            foreach (AssemblyDefinitionTemplate asmdef in template.AssemblyDefinitions)
             {
                 try
                 {
 #if UNITY_EDITOR
-                    string asmdefPath = $"Assets/Scripts/{asmdefName}.asmdef";
+                    string asmdefPath = $"Assets/Scripts/{asmdef.Name}.asmdef";
                     string asmdefDirectory = Path.GetDirectoryName(asmdefPath);
                     
                     if (!Directory.Exists(asmdefDirectory))
@@ -520,7 +524,7 @@ namespace UnityProjectArchitect.Services
 
                     object asmdefContent = new
                     {
-                        name = asmdefName,
+                        name = asmdef.Name,
                         references = new string[0],
                         includePlatforms = new string[0],
                         excludePlatforms = new string[0],
@@ -540,11 +544,25 @@ namespace UnityProjectArchitect.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Failed to create assembly definition {asmdefName}: {ex.Message}");
+                    Debug.LogError($"Failed to create assembly definition {asmdef.Name}: {ex.Message}");
                 }
             }
 
             await Task.Delay(1);
+        }
+
+        private void AddFoldersToStructure(FolderStructureData folderStructure, FolderDefinition[] folders)
+        {
+            foreach (FolderDefinition folder in folders)
+            {
+                var folderInfo = new FolderStructureData.FolderInfo
+                {
+                    Name = folder.Name,
+                    Path = folder.Path,
+                    CreatedDate = folder.CreatedDate
+                };
+                folderStructure.Folders.Add(folderInfo);
+            }
         }
 
         private void UpdateProjectDataFromTemplate(ProjectData projectData, ProjectTemplate template)
@@ -556,16 +574,21 @@ namespace UnityProjectArchitect.Services
             // Update folder structure
             if (template.FolderStructure.Folders.Count > 0)
             {
-                foreach (FolderDefinition folder in template.FolderStructure.Folders)
+                foreach (var folder in template.FolderStructure.Folders)
                 {
-                    projectData.FolderStructure.AddFolder(folder);
+                    var folderDefinition = new FolderDefinition(folder.Name, FolderType.Custom)
+                    {
+                        Path = folder.Path,
+                        CreatedDate = folder.CreatedDate
+                    };
+                    projectData.FolderStructure.AddFolder(folderDefinition);
                 }
             }
 
             // Update documentation sections if they're not already configured
-            foreach (DocumentationSectionData defaultSection in template.DefaultDocumentationSections)
+            foreach (DocumentationSection defaultSection in template.DefaultDocumentationSections)
             {
-                DocumentationSection existingSection = projectData.GetDocumentationSection(defaultSection.SectionType);
+                DocumentationSectionData existingSection = projectData.GetDocumentationSection(defaultSection.Type);
                 if (existingSection != null && string.IsNullOrEmpty(existingSection.CustomPrompt))
                 {
                     existingSection.CustomPrompt = defaultSection.CustomPrompt;

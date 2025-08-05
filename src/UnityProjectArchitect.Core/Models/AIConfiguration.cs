@@ -82,23 +82,94 @@ namespace UnityProjectArchitect.Core
     public class ProjectTemplate
     {
         public string Id { get; set; } = "";
+        public string TemplateId { get; set; } = "";  // Services expects this property
         public string Name { get; set; } = "";
+        public string name { get; set; } = "";  // Services expects lowercase name property
         public string TemplateName { get; set; } = "";
         public string Description { get; set; } = "";
+        public string TemplateDescription { get; set; } = "";  // Services expects this property
         public string Version { get; set; } = "1.0.0";
+        public string TemplateVersion { get; set; } = "1.0.0";  // Services expects this property
         public string Category { get; set; } = "";
+        public string Author { get; set; } = "";
         public List<string> Tags { get; set; } = new List<string>();
         public ProjectType TargetProjectType { get; set; } = ProjectType.General;
+        public UnityVersion MinUnityVersion { get; set; } = UnityVersion.Unity2022_3;
         public TemplateConfiguration Configuration { get; set; } = new TemplateConfiguration();
         public List<TemplateFile> Files { get; set; } = new List<TemplateFile>();
-        public List<TemplateFolderStructure> FolderStructure { get; set; } = new List<TemplateFolderStructure>();
+        public FolderStructureData FolderStructure { get; set; } = new FolderStructureData();
+        
+        // Additional properties required by Services
+        public List<SceneTemplateData> SceneTemplates { get; set; } = new List<SceneTemplateData>();
+        public List<AssemblyDefinitionTemplate> AssemblyDefinitions { get; set; } = new List<AssemblyDefinitionTemplate>();
+        public List<string> RequiredPackages { get; set; } = new List<string>();
+        public bool GenerateDefaultDocumentationSections { get; set; } = true;
+        public List<DocumentationSection> DefaultDocumentationSections { get; set; } = new List<DocumentationSection>();
+        public Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
+        public List<string> PreRequisites { get; set; } = new List<string>();
+        public bool IsBuiltIn { get; set; } = false;
+        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime LastModifiedDate { get; set; }
 
         public ProjectTemplate()
         {
             CreatedAt = DateTime.Now;
             UpdatedAt = CreatedAt;
+            CreatedDate = CreatedAt;
+            LastModifiedDate = CreatedAt;
+        }
+
+        public TemplateReference CreateReference()
+        {
+            return new TemplateReference
+            {
+                TemplateId = TemplateId,
+                TemplateName = TemplateName,
+                AppliedDate = DateTime.Now,
+                Version = TemplateVersion
+            };
+        }
+
+        public bool IsCompatibleWith(ProjectData projectData)
+        {
+            // Basic compatibility check
+            if (TargetProjectType != ProjectType.General && TargetProjectType != projectData.ProjectType)
+                return false;
+            
+            return true;
+        }
+
+        public void InitializeDefaultDocumentationSections()
+        {
+            // Method version for Services compatibility
+            if (DefaultDocumentationSections.Count == 0)
+            {
+                DefaultDocumentationSections.AddRange(new[]
+                {
+                    new DocumentationSection { Type = DocumentationSectionType.GeneralProductDescription, IsEnabled = true },
+                    new DocumentationSection { Type = DocumentationSectionType.SystemArchitecture, IsEnabled = true },
+                    new DocumentationSection { Type = DocumentationSectionType.DataModel, IsEnabled = true },
+                    new DocumentationSection { Type = DocumentationSectionType.APISpecification, IsEnabled = true },
+                    new DocumentationSection { Type = DocumentationSectionType.UserStories, IsEnabled = true },
+                    new DocumentationSection { Type = DocumentationSectionType.WorkTickets, IsEnabled = true }
+                });
+            }
+        }
+
+        // Property version for Services compatibility - different name to avoid conflict
+        public List<DocumentationSection> DefaultSections 
+        { 
+            get 
+            { 
+                if (DefaultDocumentationSections.Count == 0)
+                {
+                    InitializeDefaultDocumentationSections();
+                }
+                return DefaultDocumentationSections; 
+            } 
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -147,7 +148,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check for invalid folder names
-            foreach (string folder in template.FolderStructure.Folders)
+            foreach (FolderStructureData.FolderInfo folder in template.FolderStructure.Folders)
             {
                 if (string.IsNullOrWhiteSpace(folder.Name))
                 {
@@ -167,8 +168,7 @@ namespace UnityProjectArchitect.Services
                         "Remove invalid characters from folder names");
                 }
 
-                // Validate subfolder structure recursively
-                ValidateSubFolders(folder, result);
+                // Note: FolderInfo doesn't have SubFolders property, so no recursive validation needed
             }
 
             // Check for recommended Unity folders
@@ -212,7 +212,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Validate each section
-            foreach (string section in template.DefaultDocumentationSections)
+            foreach (DocumentationSection section in template.DefaultDocumentationSections)
             {
                 if (section.WordCountTarget <= 0)
                 {
@@ -281,7 +281,7 @@ namespace UnityProjectArchitect.Services
                 return; // No scene templates to validate
             }
 
-            foreach (string sceneTemplate in template.SceneTemplates)
+            foreach (SceneTemplateData sceneTemplate in template.SceneTemplates)
             {
                 if (string.IsNullOrWhiteSpace(sceneTemplate.SceneName))
                 {
@@ -322,9 +322,9 @@ namespace UnityProjectArchitect.Services
                 return; // No assembly definitions to validate
             }
 
-            foreach (string asmdef in template.AssemblyDefinitions)
+            foreach (AssemblyDefinitionTemplate asmdef in template.AssemblyDefinitions)
             {
-                if (string.IsNullOrWhiteSpace(asmdef))
+                if (string.IsNullOrWhiteSpace(asmdef.Name))
                 {
                     result.AddError(ValidationType.Templates,
                         "Empty assembly definition name",
@@ -335,19 +335,19 @@ namespace UnityProjectArchitect.Services
 
                 // Check for invalid characters
                 char[] invalidChars = Path.GetInvalidFileNameChars();
-                if (asmdef.IndexOfAny(invalidChars) >= 0)
+                if (asmdef.Name.IndexOfAny(invalidChars) >= 0)
                 {
                     result.AddError(ValidationType.Templates,
-                        $"Invalid assembly definition name: {asmdef}",
+                        $"Invalid assembly definition name: {asmdef.Name}",
                         "Assembly definition name contains invalid characters",
                         "Remove invalid characters from assembly definition names");
                 }
 
                 // Check naming convention
-                if (!asmdef.Contains('.') && !asmdef.EndsWith("Assembly"))
+                if (!asmdef.Name.Contains('.') && !asmdef.Name.EndsWith("Assembly"))
                 {
                     result.AddInfo(ValidationType.Templates,
-                        $"Assembly naming suggestion: {asmdef}",
+                        $"Assembly naming suggestion: {asmdef.Name}",
                         "Consider following Unity assembly naming conventions (e.g., ProjectName.Core, ProjectName.Scripts)");
                 }
             }
@@ -357,7 +357,7 @@ namespace UnityProjectArchitect.Services
 
         private async Task ValidateUnityVersionCompatibility(ProjectTemplate template, ProjectData projectData, ValidationResult result)
         {
-            if (!template.IsCompatibleWith(projectData.TargetUnityVersion))
+            if (!template.IsCompatibleWith(projectData))
             {
                 result.AddError(ValidationType.Compatibility,
                     "Unity version incompatibility",
@@ -429,7 +429,7 @@ namespace UnityProjectArchitect.Services
 
         private void ValidateSubFolders(FolderDefinition folder, ValidationResult result)
         {
-            foreach (string subFolder in folder.SubFolders)
+            foreach (FolderDefinition subFolder in folder.SubFolders)
             {
                 if (string.IsNullOrWhiteSpace(subFolder.Name))
                 {

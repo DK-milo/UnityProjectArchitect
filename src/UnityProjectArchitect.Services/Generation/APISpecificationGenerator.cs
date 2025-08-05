@@ -127,7 +127,7 @@ namespace UnityProjectArchitect.Services
                             {
                                 sb.AppendLine("**Properties:**");
                                 Dictionary<string, string> propertiesTable = new Dictionary<string, string>();
-                                foreach (PropertyDefinition prop in iface.Properties)
+                                foreach (PropertySignature prop in iface.Properties)
                                 {
                                     List<string> accessors = new List<string>();
                                     if (prop.HasGetter) accessors.Add("get");

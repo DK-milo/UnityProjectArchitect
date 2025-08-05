@@ -31,7 +31,7 @@ namespace UnityProjectArchitect.Services
 
                 List<string> createdPaths = new List<string>();
                 
-                foreach (string folder in folderStructure.Folders)
+                foreach (FolderDefinition folder in folderStructure.Folders)
                 {
                     if (folder.CreateOnApply)
                     {
@@ -97,7 +97,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Check for invalid characters in folder names
-                foreach (string folder in folderStructure.Folders)
+                foreach (FolderDefinition folder in folderStructure.Folders)
                 {
                     if (string.IsNullOrWhiteSpace(folder.Name))
                     {
@@ -214,7 +214,7 @@ namespace UnityProjectArchitect.Services
                 new FolderDefinition("Audio", FolderType.Audio, "Sound effects and music")
             };
 
-            foreach (string folder in baseFolders)
+            foreach (FolderDefinition folder in baseFolders)
             {
                 structure.AddFolder(folder);
             }
@@ -382,7 +382,7 @@ namespace UnityProjectArchitect.Services
                 }
 
                 // Create subfolders recursively
-                foreach (string subFolder in folder.SubFolders)
+                foreach (FolderDefinition subFolder in folder.SubFolders)
                 {
                     if (subFolder.CreateOnApply)
                     {
@@ -621,7 +621,7 @@ public class PlayerController : MonoBehaviour
 
         private async Task ValidateSubFolders(FolderDefinition folder, ValidationResult validationResult)
         {
-            foreach (string subFolder in folder.SubFolders)
+            foreach (FolderDefinition subFolder in folder.SubFolders)
             {
                 if (string.IsNullOrWhiteSpace(subFolder.Name))
                 {

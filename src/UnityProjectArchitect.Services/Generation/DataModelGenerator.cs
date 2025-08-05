@@ -379,7 +379,7 @@ namespace UnityProjectArchitect.Services
                                 .Where(p => dataClasses.Any(dc => dc.Name == p.Type || p.Type.Contains(dc.Name)))
                                 .ToList();
 
-                            foreach (string prop in complexProperties.Take(3))
+                            foreach (PropertyDefinition prop in complexProperties.Take(3))
                             {
                                 compositionRelations.Add($"{dataClass.Name}.{prop.Name} : {prop.Type}");
                             }
@@ -427,14 +427,14 @@ namespace UnityProjectArchitect.Services
                             sb.AppendLine($"    class {dataClass.Name} {{");
                             
                             // Add key properties
-                            foreach (string prop in dataClass.Properties.Take(5))
+                            foreach (PropertyDefinition prop in dataClass.Properties.Take(5))
                             {
                                 string visibility = GetVisibilitySymbol(prop.AccessModifier);
                                 sb.AppendLine($"        {visibility}{prop.Type} {prop.Name}");
                             }
                             
                             // Add key fields
-                            foreach (string field in dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(3))
+                            foreach (FieldDefinition field in dataClass.Fields.Where(f => f.AccessModifier == AccessModifier.Public).Take(3))
                             {
                                 string visibility = GetVisibilitySymbol(field.AccessModifier);
                                 sb.AppendLine($"        {visibility}{field.Type} {field.Name}");
@@ -456,7 +456,7 @@ namespace UnityProjectArchitect.Services
                             }
 
                             // Show composition relationships
-                            foreach (string prop in dataClass.Properties.Take(2))
+                            foreach (PropertyDefinition prop in dataClass.Properties.Take(2))
                             {
                                 ClassDefinition relatedClass = dataClasses.FirstOrDefault(dc => dc.Name == prop.Type || prop.Type.Contains(dc.Name));
                                 if (relatedClass != null && relatedClass.Name != dataClass.Name)
@@ -469,7 +469,7 @@ namespace UnityProjectArchitect.Services
                         // Add styling
                         sb.AppendLine();
                         sb.AppendLine("    %% Styling");
-                        foreach (string so in dataClasses.Where(c => c.IsScriptableObject))
+                        foreach (ClassDefinition so in dataClasses.Where(c => c.IsScriptableObject))
                         {
                             sb.AppendLine($"    class {so.Name} {{");
                             sb.AppendLine("        <<ScriptableObject>>");

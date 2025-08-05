@@ -117,7 +117,7 @@ namespace UnityProjectArchitect.Services
 
                     IOrderedEnumerable<IGrouping<string, UserStory>> storiesByCategory = stories.GroupBy(s => s.Category).OrderBy(g => g.Key);
 
-                    foreach (string categoryGroup in storiesByCategory)
+                    foreach (IGrouping<string, UserStory> categoryGroup in storiesByCategory)
                     {
                         sb.AppendLine($"### {categoryGroup.Key} Features");
                         sb.AppendLine();

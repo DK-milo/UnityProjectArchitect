@@ -93,16 +93,16 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("    %% Component Architecture Diagram");
                     sb.AppendLine();
 
-                    List<IGrouping<ComponentCategory, ArchitectureComponent>> componentsByCategory = analysisResult.Architecture.Components
+                    List<IGrouping<ComponentCategory, ComponentInfo>> componentsByCategory = analysisResult.Architecture.Components
                         .GroupBy(c => c.Category)
                         .OrderBy(g => g.Key)
                         .ToList();
 
-                    foreach (IGrouping<ComponentCategory, ArchitectureComponent> categoryGroup in componentsByCategory)
+                    foreach (IGrouping<ComponentCategory, ComponentInfo> categoryGroup in componentsByCategory)
                     {
                         sb.AppendLine($"    %% {categoryGroup.Key} Components");
                         
-                        foreach (ArchitectureComponent component in categoryGroup.Take(10)) // Limit for readability
+                        foreach (ComponentInfo component in categoryGroup.Take(10)) // Limit for readability
                         {
                             string nodeId = GetSafeNodeId(component.Name);
                             string nodeStyle = GetComponentNodeStyle(component.Category);
@@ -117,7 +117,7 @@ namespace UnityProjectArchitect.Services
                     if (analysisResult.Architecture.Connections?.Any() == true)
                     {
                         sb.AppendLine("    %% Component Connections");
-                        foreach (ArchitectureConnection connection in analysisResult.Architecture.Connections.Take(20))
+                        foreach (SystemConnection connection in analysisResult.Architecture.Connections.Take(20))
                         {
                             string fromId = GetSafeNodeId(connection.FromComponent);
                             string toId = GetSafeNodeId(connection.ToComponent);
@@ -137,7 +137,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine();
 
                     sb.AppendLine("**Component Categories:**");
-                    foreach (IGrouping<ComponentCategory, ArchitectureComponent> categoryGroup in componentsByCategory)
+                    foreach (IGrouping<ComponentCategory, ComponentInfo> categoryGroup in componentsByCategory)
                     {
                         sb.AppendLine($"- **{categoryGroup.Key}:** {categoryGroup.Count()} components");
                         IEnumerable<string> topComponents = categoryGroup.Take(5).Select(c => c.Name);
@@ -164,7 +164,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Architecture?.Layers?.Any() == true)
                 {
-                    List<ArchitectureLayer> layersByLevel = analysisResult.Architecture.Layers
+                    List<LayerInfo> layersByLevel = analysisResult.Architecture.Layers
                         .OrderBy(l => l.Level)
                         .ToList();
 
@@ -173,7 +173,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine("    %% Layered Architecture");
                     sb.AppendLine();
 
-                    foreach (ArchitectureLayer layer in layersByLevel)
+                    foreach (LayerInfo layer in layersByLevel)
                     {
                         string layerId = GetSafeNodeId(layer.Name);
                         sb.AppendLine($"    {layerId}[\"{layer.Name} Layer\"]");
@@ -200,7 +200,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine();
 
                     sb.AppendLine("**Layer Details:**");
-                    foreach (ArchitectureLayer layer in layersByLevel)
+                    foreach (LayerInfo layer in layersByLevel)
                     {
                         sb.AppendLine($"- **{layer.Name} (Level {layer.Level}):** {layer.Components.Count} components");
                         if (!string.IsNullOrEmpty(layer.Description))
@@ -314,7 +314,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.DetectedPatterns?.Any() == true)
                 {
-                    List<DetectedPattern> patterns = analysisResult.Scripts.DetectedPatterns
+                    List<DesignPattern> patterns = analysisResult.Scripts.DetectedPatterns
                         .Where(p => p.Confidence > 0.6f)
                         .OrderByDescending(p => p.Confidence)
                         .ToList();
@@ -322,7 +322,7 @@ namespace UnityProjectArchitect.Services
                     if (patterns.Any())
                     {
                         sb.AppendLine("**Detected Design Patterns:**");
-                        foreach (DetectedPattern pattern in patterns)
+                        foreach (DesignPattern pattern in patterns)
                         {
                             string confidenceBar = new string('█', (int)(pattern.Confidence * 10));
                             sb.AppendLine($"- **{pattern.Name}** (Confidence: {pattern.Confidence:P0}) `{confidenceBar}`");

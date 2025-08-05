@@ -159,7 +159,7 @@ namespace UnityProjectArchitect.Services
 
                 if (analysisResult.Scripts?.Metrics != null)
                 {
-                    ScriptMetrics metrics = analysisResult.Scripts.Metrics;
+                    CodeMetrics metrics = analysisResult.Scripts.Metrics;
                     
                     sb.AppendLine("**Code Quality Metrics:**");
                     sb.AppendLine($"- **Complexity:** Average cyclomatic complexity of {metrics.AverageCyclomaticComplexity:F1}");

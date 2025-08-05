@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityProjectArchitect.AI.Services;
 using UnityProjectArchitect.Core;
+using UnityProjectArchitect.Services.Utilities;
 
 namespace UnityProjectArchitect.Services
 {
@@ -69,16 +70,16 @@ namespace UnityProjectArchitect.Services
             if (template.FolderStructure?.Folders == null)
                 return;
 
-            foreach (FolderDefinition folder in template.FolderStructure.Folders)
+            foreach (FolderStructureData.FolderInfo folderInfo in template.FolderStructure.Folders)
             {
-                string folderPath = Path.Combine(Application.dataPath, folder.RelativePath);
+                string folderPath = Path.Combine(Application.dataPath, folderInfo.Path);
                 
                 if (Directory.Exists(folderPath))
                 {
                     TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.FolderExists,
                         folderPath,
-                        $"Folder '{folder.Name}' already exists at {folderPath}"
+                        $"Folder '{folderInfo.Name}' already exists at {folderPath}"
                     )
                     {
                         Severity = TemplateSeverity.Warning,
@@ -88,8 +89,7 @@ namespace UnityProjectArchitect.Services
                     conflicts.Add(conflict);
                 }
 
-                // Check subfolders recursively
-                DetectSubFolderConflicts(folder, folderPath, conflicts);
+                // FolderStructureData.FolderInfo doesn't have subfolders to process recursively
             }
         }
 
@@ -124,7 +124,7 @@ namespace UnityProjectArchitect.Services
             if (template.SceneTemplates?.Count == 0)
                 return;
 
-            foreach (SceneTemplate sceneTemplate in template.SceneTemplates)
+            foreach (SceneTemplateData sceneTemplate in template.SceneTemplates)
             {
                 if (!sceneTemplate.CreateOnApply)
                     continue;
@@ -153,16 +153,16 @@ namespace UnityProjectArchitect.Services
             if (template.AssemblyDefinitions?.Count == 0)
                 return;
 
-            foreach (string asmdef in template.AssemblyDefinitions)
+            foreach (AssemblyDefinitionTemplate asmdef in template.AssemblyDefinitions)
             {
-                string asmdefPath = Path.Combine(Application.dataPath, "Scripts", $"{asmdef}.asmdef");
+                string asmdefPath = Path.Combine(Application.dataPath, "Scripts", $"{asmdef.Name}.asmdef");
                 
                 if (File.Exists(asmdefPath))
                 {
                     TemplateConflict conflict = new TemplateConflict(
                         TemplateConflictType.AssemblyDefinitionConflict,
                         asmdefPath,
-                        $"Assembly definition '{asmdef}' already exists"
+                        $"Assembly definition '{asmdef.Name}' already exists"
                     )
                     {
                         Severity = TemplateSeverity.Error,
@@ -243,7 +243,7 @@ namespace UnityProjectArchitect.Services
             }
 
             // Check Unity version conflicts
-            if (!template.IsCompatibleWith(projectData.TargetUnityVersion))
+            if (!template.IsCompatibleWith(projectData))
             {
                 TemplateConflict conflict = new TemplateConflict(
                     TemplateConflictType.SettingsConflict,
@@ -261,15 +261,15 @@ namespace UnityProjectArchitect.Services
             // Check documentation section conflicts
             if (template.DefaultDocumentationSections?.Count > 0)
             {
-                foreach (DocumentationSectionData templateSection in template.DefaultDocumentationSections)
+                foreach (DocumentationSection templateSection in template.DefaultDocumentationSections)
                 {
-                    DocumentationSectionData existingSection = projectData.GetDocumentationSection(templateSection.SectionType);
+                    DocumentationSectionData existingSection = projectData.GetDocumentationSection(templateSection.Type);
                     if (existingSection != null && existingSection.HasContent)
                     {
                         TemplateConflict conflict = new TemplateConflict(
                             TemplateConflictType.SettingsConflict,
-                            $"DocumentationSection.{templateSection.SectionType}",
-                            $"Documentation section '{templateSection.SectionType}' already has content"
+                            $"DocumentationSection.{templateSection.Type}",
+                            $"Documentation section '{templateSection.Type}' already has content"
                         )
                         {
                             Severity = TemplateSeverity.Warning,

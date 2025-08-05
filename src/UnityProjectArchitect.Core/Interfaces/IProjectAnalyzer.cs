@@ -62,6 +62,20 @@ namespace UnityProjectArchitect.Core
         public string ErrorMessage { get; set; }
         public ProjectMetrics Metrics { get; set; }
 
+        public List<object> Issues
+        {
+            get
+            {
+                List<object> allIssues = new List<object>();
+                if (Structure?.Issues != null) allIssues.AddRange(Structure.Issues.Cast<object>());
+                if (Scripts?.Issues != null) allIssues.AddRange(Scripts.Issues.Cast<object>());
+                if (Assets?.Issues != null) allIssues.AddRange(Assets.Issues.Cast<object>());
+                if (Architecture?.Issues != null) allIssues.AddRange(Architecture.Issues.Cast<object>());
+                if (Performance?.Issues != null) allIssues.AddRange(Performance.Issues.Cast<object>());
+                return allIssues;
+            }
+        }
+
         public ProjectAnalysisResult()
         {
             Insights = new List<ProjectInsight>();

@@ -419,10 +419,10 @@ namespace UnityProjectArchitect.Services
 
             if (metrics.TextureMemoryMB > 100)
             {
-                recommendations.Add(new PerformanceRecommendation(
-                    "Optimize Texture Compression",
-                    "Consider using compressed texture formats to reduce memory usage")
+                recommendations.Add(new PerformanceRecommendation
                 {
+                    Title = "Optimize Texture Compression",
+                    Description = "Consider using compressed texture formats to reduce memory usage",
                     ExpectedImpact = PerformanceImpact.High,
                     ImplementationEffort = 3
                 });

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using UnityProjectArchitect.Core;
+using UnityProjectArchitect.Services.Utilities;
 
 namespace UnityProjectArchitect.Services
 {

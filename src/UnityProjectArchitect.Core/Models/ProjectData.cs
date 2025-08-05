@@ -118,22 +118,43 @@ namespace UnityProjectArchitect.Core
     {
         General,
         GameDevelopment,
+        Game2D,
+        Game3D,
+        Unknown,
         EditorTool,
         VRApplication,
+        VR,
+        AR,
         MobileGame,
+        Mobile,
+        Mobile2D,
+        Mobile3D,
+        PC2D,
+        PC3D,
         WebGL,
         ConsoleGame,
+        Console,
+        Multiplayer,
         Simulation,
         Educational,
-        Prototype
+        Prototype,
+        Tool,
+        Template
     }
 
     public enum UnityVersion
     {
+        Unknown,
+        Unity2021_3,
+        Unity2022_1,
+        Unity2022_2,
         Unity2022_3,
+        Unity2023_1,
+        Unity2023_2,
         Unity2023_3,
         Unity6000,
-        Unity6001
+        Unity6001,
+        Other
     }
 
     public enum AIProvider
@@ -158,8 +179,17 @@ namespace UnityProjectArchitect.Core
         TestPlan,
         DeploymentGuide,
         SecurityConsiderations,
-        PerformanceRequirements
+        PerformanceRequirements,
+        ProjectOverview,
+        ArchitectureOverview,
+        CodeAnalysis,
+        AssetAnalysis,
+        PerformanceAnalysis,
+        Recommendations,
+        ProjectMetrics,
+        Custom
     }
+
 
     public enum ExportFormat
     {
@@ -185,6 +215,9 @@ namespace UnityProjectArchitect.Core
         public bool AutoSave { get; set; } = true;
         public DocumentationStatus Status { get; set; } = DocumentationStatus.NotStarted;
 
+        public bool HasContent => !string.IsNullOrWhiteSpace(Content);
+        public int CurrentWordCount => string.IsNullOrWhiteSpace(Content) ? 0 : Content.Split(new char[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
         public void MarkAsGenerated()
         {
             LastUpdated = DateTime.Now;
@@ -197,6 +230,19 @@ namespace UnityProjectArchitect.Core
         AssistGeneration,
         FullGeneration,
         Enhancement
+    }
+
+    public enum DocumentationStatus
+    {
+        NotStarted,
+        InProgress,
+        Generated,
+        Completed,
+        Reviewed,
+        Approved,
+        Published,
+        Outdated,
+        NeedsReview
     }
 
     public class TemplateReference
@@ -224,6 +270,18 @@ namespace UnityProjectArchitect.Core
         public List<FileInfo> Files { get; set; } = new List<FileInfo>();
         public DateTime LastScanned { get; set; }
         public string RootPath { get; set; } = "";
+
+        public void AddFolder(FolderDefinition folder)
+        {
+            // For compatibility - convert FolderDefinition to FolderInfo
+            var folderInfo = new FolderInfo
+            {
+                Name = folder.Name,
+                Path = folder.Path,
+                CreatedDate = folder.CreatedDate
+            };
+            Folders.Add(folderInfo);
+        }
 
         public class FolderInfo
         {

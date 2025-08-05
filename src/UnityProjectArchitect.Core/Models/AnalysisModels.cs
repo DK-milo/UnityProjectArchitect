@@ -10,8 +10,14 @@ namespace UnityProjectArchitect.Core
     {
         public List<FolderInfo> Folders { get; set; } = new List<FolderInfo>();
         public List<FileInfo> Files { get; set; } = new List<FileInfo>();
+        public List<SceneInfo> Scenes { get; set; } = new List<SceneInfo>();
+        public List<AssemblyDefinitionInfo> AssemblyDefinitions { get; set; } = new List<AssemblyDefinitionInfo>();
         public List<StructureIssue> Issues { get; set; } = new List<StructureIssue>();
         public bool FollowsStandardStructure { get; set; }
+        public ProjectType DetectedProjectType { get; set; } = ProjectType.Unknown;
+        public UnityVersion DetectedUnityVersion { get; set; } = UnityVersion.Unknown;
+        public int TotalFiles { get; set; }
+        public long TotalSizeBytes { get; set; }
         public StructureMetrics Metrics { get; set; } = new StructureMetrics();
     }
 
@@ -23,6 +29,9 @@ namespace UnityProjectArchitect.Core
         public CodeMetrics Metrics { get; set; } = new CodeMetrics();
         public DependencyGraph Dependencies { get; set; } = new DependencyGraph();
         public List<DesignPattern> DetectedPatterns { get; set; } = new List<DesignPattern>();
+        public int TotalClasses => Classes.Count;
+        public int TotalMethods => Classes.Sum(c => c.Methods.Count);
+        public int TotalLinesOfCode => Classes.Sum(c => c.LinesOfCode);
     }
 
     public class ArchitectureAnalysis
@@ -180,6 +189,24 @@ namespace UnityProjectArchitect.Core
         public string Path { get; set; } = "";
         public StructureIssueSeverity Severity { get; set; }
         public string Suggestion { get; set; } = "";
+
+        public StructureIssue()
+        {
+        }
+
+        public StructureIssue(StructureIssueType type, string description, string path)
+        {
+            Type = type;
+            Description = description;
+            Path = path;
+        }
+
+        public StructureIssue(StructureIssueType type, string description, string path, StructureIssueSeverity severity, string suggestion = "")
+            : this(type, description, path)
+        {
+            Severity = severity;
+            Suggestion = suggestion;
+        }
     }
 
     public class CodeIssue
@@ -192,6 +219,17 @@ namespace UnityProjectArchitect.Core
         public string CodeSnippet { get; set; } = "";
         public string Suggestion { get; set; } = "";
         public string RuleId { get; set; } = "";
+
+        public CodeIssue()
+        {
+        }
+
+        public CodeIssue(CodeIssueType type, CodeIssueSeverity severity, string description)
+        {
+            Type = type;
+            Severity = severity;
+            Description = description;
+        }
     }
 
     public class ArchitectureIssue
@@ -201,6 +239,16 @@ namespace UnityProjectArchitect.Core
         public string Description { get; set; } = "";
         public List<string> AffectedComponents { get; set; } = new List<string>();
         public string Suggestion { get; set; } = "";
+
+        public ArchitectureIssue()
+        {
+        }
+
+        public ArchitectureIssue(ArchitectureIssueType type, string description)
+        {
+            Type = type;
+            Description = description;
+        }
     }
 
     public class AssetIssue
@@ -210,6 +258,17 @@ namespace UnityProjectArchitect.Core
         public string Description { get; set; } = "";
         public string AssetPath { get; set; } = "";
         public string Suggestion { get; set; } = "";
+
+        public AssetIssue()
+        {
+        }
+
+        public AssetIssue(AssetIssueType type, string description, string assetPath)
+        {
+            Type = type;
+            Description = description;
+            AssetPath = assetPath;
+        }
     }
 
     public class PerformanceIssue
@@ -219,6 +278,16 @@ namespace UnityProjectArchitect.Core
         public string Location { get; set; } = "";
         public PerformanceImpact Impact { get; set; }
         public string Suggestion { get; set; } = "";
+
+        public PerformanceIssue()
+        {
+        }
+
+        public PerformanceIssue(PerformanceIssueType type, string description)
+        {
+            Type = type;
+            Description = description;
+        }
     }
 
     // Metrics
@@ -375,6 +444,23 @@ namespace UnityProjectArchitect.Core
         public string Type { get; set; } = "";
         public string FilePath { get; set; } = "";
         public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+
+        public DependencyNode()
+        {
+        }
+
+        public DependencyNode(string id, string name, string type)
+        {
+            Id = id;
+            Name = name;
+            Type = type;
+        }
+
+        public DependencyNode(string id, string name, string type, string filePath)
+            : this(id, name, type)
+        {
+            FilePath = filePath;
+        }
     }
 
     public class DependencyEdge
@@ -383,6 +469,23 @@ namespace UnityProjectArchitect.Core
         public string ToId { get; set; } = "";
         public DependencyType DependencyType { get; set; }
         public string Description { get; set; } = "";
+
+        public DependencyEdge()
+        {
+        }
+
+        public DependencyEdge(string fromId, string toId, DependencyType dependencyType)
+        {
+            FromId = fromId;
+            ToId = toId;
+            DependencyType = dependencyType;
+        }
+
+        public DependencyEdge(string fromId, string toId, DependencyType dependencyType, string description)
+            : this(fromId, toId, dependencyType)
+        {
+            Description = description;
+        }
     }
 
     public class DesignPattern
@@ -393,6 +496,16 @@ namespace UnityProjectArchitect.Core
         public List<string> InvolvedClasses { get; set; } = new List<string>();
         public float Confidence { get; set; }
         public string Evidence { get; set; } = "";
+
+        public DesignPattern()
+        {
+        }
+
+        public DesignPattern(DesignPatternType type, string name)
+        {
+            Type = type;
+            Name = name;
+        }
     }
 
     public class AssetInfo
@@ -414,6 +527,17 @@ namespace UnityProjectArchitect.Core
         public string DependencyPath { get; set; } = "";
         public AssetDependencyType Type { get; set; }
         public bool IsDirectDependency { get; set; }
+
+        public AssetDependency()
+        {
+        }
+
+        public AssetDependency(string assetPath, string dependencyPath, AssetDependencyType type)
+        {
+            AssetPath = assetPath;
+            DependencyPath = dependencyPath;
+            Type = type;
+        }
     }
 
     public class AssemblyDefinitionInfo
@@ -488,6 +612,17 @@ namespace UnityProjectArchitect.Core
         public ConnectionType Type { get; set; }
         public string Description { get; set; } = "";
         public float Strength { get; set; }
+
+        public SystemConnection()
+        {
+        }
+
+        public SystemConnection(string fromComponent, string toComponent, ConnectionType type)
+        {
+            FromComponent = fromComponent;
+            ToComponent = toComponent;
+            Type = type;
+        }
     }
 
     public class LayerInfo
@@ -496,6 +631,16 @@ namespace UnityProjectArchitect.Core
         public int Level { get; set; }
         public List<string> Components { get; set; } = new List<string>();
         public string Description { get; set; } = "";
+
+        public LayerInfo()
+        {
+        }
+
+        public LayerInfo(string name, int level)
+        {
+            Name = name;
+            Level = level;
+        }
     }
 
     // Enums (continuation from previous files)

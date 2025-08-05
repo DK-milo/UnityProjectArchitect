@@ -143,7 +143,7 @@ namespace UnityProjectArchitect.Services
             List<InterfaceDefinition> interfaces = ExtractInterfacesFromContent(content, filePath);
             result.Interfaces.AddRange(interfaces);
 
-            foreach (string classDefinition in classes)
+            foreach (ClassDefinition classDefinition in classes)
             {
                 result.Methods.AddRange(classDefinition.Methods);
             }
@@ -161,7 +161,7 @@ namespace UnityProjectArchitect.Services
 
         private List<ClassDefinition> ExtractClassesFromContent(string content, string filePath)
         {
-            List<string> classes = new List<ClassDefinition>();
+            List<ClassDefinition> classes = new List<ClassDefinition>();
             string[] lines = content.Split('\n');
             
             string namespacePattern = @"namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*{";
@@ -630,11 +630,10 @@ namespace UnityProjectArchitect.Services
             {
                 if (classDefinition.Methods.Count > 20)
                 {
-                    issues.Add(new CodeIssue(CodeIssueType.CodeSmell, 
-                        $"Class {classDefinition.Name} has too many methods ({classDefinition.Methods.Count})", 
-                        classDefinition.FilePath)
+                    issues.Add(new CodeIssue(CodeIssueType.CodeSmell, CodeIssueSeverity.Major, 
+                        $"Class {classDefinition.Name} has too many methods ({classDefinition.Methods.Count})")
                     {
-                        Severity = CodeIssueSeverity.Major,
+                        FilePath = classDefinition.FilePath,
                         LineNumber = classDefinition.StartLine,
                         Suggestion = "Consider breaking this class into smaller, more focused classes"
                     });
@@ -642,11 +641,10 @@ namespace UnityProjectArchitect.Services
 
                 if (classDefinition.LinesOfCode > 500)
                 {
-                    issues.Add(new CodeIssue(CodeIssueType.CodeSmell, 
-                        $"Class {classDefinition.Name} is very large ({classDefinition.LinesOfCode} lines)", 
-                        classDefinition.FilePath)
+                    issues.Add(new CodeIssue(CodeIssueType.CodeSmell, CodeIssueSeverity.Major, 
+                        $"Class {classDefinition.Name} is very large ({classDefinition.LinesOfCode} lines)")
                     {
-                        Severity = CodeIssueSeverity.Major,
+                        FilePath = classDefinition.FilePath,
                         LineNumber = classDefinition.StartLine,
                         Suggestion = "Consider refactoring this class to reduce its size"
                     });
@@ -656,11 +654,10 @@ namespace UnityProjectArchitect.Services
                 {
                     if (method.CyclomaticComplexity > 10)
                     {
-                        issues.Add(new CodeIssue(CodeIssueType.CodeSmell, 
-                            $"Method {method.Name} has high cyclomatic complexity ({method.CyclomaticComplexity})", 
-                            classDefinition.FilePath)
+                        issues.Add(new CodeIssue(CodeIssueType.CodeSmell, CodeIssueSeverity.Major, 
+                            $"Method {method.Name} has high cyclomatic complexity ({method.CyclomaticComplexity})")
                         {
-                            Severity = CodeIssueSeverity.Major,
+                            FilePath = classDefinition.FilePath,
                             LineNumber = method.StartLine,
                             Suggestion = "Consider breaking this method into smaller, simpler methods"
                         });

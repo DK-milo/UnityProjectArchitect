@@ -16,7 +16,9 @@ namespace UnityProjectArchitect.Core
         Custom,
         Resources,
         Editor,
-        Documentation
+        Documentation,
+        StreamingAssets,
+        Plugins
     }
 
     public class FolderDefinition
@@ -25,9 +27,12 @@ namespace UnityProjectArchitect.Core
         public FolderType Type { get; set; }
         public string Description { get; set; } = "";
         public string Path { get; set; } = "";
+        public string RelativePath { get; set; } = "";
         public bool IsRequired { get; set; } = true;
         public bool IsCreated { get; set; } = false;
+        public bool CreateOnApply { get; set; } = true;
         public List<FolderDefinition> SubFolders { get; set; } = new List<FolderDefinition>();
+        public List<string> FileTemplates { get; set; } = new List<string>();
         public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
         public DateTime CreatedDate { get; set; }
 
@@ -75,5 +80,6 @@ namespace UnityProjectArchitect.Core
             return HashCode.Combine(Name, Type);
         }
     }
+
 
 }

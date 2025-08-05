@@ -69,10 +69,12 @@ namespace UnityProjectArchitect.Core
         public bool IsValid 
         { 
             get => _isValid && !HasBlockers; 
-            private set => _isValid = value; 
+            set => _isValid = value; 
         }
 
         public List<ValidationIssue> Issues => _issues;
+        public List<string> Errors => _issues.Where(i => i.Severity >= ValidationSeverity.Error).Select(i => i.Message).ToList();
+        public List<string> Warnings => _issues.Where(i => i.Severity == ValidationSeverity.Warning).Select(i => i.Message).ToList();
         public DateTime ValidationTime { get; set; }
         public string ValidationContext { get; set; } = "";
         public string ErrorMessage { get; set; } = "";
