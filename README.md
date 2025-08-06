@@ -1,6 +1,6 @@
 # Unity Project Architect
 
-**Version:** 0.2.0 (Active Development)  
+**Version:** 0.3.0 (Complete - Ready for Publishing)  
 **Unity Compatibility:** Unity 6 (6000.0.0f1+) and Unity 2023.3+  
 **Package Name:** `com.unitprojectarchitect.core`
 
@@ -63,11 +63,14 @@ Automatically generates six essential project documentation sections:
 
 ## 🔧 Quick Start
 
-1. **Open the Tool**: `Window > Unity Project Architect`
-2. **Configure Settings**: Set up Claude API key (optional) and documentation preferences
-3. **Analyze Project**: Click "Analyze Project" to scan your Unity project
-4. **Generate Documentation**: Select sections to generate and choose export format
-5. **Export**: Save as Markdown, PDF, or Unity ScriptableObjects
+1. **Open Unity Project Architect Studio**: `Tools > Unity Project Architect > Unity Project Architect Studio` (or `Ctrl+Shift+P`)
+2. **Try the Demo**: Import samples from Package Manager to see full functionality
+3. **Use the 3-Tab Interface**:
+   - **Tab 1 - Game Concept Studio**: Describe your game and generate complete documentation
+   - **Tab 2 - Project Analyzer**: Analyze existing projects with detailed insights  
+   - **Tab 3 - Smart Template Creator**: Create custom project templates
+4. **Export Results**: Save as Markdown, PDF, or create folder structures
+5. **Optional**: Configure Claude API key in settings for enhanced AI features
 
 ## ⚙️ System Requirements
 

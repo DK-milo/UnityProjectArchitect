@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using UnityProjectArchitect.Core;
@@ -19,11 +20,14 @@ namespace UnityProjectArchitect.Services
 
         private readonly MarkdownExporter _markdownExporter;
         private readonly Dictionary<string, PDFTemplate> _templates;
+        private readonly PandocIntegration _pandocIntegration;
+        private bool _pandocInitialized;
 
         public PDFExporter()
         {
             _markdownExporter = new MarkdownExporter();
             _templates = new Dictionary<string, PDFTemplate>();
+            _pandocIntegration = new PandocIntegration();
             InitializeDefaultTemplates();
         }
 
@@ -34,7 +38,13 @@ namespace UnityProjectArchitect.Services
 
             try
             {
-                // Step 1: Generate Markdown content
+                // Step 1: Initialize Pandoc if not already done
+                if (!_pandocInitialized)
+                {
+                    _pandocInitialized = await _pandocIntegration.InitializeAsync();
+                }
+
+                // Step 2: Generate Markdown content
                 ExportOptions markdownOptions = CreateMarkdownOptions(options);
                 ExportOperationResult markdownResult = await _markdownExporter.FormatAsync(content, markdownOptions);
                 
@@ -47,27 +57,53 @@ namespace UnityProjectArchitect.Services
 
                 string markdownContent = markdownResult.Metadata["content"] as string;
                 
-                // Step 2: Convert Markdown to HTML
+                // Step 3: Convert Markdown to HTML
                 string htmlContent = await ConvertMarkdownToHtmlAsync(markdownContent, options);
                 
-                // Step 3: Apply PDF-specific formatting and styling
+                // Step 4: Apply PDF-specific formatting and styling
                 string styledHtml = await ApplyPDFStylingAsync(htmlContent, content, options);
                 
-                // Step 4: Generate PDF metadata
+                // Step 5: Generate PDF metadata
                 PDFMetadata pdfMetadata = GeneratePDFMetadata(content, options);
                 
-                result.Success = true;
-                result.GeneratedFiles.Add($"{content.Title}.pdf");
-                result.TotalSizeBytes = Encoding.UTF8.GetByteCount(styledHtml) * 2; // Estimate PDF size
-                result.ExportTime = DateTime.Now - startTime;
-                
-                // Store content and metadata for PDF generation
-                result.Metadata["html_content"] = styledHtml;
+                // Step 6: Generate PDF using Pandoc (if available) or fallback to HTML
+                if (_pandocIntegration.IsAvailable)
+                {
+                    string outputPath = Path.Combine(Path.GetTempPath(), $"{content.Title ?? "Documentation"}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                    PandocOptions pandocOptions = CreatePandocOptions(options, pdfMetadata);
+                    
+                    PandocResult pandocResult = await _pandocIntegration.ConvertHtmlToPdfAsync(styledHtml, outputPath, pandocOptions);
+                    
+                    if (pandocResult.Success)
+                    {
+                        result.Success = true;
+                        result.GeneratedFiles.Add(outputPath);
+                        result.TotalSizeBytes = pandocResult.FileSizeBytes;
+                        result.ExportTime = DateTime.Now - startTime;
+                        result.Metadata["pdf_path"] = outputPath;
+                        result.Metadata["pandoc_processing_time"] = pandocResult.ProcessingTime;
+                        
+                        Debug.Log($"PDF generated successfully: {pandocResult.FormattedFileSize} in {pandocResult.ProcessingTime.TotalSeconds:F1}s at {outputPath}");
+                    }
+                    else
+                    {
+                        // Pandoc failed, fall back to HTML export
+                        Debug.LogWarning($"Pandoc PDF generation failed: {pandocResult.ErrorMessage}. Falling back to HTML export.");
+                        result = await GenerateFallbackHtmlResult(content, styledHtml, markdownContent, startTime);
+                    }
+                }
+                else
+                {
+                    // Pandoc not available, fall back to HTML export
+                    ValidationResult pandocValidation = _pandocIntegration.ValidateInstallation();
+                    string pandocMessage = pandocValidation.IsValid ? "Pandoc not initialized" : string.Join(", ", pandocValidation.Errors);
+                    Debug.LogWarning($"Pandoc not available: {pandocMessage}. Falling back to HTML export.");
+                    result = await GenerateFallbackHtmlResult(content, styledHtml, markdownContent, startTime);
+                }
+
+                result.Statistics = GenerateStatistics(content, markdownContent, styledHtml);
                 result.Metadata["pdf_metadata"] = pdfMetadata;
                 result.Metadata["markdown_content"] = markdownContent;
-                result.Statistics = GenerateStatistics(content, markdownContent, styledHtml);
-
-                Debug.Log($"PDF export prepared: {result.FormattedSize} in {result.ExportTime.TotalSeconds:F1}s");
             }
             catch (Exception ex)
             {
@@ -575,6 +611,66 @@ namespace UnityProjectArchitect.Services
         private string GetDefaultTemplateContent()
         {
             return "Default PDF template with professional styling and layout.";
+        }
+
+        private PandocOptions CreatePandocOptions(ExportOptions options, PDFMetadata metadata)
+        {
+            string recommendedEngine = Task.Run(async () => await _pandocIntegration.GetRecommendedEngineAsync()).Result;
+            
+            return new PandocOptions
+            {
+                PdfEngine = GetOption<string>(options, "PdfEngine", recommendedEngine),
+                PageSize = GetOption<string>(options, "PageSize", "A4"),
+                MarginTop = GetOption<string>(options, "MarginTop", "1in"),
+                MarginBottom = GetOption<string>(options, "MarginBottom", "1in"),
+                MarginLeft = GetOption<string>(options, "MarginLeft", "1in"),
+                MarginRight = GetOption<string>(options, "MarginRight", "1in"),
+                FontFamily = GetOption<string>(options, "FontFamily", "Arial"),
+                FontSize = GetOption<int>(options, "FontSize", 11),
+                IncludeTableOfContents = GetOption<bool>(options, "IncludeTOC", true),
+                TocDepth = GetOption<int>(options, "TocDepth", 3),
+                IncludeBookmarks = GetOption<bool>(options, "IncludeBookmarks", true),
+                NumberSections = GetOption<bool>(options, "NumberSections", false),
+                TimeoutMs = GetOption<int>(options, "TimeoutMs", 120000),
+                Variables = new Dictionary<string, string>
+                {
+                    ["title"] = metadata.Title,
+                    ["author"] = metadata.Author,
+                    ["subject"] = metadata.Subject,
+                    ["keywords"] = metadata.Keywords
+                }
+            };
+        }
+
+        private async Task<ExportOperationResult> GenerateFallbackHtmlResult(ExportContent content, string styledHtml, string markdownContent, DateTime startTime)
+        {
+            ExportOperationResult result = new ExportOperationResult(ExportFormat.PDF, "");
+            
+            try
+            {
+                // Generate HTML file as fallback
+                string outputPath = Path.Combine(Path.GetTempPath(), $"{content.Title ?? "Documentation"}_{DateTime.Now:yyyyMMdd_HHmmss}.html");
+                await File.WriteAllTextAsync(outputPath, styledHtml, Encoding.UTF8);
+                
+                result.Success = true;
+                result.GeneratedFiles.Add(outputPath);
+                result.TotalSizeBytes = new System.IO.FileInfo(outputPath).Length;
+                result.ExportTime = DateTime.Now - startTime;
+                result.Metadata["html_path"] = outputPath;
+                result.Metadata["html_content"] = styledHtml;
+                result.Metadata["fallback_mode"] = true;
+                result.Metadata["fallback_reason"] = "Pandoc not available - exported as HTML";
+                
+                Debug.Log($"PDF fallback HTML generated: {result.FormattedSize} in {result.ExportTime.TotalSeconds:F1}s at {outputPath}");
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = $"Fallback HTML generation failed: {ex.Message}";
+                Debug.LogError($"PDFExporter fallback error: {ex}");
+            }
+            
+            return result;
         }
 
         private class PDFTemplate

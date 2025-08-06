@@ -150,22 +150,124 @@
 
 ---
 
+## Post-MVP Enhancement Tasks
+
+### **PRIORITY 1:** Complete Export Pipeline (2 hours)
+
+#### **Task 5A: Pandoc PDF Conversion Integration (1h)**
+**Status:** 📋 **PENDING**  
+**Description:** Complete the PDF export pipeline by integrating Pandoc CLI for HTML-to-PDF conversion
+
+**Current State:** PDFExporter generates styled HTML but doesn't produce actual PDF files  
+**Implementation Required:**
+- Add Pandoc CLI process execution to PDFExporter.cs
+- Implement HTML-to-PDF conversion using Pandoc with custom CSS
+- Add error handling and fallback mechanisms for missing Pandoc installation
+- Include Pandoc installation validation and user guidance
+- Support PDF metadata injection and optimization options
+
+**Detailed Prompt:**
+```
+Complete the PDF export pipeline in Unity Project Architect by integrating Pandoc CLI:
+
+IMPLEMENTATION REQUIREMENTS:
+1. MODIFY PDFExporter.cs FormatAsync method:
+   - After HTML generation, add Pandoc CLI execution step
+   - Use ProcessStartInfo to execute: pandoc input.html -o output.pdf --pdf-engine=wkhtmltopdf
+   - Include CSS file generation for enhanced PDF styling
+   - Add timeout handling and process monitoring
+
+2. ADD PandocIntegration.cs service:
+   - Pandoc installation detection and validation
+   - Version compatibility checking (minimum Pandoc 2.11+)
+   - Process execution wrapper with proper error handling
+   - Support for PDF engines (wkhtmltopdf, weasyprint, chrome-headless)
+   - Command-line argument building for different PDF options
+
+3. ADD fallback mechanisms:
+   - Graceful degradation when Pandoc is not available
+   - Alternative PDF generation using Unity's built-in web view (if available)
+   - Clear user messaging about Pandoc installation requirements
+   - HTML export as fallback option with styling preserved
+
+4. UPDATE PDFExporter options:
+   - PDF engine selection (wkhtmltopdf recommended for best results)
+   - Page layout options (margins, headers, footers, page breaks)
+   - Table of contents generation with proper linking
+   - Custom CSS injection for company branding
+
+TECHNICAL REQUIREMENTS:
+- Cross-platform support (Windows, macOS, Linux)
+- Async/await pattern for process execution
+- Proper stream handling and resource disposal
+- Comprehensive error reporting with actionable messages
+- Unit tests with mock process execution
+```
+
+#### **Task 5B: Mermaid Diagram Rendering (1h)**
+**Status:** 📋 **PENDING**  
+**Description:** Add Mermaid CLI integration for converting diagram syntax to actual images
 ## Next Immediate Tasks
 
-### **PRIORITY 1:** Complete DLL Architecture Migration
-1. ✅ **Core Migration:** C# solution structure and Unity-independent business logic - **COMPLETED**
-2. 🔄 **Final Cleanup:** Fix remaining 26 AI project compilation errors (30 min)
-3. ✅ **Build Verification:** Ensure all DLLs compile successfully (15 min)
+**Current State:** Documentation generators output Mermaid syntax but don't render to images  
+**Implementation Required:**
+- Add Mermaid CLI process execution for diagram rendering
+- Convert Mermaid syntax blocks to PNG/SVG images in exported documents
+- Integrate rendered diagrams into Markdown and PDF exports
+- Handle diagram rendering errors and provide fallback text
 
-### **PRIORITY 2:** ✅ **COMPLETED** - AI Integration
-1. ✅ **Step 3A:** Claude API integration with secure key management (2h) - **COMPLETED**
-2. ✅ **Step 3B:** Specialized prompt engineering for each section (2h) - **COMPLETED**
-3. ✅ **Step 3C:** AI assistant service implementation (2h) - **COMPLETED**
+**Detailed Prompt:**
+```
+Implement Mermaid diagram rendering in Unity Project Architect documentation export:
 
-### **PRIORITY 3:** Stage 3 - Final Delivery ⏳ **IN PROGRESS** (2h/4h completed)
-1. ✅ **Step 4A:** Unity Editor window integration (2h) - **COMPLETED**
-2. ✅ **Step 4B:** Create hybrid Unity package from DLLs (1h) - **COMPLETED**
-3. **Step 4C:** Testing, optimization, and demo project (1h)
+IMPLEMENTATION REQUIREMENTS:
+1. CREATE MermaidRenderer.cs service:
+   - Mermaid CLI installation detection and validation
+   - Extract Mermaid code blocks from markdown content using regex
+   - Execute mermaid-cli: mmdc -i input.mmd -o output.png -t default -b white
+   - Replace Mermaid syntax with image references in exported content
+   - Support multiple output formats (PNG, SVG, PDF-compatible)
+
+2. INTEGRATE with existing generators:
+   - MODIFY SystemArchitectureGenerator.cs: Add diagram rendering option
+   - MODIFY DataModelGenerator.cs: Render data model diagrams
+   - MODIFY UserStoriesGenerator.cs: Render user journey diagrams
+   - MODIFY WorkTicketsGenerator.cs: Render workflow diagrams
+
+3. ADD export format support:
+   - MarkdownExporter: Include rendered images with proper file paths
+   - PDFExporter: Embed images directly in HTML for PDF conversion
+   - UnityAssetExporter: Save diagram images as Unity texture assets
+
+4. ADD configuration options:
+   - Diagram theme selection (default, dark, forest, neutral)
+   - Output resolution and quality settings
+   - Background color and transparency options
+   - Fallback behavior when Mermaid CLI unavailable
+
+TECHNICAL IMPLEMENTATION:
+- Async diagram rendering with progress reporting
+- Temporary file management for diagram generation
+- Image optimization and compression
+- Error handling with graceful fallback to syntax display
+- Cross-platform Mermaid CLI execution (Node.js dependency)
+- Caching system for rendered diagrams to avoid regeneration
+
+INTEGRATION POINTS:
+- ExportService orchestration for multi-step export (generate → render → format)
+- Progress reporting during diagram rendering phases
+- Unity AssetDatabase integration for diagram image imports
+- Memory-efficient handling of multiple diagram renders
+```
+
+---
+
+## Completed Tasks Summary
+
+### **✅ COMPLETED:** All MVP Deliverables (30/30 hours)
+1. ✅ **Stage 1:** Technical Documentation (8h) - Complete project specification
+2. ✅ **Stage 2:** Functional Code (18h) - Core framework, documentation generation, AI integration  
+3. ✅ **Stage 3:** Final Delivery (4h) - Unity integration, hybrid package, publishing preparation
 
 ---
 

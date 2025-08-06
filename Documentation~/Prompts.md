@@ -1,176 +1,18 @@
-# Unity Project Architect - Context Transfer for Claude Code
+# Unity Project Architect - Development Prompts
 
-## Project Overview
-I'm developing a Unity package called **"Unity Project Architect"** - an AI-powered project management and documentation tool for Unity developers. This is a 30-hour MVP project structured in 3 phases.
-
-### Core Concept
-A Unity Editor package that helps developers:
-- Generate complete project documentation (6 standard sections)
-- Create project templates and structures automatically
-- Organize folder hierarchies and project setup (no script generation)
-- Use AI assistance (Claude API) for planning and documentation
-- Manage development workflows within Unity Editor
-
-## Technical Stack
-- **Unity 6 (6000.0.0f1+)** with UI Toolkit
-- **C# .NET** for all logic
-- **Unity Package Manager** distribution
-- **Claude API integration** (user provides API key)
-- **JetBrains Rider** as IDE
-- **Git** for version control
-
-## Project Timeline (30 hours total)
-
-### Stage 1: Technical Documentation (8 hours)
-**Status**: Starting now
-**Deliverables**:
-1. Product Requirements Document (PRD) - 2h
-2. System Architecture - 2h  
-3. Technical Specification - 1.5h
-4. Data Model - 1h
-5. Testing Plan - 1h
-6. Development Roadmap - 0.5h
-
-### Stage 2: Functional Code (18 hours)
-**Sprint 2.1**: Core Framework (6h) - Package structure, data models, template system
-**Sprint 2.2**: Documentation Generator (6h) - Auto-analysis, export system
-**Sprint 2.3**: AI Integration (6h) - Claude API, prompt engineering
-
-### Stage 3: Final Delivery (4 hours)
-Testing, demo project, user documentation, package publishing
-
-## Package Architecture
-
-### Target Structure:
-```
-com.yourname.project-architect/
-├── package.json
-├── Runtime/
-│   ├── Core/
-│   │   ├── ProjectData.cs (ScriptableObject)
-│   │   ├── DocumentationGenerator.cs
-│   │   └── TemplateManager.cs
-│   ├── UI/ (UI Toolkit components)
-│   └── API/
-│       ├── ClaudeIntegration.cs
-│       └── AIAssistant.cs
-├── Editor/
-│   ├── Windows/
-│   │   ├── ProjectArchitectWindow.cs (Main editor window)
-│   │   └── TemplateCreatorWindow.cs
-│   └── MenuItems/
-├── Tests/
-├── Documentation~/
-└── Samples~/
-```
-
-## Key Features to Implement
-
-### 1. Template System
-- Project type templates (2D, 3D, VR, Mobile)
-- Automatic folder structure generation
-- Assembly Definition setup
-- Scene templates
-
-### 2. Documentation Generator (6 required sections)
-- **General Product Description**
-- **System Architecture** (with auto-generated diagrams)
-- **Data Model** (from ScriptableObjects analysis)
-- **API Specification** (internal package API)
-- **User Stories** (AI-generated from project description)
-- **Work Tickets** (breakdown of development tasks)
-
-### 3. AI Integration
-- Claude API integration (user's API key)
-- Specialized prompts for each documentation section
-- Project analysis and suggestions
-- Automatic content generation
-
-### 4. Unity Editor Integration
-- Custom Editor Window with UI Toolkit
-- Project analysis tools
-- Export system (Markdown, PDF, Unity assets)
-- Real-time documentation updates
-
-## Development Environment Setup
-
-### Required Tools (for development only):
-- Unity 6 with UI Toolkit package
-- JetBrains Rider
-- Git repository
-- Mermaid CLI (for diagram templates)
-- Pandoc (for document conversion)
-
-### User Requirements (for final package):
-- Unity 6 only
-- Optional: Claude API key for AI features
-
-## Current Status & Immediate Tasks
-
-**STARTING WITH STAGE 1 - DOCUMENTATION**
-
-**Next immediate task**: Create the Product Requirements Document (PRD) defining:
-- Exact feature scope
-- User personas and use cases  
-- Technical constraints and requirements
-- Success metrics
-- Package API design
-
-## Key Design Principles
-
-1. **Zero external dependencies** for end users
-2. **Plug-and-play** installation via Unity Package Manager
-3. **AI-optional** - works without API key, enhanced with it
-4. **Template-based** - pre-generated assets, not runtime generation
-5. **Unity-native** - follows Unity conventions and patterns
-6. **Structure-only templates** - creates folders, scenes, and documentation; users write their own scripts
-
-## Development Guidelines
-
-- Use Unity 2023.3+ compatible code
-- Follow Unity package development best practices
-- Implement proper Assembly Definition structure  
-- Create comprehensive test suite
-- Document all public APIs
-- Use UI Toolkit for all editor interfaces
-
-## Success Criteria
-
-**MVP Complete when**:
-- Package installs cleanly in any Unity 6 project
-- All 6 documentation sections generate automatically  
-- Claude API integration works with user-provided keys
-- Template system creates functional project structures
-- Editor UI is intuitive and bug-free
-- Complete test coverage
-
-## Request for Claude Code
-
-Please help me start with **Stage 1: Technical Documentation**, beginning with the **Product Requirements Document (PRD)**. 
-
-I need you to:
-1. Set up the proper package structure in my Rider project
-2. Create the initial package.json and assembly definitions
-3. Help me write a comprehensive PRD that defines this package's exact scope and requirements
-4. Guide me through the system architecture design
-5. Establish coding patterns and conventions for the Unity package
-
-I want to follow Unity package development best practices and create professional-grade documentation that will guide the entire development process.
-
-Can you help me start by setting up the project structure and beginning the PRD creation?
+**Version:** 2.0  
+**Purpose:** Standardized implementation prompts for Unity Project Architect development  
+**Updated:** August 6, 2025
 
 ---
 
-# Development Props
+## Stage 1: Technical Documentation
 
-## Stage 1: Technical Documentation (COMPLETED ✅)
-
-### Prompt 1A: Product Requirements Document Creation
+### Prompt 1A: Product Requirements Document
 ```
-Create a comprehensive PRD for Unity Project Architect following these technical specifications:
+Create a comprehensive PRD for Unity Project Architect following these specifications:
 
 REQUIREMENTS:
-- 30-hour MVP timeline with 3 development stages (Stage 1: 8h, Stage 2: 18h, Stage 3: 4h)
 - Unity 6+ compatibility with UI Toolkit integration
 - AI-powered documentation generation using Claude API
 - Structure-only templates (no script generation)
@@ -181,9 +23,8 @@ DELIVERABLES:
 2. Target user personas (Solo Developer, Team Lead, Freelance Developer) with specific use cases
 3. Complete functional requirements breakdown (Core MVP + Post-MVP features)
 4. Technical requirements including platform compatibility, performance benchmarks, security considerations
-5. Detailed development roadmap with substage breakdown and hour estimates
-6. Package API design with extension points
-7. Acceptance criteria and definition of done
+5. Package API design with extension points
+6. Acceptance criteria and definition of done
 
 FORMAT: Professional technical document with clear section hierarchy, measurable success metrics, and detailed technical constraints.
 ```
@@ -191,13 +32,6 @@ FORMAT: Professional technical document with clear section hierarchy, measurable
 ### Prompt 1B: System Architecture Design
 ```
 Design the complete system architecture for Unity Project Architect package:
-
-TECHNICAL REQUIREMENTS:
-- Modular design with clear separation of concerns
-- ScriptableObject-based data persistence
-- Interface-driven service architecture
-- Unity Package Manager distribution structure
-- Assembly Definition organization for Runtime/Editor separation
 
 ARCHITECTURE COMPONENTS:
 1. Core Data Models: ProjectData, DocumentationSection, TemplateConfiguration, ProjectSettings, ValidationResult
@@ -208,20 +42,116 @@ ARCHITECTURE COMPONENTS:
 6. Unity Editor Integration: Custom EditorWindows with UI Toolkit, MenuItems
 
 IMPLEMENTATION APPROACH:
+- Modular design with clear separation of concerns
+- ScriptableObject-based data persistence
+- Interface-driven service architecture
+- Unity Package Manager distribution structure
+- Assembly Definition organization for Runtime/Editor separation
 - Use dependency injection pattern for service management
 - Implement async/await for long-running operations with progress reporting
 - Apply SOLID principles throughout the codebase
 - Include comprehensive error handling and logging
-- Design for testability with 80%+ code coverage target
+- Design for testability with high code coverage target
 ```
 
-## Stage 2.1: Core Framework (COMPLETED ✅)
+### Prompt 1C: Technical Specification
+```
+Define comprehensive technical specifications for Unity Project Architect:
 
-### Prompt 2.1A: Core Data Models Implementation
+TECHNICAL SPECIFICATIONS:
+1. Platform Requirements: Unity 2023.3+, Windows/macOS/Linux support
+2. Performance Targets: Fast startup, efficient documentation generation, minimal memory footprint
+3. Security Requirements: Encrypted API key storage, no data transmission without consent
+4. Compatibility Matrix: Unity versions, .NET framework requirements
+5. API Design Patterns: Interface contracts, data transfer objects, error handling
+6. Integration Points: Unity Editor APIs, Package Manager, UI Toolkit
+7. Testing Strategy: Unit tests, integration tests, mock frameworks
+8. Documentation Standards: XML documentation, README structure, changelog format
+
+DELIVERABLES:
+- Complete interface definitions with method signatures
+- Data model specifications with validation rules
+- Error handling and logging frameworks
+- Performance benchmarks and optimization guidelines
+```
+
+### Prompt 1D: Data Model Design
+```
+Design comprehensive data models for Unity Project Architect:
+
+CORE DATA MODELS:
+1. ProjectData (ScriptableObject):
+   - Project metadata: name, description, version, type, Unity version
+   - Team information: team name, contact email, repository
+   - Documentation settings: enabled sections, AI configuration
+   - Template references: applied templates, custom configurations
+
+2. DocumentationSection:
+   - Section type enum: GeneralProductDescription, SystemArchitecture, DataModel, APISpecification, UserStories, WorkTickets
+   - Content management: markdown content, generation status, last updated
+   - Export settings: format preferences, file paths
+
+3. Analysis Models:
+   - ProjectAnalysisResult: comprehensive analysis with metrics
+   - ScriptAnalysisResult: code analysis with patterns and issues
+   - AssetAnalysisResult: asset distribution and dependencies
+   - ProjectInsight: categorized insights with severity levels
+   - ProjectRecommendation: actionable improvements with effort estimates
+
+IMPLEMENTATION REQUIREMENTS:
+- All ScriptableObject classes with proper serialization
+- Comprehensive validation with error reporting
+- Unity Editor integration with custom inspectors
+- JSON serialization support for export functionality
+```
+
+### Prompt 1E: Testing Plan
+```
+Create comprehensive testing strategy for Unity Project Architect:
+
+TESTING FRAMEWORK:
+1. Unit Testing:
+   - Core service logic testing with high coverage
+   - Data model validation and serialization
+   - AI integration with mock responses
+   - Template system with file system mocks
+
+2. Integration Testing:
+   - Service interaction validation
+   - Unity Editor integration testing
+   - End-to-end workflow validation
+   - Performance benchmarking
+
+3. Validation Framework:
+   - Input validation with error reporting
+   - Content quality scoring
+   - Template compatibility checking
+   - Export format validation
+
+TESTING TOOLS:
+- NUnit for unit testing
+- Mock frameworks for external dependencies
+- Unity Test Runner for Editor integration
+- Performance profiling and benchmarking
+
+QUALITY GATES:
+- Zero compilation errors/warnings
+- High unit test coverage
+- All integration tests passing
+- Performance targets met
+```
+
+---
+
+## Stage 2: Functional Code
+
+### Steps 1A-1C: Core Framework
+
+#### Prompt 2.1A: Core Data Models Implementation
 ```
 Implement the complete core data model architecture for Unity Project Architect:
 
-STEP-BY-STEP IMPLEMENTATION:
+IMPLEMENTATION REQUIREMENTS:
 1. CREATE ProjectData.cs ScriptableObject:
    - Project metadata (name, description, version, type, Unity version)
    - Team and contact information
@@ -263,7 +193,7 @@ TECHNICAL REQUIREMENTS:
 - Include Unity-specific attributes for editor integration
 ```
 
-### Prompt 2.1B: Service Interfaces Design
+#### Prompt 2.1B: Service Interfaces Design
 ```
 Create the complete service interface architecture following SOLID principles:
 
@@ -317,7 +247,7 @@ DESIGN PATTERNS TO IMPLEMENT:
 - Command pattern for undoable operations
 ```
 
-### Prompt 2.1C: Template System Foundation
+#### Prompt 2.1C: Template System Foundation
 ```
 Implement the complete template management system:
 
@@ -367,9 +297,9 @@ FILE STRUCTURE REQUIREMENTS:
 - Package dependency management and validation
 ```
 
-## Sprint 2.2A: Project Analysis Engine (COMPLETED ✅)
+### Steps 2A-2C: Documentation Generator
 
-### Prompt 2.2A: Project Analysis Engine Implementation
+#### Prompt 2.2A: Project Analysis Engine Implementation
 ```
 Build a comprehensive project analysis engine with intelligent insights and recommendations:
 
@@ -381,10 +311,10 @@ CORE ANALYSIS COMPONENTS:
    - ProjectInsight with severity levels and confidence scoring
    - ProjectRecommendation with detailed action steps and effort estimation
    - Performance, Architecture, and Dependency analysis models
-   - 15+ supporting enums and data structures
+   - Supporting enums and data structures
 
 2. ProjectAnalyzer.cs - Main Analysis Service:
-   - Async project analysis with progress reporting (10 stages)
+   - Async project analysis with progress reporting
    - Integration of script, asset, and structure analyzers
    - Comprehensive error handling and logging
    - Project metrics calculation (lines of code, complexity, technical debt)
@@ -400,7 +330,7 @@ CORE ANALYSIS COMPONENTS:
    - Code issue detection (god classes, high complexity, naming conventions)
 
 4. AssetAnalyzer.cs - Unity Asset Analysis:
-   - Support for 15+ Unity asset types (textures, materials, meshes, audio, etc.)
+   - Support for multiple Unity asset types (textures, materials, meshes, audio, etc.)
    - YAML parsing for asset dependency analysis
    - Asset usage reporting and unused asset detection
    - Metadata extraction from .meta files (import settings, compression, etc.)
@@ -416,7 +346,7 @@ CORE ANALYSIS COMPONENTS:
    - Unity version detection from ProjectSettings
 
 6. InsightGenerator.cs - Intelligent Analysis:
-   - 7 categories of insights: Structure, CodeQuality, Performance, Architecture, Dependencies, Maintainability, Testing
+   - Multiple categories of insights: Structure, CodeQuality, Performance, Architecture, Dependencies, Maintainability, Testing
    - Severity-based prioritization (Info, Low, Medium, High, Critical)
    - Confidence scoring based on evidence strength
    - Context-aware analysis with detailed evidence collection
@@ -426,9 +356,9 @@ CORE ANALYSIS COMPONENTS:
    - Priority-based recommendation ranking (Low, Medium, High, Critical)
    - Detailed action steps with time estimates and prerequisites
    - Risk/benefit analysis for each recommendation
-   - Effort estimation with complexity scoring (1-5 scale)
+   - Effort estimation with complexity scoring
    - Required skills identification for implementation
-   - 8 recommendation categories covering all aspects of project health
+   - Recommendation categories covering all aspects of project health
 
 TECHNICAL IMPLEMENTATION REQUIREMENTS:
 - Async/await throughout with CancellationToken support
@@ -448,11 +378,12 @@ ANALYSIS DEPTH FEATURES:
 - Technical debt calculation based on code issues and complexity
 - Maintainability scoring with actionable improvement paths
 ```
-### Prompt 2.2B: Documentation Section Generators Implementation (COMPLETED ✅)
+
+#### Prompt 2.2B: Documentation Section Generators Implementation
 ```
 Implement the complete documentation section generator system for Unity Project Architect:
 
-STEP-BY-STEP IMPLEMENTATION:
+IMPLEMENTATION REQUIREMENTS:
 1. CREATE BaseDocumentationGenerator.cs abstract base class:
    - Common markdown generation utilities (headers, lists, tables, code blocks)
    - Project analysis result integration
@@ -510,72 +441,169 @@ TECHNICAL REQUIREMENTS:
 - Include comprehensive error handling and null checks
 - Support dynamic content based on project characteristics
 ```
-## Next Stage Prompts (PENDING)
 
-### Prompt 2.2B: Documentation Section Generators (PENDING ⏳)
+#### Prompt 2.2C: Export System Implementation
 ```
-NEXT IMPLEMENTATION: Create specialized generators for each of the 6 documentation sections, integrating with the completed analysis engine to produce contextual, project-specific documentation content.
+Implement the complete multi-format export system for Unity Project Architect:
+
+EXPORT SYSTEM COMPONENTS:
+
+1. ExportService.cs - Main Export Orchestrator:
+   - Multi-format export pipeline coordination
+   - Progress tracking and reporting
+   - Export validation and error handling
+   - Batch export operations with cancellation support
+   - Export history and metadata management
+
+2. MarkdownExporter.cs - Markdown Export Implementation:
+   - Template-based markdown generation
+   - Table of contents generation with proper linking
+   - Code block formatting with syntax highlighting
+   - Emoji support and visual formatting
+   - Cross-reference linking between sections
+
+3. PDFExporter.cs - PDF Export Implementation:
+   - HTML generation with CSS styling
+   - PDF conversion pipeline setup (prepare for Pandoc integration)
+   - Page layout and formatting options
+   - Table of contents and navigation
+   - Professional document styling
+
+4. UnityAssetExporter.cs - Unity Asset Export:
+   - ScriptableObject creation from documentation data
+   - Unity asset database integration
+   - Custom inspector support for generated assets
+   - Asset reference management
+   - Editor integration for in-Unity viewing
+
+5. ExportTemplateManager.cs - Template Management:
+   - Export template loading and caching
+   - Variable substitution in templates
+   - Template validation and error checking
+   - Custom template support
+   - Template versioning and compatibility
+
+TECHNICAL REQUIREMENTS:
+- Async export operations with progress reporting
+- Comprehensive error handling and rollback
+- Template-based formatting with variable substitution
+- Multi-format output with consistent quality
+- File system operations with proper cleanup
+- Unity Editor integration with asset database
+- Export validation and quality checks
+
+EXPORT FORMAT SPECIFICATIONS:
+- Markdown: GitHub-compatible with TOC and cross-references
+- HTML: Styled with CSS for PDF conversion readiness
+- Unity Assets: ScriptableObjects with custom inspectors
+- Export metadata: Generation timestamps and settings
 ```
 
-### Prompt 3A: Claude API Integration (✅ COMPLETED)
+### Steps 3A-3C: AI Integration
+
+#### Prompt 3A: Claude API Integration
 ```
-IMPLEMENTED: Step 3A - Claude API Integration (2h)
+Implement complete Claude API integration with secure authentication and robust error handling:
 
-Description: Complete Claude API integration with secure authentication, comprehensive error handling, and robust response parsing for AI-powered documentation generation.
+IMPLEMENTATION COMPONENTS:
 
-Deliverables Completed:
-- ClaudeAPIClient.cs: Full Claude API client with retry mechanisms, rate limiting, and secure authentication
-- APIKeyManager.cs: Encrypted API key storage using AES encryption with integrity validation
-- ResponseParser.cs: Comprehensive AI response parsing with content analysis and quality scoring
-- ClaudeAPIModels.cs & ResponseModels.cs: Complete data models with validation framework
-- AIIntegrationTest.cs: Mock testing suite for validation and integration testing
+1. ClaudeAPIClient.cs - Core API Client:
+   - HTTP client configuration with proper headers
+   - Request/response serialization with JSON handling
+   - Rate limiting implementation with exponential backoff
+   - Retry logic for transient failures
+   - Timeout handling and cancellation support
+   - API key validation and secure storage integration
 
-Technical Implementation:
+2. APIKeyManager.cs - Secure Key Management:
+   - Encrypted API key storage using Unity EditorPrefs
+   - AES encryption with integrity validation
+   - Key validation and format checking
+   - Secure key retrieval with error handling
+   - Key rotation and management utilities
+
+3. ResponseParser.cs - AI Response Processing:
+   - JSON response parsing and validation
+   - Content extraction and formatting
+   - Quality scoring and confidence metrics
+   - Error detection and handling
+   - Response metadata preservation
+
+4. ClaudeAPIModels.cs & ResponseModels.cs - Data Contracts:
+   - Request/response model definitions
+   - JSON serialization attributes
+   - Validation framework integration
+   - Error response handling
+   - API versioning support
+
+5. AIIntegrationTest.cs - Testing Framework:
+   - Mock API responses for testing
+   - Integration test scenarios
+   - Error condition testing
+   - Performance benchmarking
+   - Validation framework testing
+
+TECHNICAL REQUIREMENTS:
 - Secure API key management with AES-256 encryption
-- Retry logic with exponential backoff for network resilience
-- Comprehensive error handling and validation
+- Comprehensive error handling with specific error types
+- Retry mechanisms with exponential backoff
 - Thread-safe operations with async/await patterns
-- Mock framework for offline testing and development
-- Quality scoring and confidence metrics for AI responses
+- Memory-efficient request/response handling
+- Comprehensive logging and diagnostics
+- Unit testable with dependency injection
 
-Integration Points:
-- IProjectAnalyzer integration for context-aware prompts
-- IDocumentationGenerator integration for AI-enhanced content
-- Extensible prompt system for different documentation sections
-- Fallback mechanisms for offline operation
+SECURITY CONSIDERATIONS:
+- No API keys in source code or logs
+- Secure transmission with HTTPS only
+- Input validation and sanitization
+- Error messages without sensitive information
+- Audit trail for API usage
 ```
 
-### Prompt 3B: AI Prompt Engineering System (✅ COMPLETED)
+#### Prompt 3B: AI Prompt Engineering System
 ```
-IMPLEMENTED: Step 3B - Prompt Engineering System (2h)
+Implement comprehensive AI prompt engineering system with specialized templates and optimization:
 
-Description: Comprehensive AI prompt engineering system with specialized templates, context building, and optimization for high-quality documentation generation.
+PROMPT SYSTEM COMPONENTS:
 
-Deliverables Completed:
-- PromptTemplateManager.cs: Template management with caching, validation, and dynamic loading
-- SectionSpecificPrompts.cs: 6 specialized prompt generators for each documentation section
-- ContextBuilder.cs: Project-aware context building with intelligent truncation and analysis integration
-- PromptOptimizer.cs: Token efficiency optimization and prompt quality analysis
-- Step3BFunctionalityTest.cs: Comprehensive functional test suite for all components
+1. PromptTemplateManager.cs - Template Management:
+   - Template loading and caching system
+   - Template validation and error checking
+   - Dynamic template compilation
+   - Template versioning and compatibility
+   - Performance monitoring and optimization
 
-Technical Implementation:
-- Template caching system with TTL management and performance monitoring
-- Context-aware prompt building with 2000-character intelligent truncation
-- Quality scoring system (Clarity, Specificity, Completeness) with configurable thresholds
-- Token count estimation and optimization for cost efficiency
-- Extensible template system supporting filesystem-based custom templates
-- Comprehensive validation framework with section-specific rules
+2. SectionSpecificPrompts.cs - Specialized Prompt Generators:
+   - Section-specific prompt templates for all 6 documentation types
+   - Context-aware prompt building
+   - Dynamic content adaptation
+   - Quality optimization for each section type
+   - Token efficiency optimization
 
-Section-Specific Templates:
-- General Product Description (300-500 words): Project overview with value proposition
-- System Architecture (500-800 words): Technical structure with design patterns
-- Data Model (400-600 words): ScriptableObject and data relationship documentation
-- API Specification (600-900 words): Interface documentation with usage examples
-- User Stories (500-700 words): Agile stories with acceptance criteria
-- Work Tickets (600-800 words): Implementation tasks with complexity estimation
+3. ContextBuilder.cs - Project Context Assembly:
+   - Project metadata extraction and formatting
+   - Analysis result integration
+   - Intelligent context truncation with character limits
+   - Hierarchical context prioritization
+   - Context validation and optimization
 
-Context Building Features:
-- Project overview extraction (name, type, Unity version, description)
+4. PromptOptimizer.cs - Optimization Engine:
+   - Token count estimation and optimization
+   - Prompt quality scoring (Clarity, Specificity, Completeness)
+   - Context relevance analysis
+   - Cost optimization strategies
+   - Performance metrics and monitoring
+
+TEMPLATE SPECIFICATIONS:
+- General Product Description: Project overview with value proposition
+- System Architecture: Technical structure with design patterns
+- Data Model: ScriptableObject and data relationship documentation
+- API Specification: Interface documentation with usage examples
+- User Stories: Agile stories with acceptance criteria
+- Work Tickets: Implementation tasks with complexity estimation
+
+CONTEXT BUILDING FEATURES:
+- Project overview (name, type, Unity version, description)
 - Technical context (team info, version, repository, AI settings)
 - Content analysis (folder structure, file types, asset distribution)
 - Architecture analysis (components, layers, connections, patterns)
@@ -583,23 +611,328 @@ Context Building Features:
 - Asset analysis (count, size, type distribution, dependencies)
 - Performance analysis with critical issue identification
 
-Quality Assurance:
-- Template validation with required placeholder verification
-- Quality metrics calculation with weighted scoring
-- Context validation and optimization
-- Comprehensive test coverage with mock data
-- Build verification with zero compilation errors
-
-Integration Points:
-- IProjectAnalyzer for dynamic context building
-- IDocumentationGenerator for template-based content generation
-- Claude API services for optimized prompt delivery
-- Unity Editor for real-time template customization
-
-Next Steps: Step 3C - AI Assistant service implementation with conversation management
+TECHNICAL REQUIREMENTS:
+- Template caching with TTL management
+- Context-aware prompt optimization
+- Quality metrics calculation
+- Token efficiency optimization
+- Comprehensive validation framework
+- Performance monitoring and benchmarking
+- Extensible template system
 ```
 
-### Prompt 4A: Unity Editor Integration (PENDING ⏳)
+#### Prompt 3C: AI Assistant Service Implementation
 ```
-NEXT IMPLEMENTATION: Create comprehensive Unity Editor window using UI Toolkit, integrating all completed services into an intuitive user interface following Unity design patterns.
+Implement the complete AI assistant service with conversation management and content validation:
+
+AI ASSISTANT COMPONENTS:
+
+1. AIAssistant.cs - Main Service Orchestrator:
+   - Service coordination and workflow management
+   - Content generation for all 6 documentation sections
+   - Project analysis integration and enhancement
+   - Progress tracking and reporting
+   - Error handling and graceful degradation
+   - Performance monitoring and optimization
+
+2. ConversationManager.cs - Multi-turn Conversation Handling:
+   - Conversation context preservation
+   - Multi-turn interaction support
+   - Context window management
+   - Conversation history and retrieval
+   - Session lifecycle management
+   - Context relevance scoring
+
+3. ContentValidator.cs - AI Content Quality Assurance:
+   - Generated content validation framework
+   - Quality scoring and confidence metrics
+   - Content structure validation
+   - Consistency checking across sections
+   - Error detection and correction suggestions
+   - Content enhancement recommendations
+
+4. OfflineFallbackManager.cs - Offline Operation Support:
+   - Template-based content generation
+   - Static content fallback mechanisms
+   - Offline capability detection
+   - Graceful service degradation
+   - User notification and guidance
+   - Offline content quality optimization
+
+INTEGRATION POINTS:
+- IProjectAnalyzer integration for context-aware content
+- PromptTemplateManager for optimized prompt delivery
+- ClaudeAPIClient for AI service communication
+- ContentValidator for quality assurance
+- ExportService for generated content output
+
+ADVANCED FEATURES:
+- Multi-provider AI support framework
+- Content enhancement and refinement
+- Batch processing with progress tracking
+- Conversation branching and merging
+- Context-aware content suggestions
+- Performance analytics and optimization
+
+TECHNICAL REQUIREMENTS:
+- Async/await patterns throughout
+- Comprehensive error handling with fallback
+- Memory-efficient conversation management
+- Thread-safe operations
+- Extensive logging and diagnostics
+- Unit testable with mock integrations
+- Performance monitoring and optimization
 ```
+
+---
+
+## Stage 3: Final Delivery
+
+### Prompt 4A: Unity Editor Integration
+```
+Create comprehensive Unity Editor integration with modern UI Toolkit interface:
+
+UNITY EDITOR COMPONENTS:
+
+1. UnifiedProjectArchitectWindow.cs - Main Editor Window:
+   - Modern UI Toolkit implementation with responsive design
+   - Multi-tab interface: Game Concept Studio, Project Analyzer, Smart Template Creator
+   - Real-time project analysis with progress tracking
+   - Export capabilities with preview and validation
+   - Settings integration and configuration management
+   - Help system and documentation links
+
+2. ProjectArchitectMenuItems.cs - Menu Integration:
+   - Tools menu integration with proper organization
+   - Context menu items for folders and assets
+   - Keyboard shortcuts for common operations
+   - Quick access to main functions
+   - Help and documentation menu items
+
+3. TemplateCreatorWindow.cs - Template Creation Interface:
+   - Template design and configuration UI
+   - Folder structure visualization and editing
+   - Template validation and testing
+   - Import/export template functionality
+   - Preview and testing capabilities
+
+4. ProjectAnalysisView.cs & DocumentationStatusView.cs - UI Components:
+   - Real-time analysis results display
+   - Progress tracking and status updates
+   - Interactive insights and recommendations
+   - Export controls and options
+   - Settings and configuration access
+
+UI TOOLKIT IMPLEMENTATION:
+- UXML layout files for responsive design
+- USS stylesheets following Unity design patterns
+- Custom UI elements and controls
+- Data binding and real-time updates
+- Accessibility and keyboard navigation
+- Professional visual design
+
+TECHNICAL REQUIREMENTS:
+- Unity 2023.3+ UI Toolkit compatibility
+- Responsive layout design
+- Real-time data binding
+- Progress tracking and cancellation
+- Error handling with user feedback
+- Settings persistence and management
+- Help system integration
+
+INTEGRATION FEATURES:
+- Service integration with progress reporting
+- Asset database integration for file operations
+- Unity Editor workflow integration
+- Context-sensitive help and tooltips
+- Professional visual design following Unity conventions
+```
+
+### Prompt 4B: Hybrid Unity Package Creation
+```
+Create hybrid Unity package from compiled DLLs with proper Unity integration:
+
+PACKAGE CREATION PROCESS:
+
+1. DLL Compilation and Integration:
+   - Compile all C# solution projects to DLLs
+   - Copy DLLs to Runtime/Plugins/ directory
+   - Configure assembly definitions for proper loading
+   - Validate DLL dependencies and loading order
+   - Test DLL integration with Unity Editor
+
+2. UnityServiceBridge.cs - DLL to Unity Bridge:
+   - Service interface implementations for Unity Editor
+   - Fallback mechanisms when DLL services fail
+   - Unity-specific data conversion and adaptation
+   - Error handling and logging integration
+   - Performance monitoring and optimization
+
+3. Package Structure Validation:
+   - Validate package.json metadata and dependencies
+   - Verify assembly definition configurations
+   - Test sample integration and functionality
+   - Validate Unity Package Validation Suite compliance
+   - Performance testing and optimization
+
+4. Unity Integration Testing:
+   - Editor window functionality testing
+   - Menu integration and shortcuts testing
+   - Service integration and error handling
+   - Performance benchmarking in Unity environment
+   - Cross-Unity version compatibility testing
+
+TECHNICAL REQUIREMENTS:
+- Proper assembly definition dependencies
+- Unity Editor API compatibility
+- Error handling and graceful degradation
+- Performance optimization for Unity environment
+- Memory management and cleanup
+- Comprehensive testing and validation
+
+PACKAGE VALIDATION:
+- Unity Package Validation Suite compliance
+- Assembly definition best practices
+- Performance and memory usage validation
+- Cross-platform compatibility testing
+- Documentation and sample completeness
+```
+
+### Prompt 4C: Package Publishing Preparation
+```
+Complete package publishing preparation with documentation and samples:
+
+PUBLISHING DELIVERABLES:
+
+1. Complete Sample Projects:
+   - BasicSetup sample: Demonstrates core workflow with project analysis and documentation generation
+   - TemplateGuide sample: Shows template creation and application process
+   - Sample documentation and tutorials
+   - Interactive examples with step-by-step guidance
+
+2. Professional Documentation:
+   - README.md: Comprehensive user guide with quickstart tutorial
+   - CHANGELOG.md: Version history and release notes
+   - UserManual.md: Complete feature documentation with screenshots
+   - PackageValidation.md: Validation checklist and publishing readiness
+
+3. Package Metadata Finalization:
+   - package.json: Complete metadata with proper versioning
+   - Keywords: Relevant keywords for discoverability
+   - Dependencies: Proper Unity package dependencies
+   - Repository information and links
+
+4. Publishing Validation:
+   - Unity Package Validation Suite: Full compliance
+   - Cross-platform testing: Windows, macOS, Linux
+   - Unity version compatibility testing
+   - Performance validation: Memory and startup time
+   - Documentation completeness check
+
+QUALITY ASSURANCE:
+- All samples functional and documented
+- Documentation accuracy and completeness
+- Package installation and removal testing
+- Error handling and user experience validation
+- Professional presentation and polish
+
+FINAL CHECKLIST:
+- Package builds without errors or warnings
+- All samples import and function correctly
+- Documentation is complete and accurate
+- Unity Package Manager publishing readiness
+- Version control and release tagging
+- Performance benchmarks meet requirements
+```
+
+---
+
+## Post-MVP Enhancement Opportunities
+
+### Enhancement Task 5A: Pandoc PDF Conversion Integration
+```
+Complete the PDF export pipeline in Unity Project Architect by integrating Pandoc CLI:
+
+IMPLEMENTATION REQUIREMENTS:
+1. MODIFY PDFExporter.cs FormatAsync method:
+   - After HTML generation, add Pandoc CLI execution step
+   - Use ProcessStartInfo to execute: pandoc input.html -o output.pdf --pdf-engine=wkhtmltopdf
+   - Include CSS file generation for enhanced PDF styling
+   - Add timeout handling and process monitoring
+
+2. ADD PandocIntegration.cs service:
+   - Pandoc installation detection and validation
+   - Version compatibility checking (minimum Pandoc 2.11+)
+   - Process execution wrapper with proper error handling
+   - Support for PDF engines (wkhtmltopdf, weasyprint, chrome-headless)
+   - Command-line argument building for different PDF options
+
+3. ADD fallback mechanisms:
+   - Graceful degradation when Pandoc is not available
+   - Alternative PDF generation using Unity's built-in web view (if available)
+   - Clear user messaging about Pandoc installation requirements
+   - HTML export as fallback option with styling preserved
+
+4. UPDATE PDFExporter options:
+   - PDF engine selection (wkhtmltopdf recommended for best results)
+   - Page layout options (margins, headers, footers, page breaks)
+   - Table of contents generation with proper linking
+   - Custom CSS injection for company branding
+
+TECHNICAL REQUIREMENTS:
+- Cross-platform support (Windows, macOS, Linux)
+- Async/await pattern for process execution
+- Proper stream handling and resource disposal
+- Comprehensive error reporting with actionable messages
+- Unit tests with mock process execution
+```
+
+### Enhancement Task 5B: Mermaid Diagram Rendering
+```
+Implement Mermaid diagram rendering in Unity Project Architect documentation export:
+
+IMPLEMENTATION REQUIREMENTS:
+1. CREATE MermaidRenderer.cs service:
+   - Mermaid CLI installation detection and validation
+   - Extract Mermaid code blocks from markdown content using regex
+   - Execute mermaid-cli: mmdc -i input.mmd -o output.png -t default -b white
+   - Replace Mermaid syntax with image references in exported content
+   - Support multiple output formats (PNG, SVG, PDF-compatible)
+
+2. INTEGRATE with existing generators:
+   - MODIFY SystemArchitectureGenerator.cs: Add diagram rendering option
+   - MODIFY DataModelGenerator.cs: Render data model diagrams
+   - MODIFY UserStoriesGenerator.cs: Render user journey diagrams
+   - MODIFY WorkTicketsGenerator.cs: Render workflow diagrams
+
+3. ADD export format support:
+   - MarkdownExporter: Include rendered images with proper file paths
+   - PDFExporter: Embed images directly in HTML for PDF conversion
+   - UnityAssetExporter: Save diagram images as Unity texture assets
+
+4. ADD configuration options:
+   - Diagram theme selection (default, dark, forest, neutral)
+   - Output resolution and quality settings
+   - Background color and transparency options
+   - Fallback behavior when Mermaid CLI unavailable
+
+TECHNICAL IMPLEMENTATION:
+- Async diagram rendering with progress reporting
+- Temporary file management for diagram generation
+- Image optimization and compression
+- Error handling with graceful fallback to syntax display
+- Cross-platform Mermaid CLI execution (Node.js dependency)
+- Caching system for rendered diagrams to avoid regeneration
+
+INTEGRATION POINTS:
+- ExportService orchestration for multi-step export (generate → render → format)
+- Progress reporting during diagram rendering phases
+- Unity AssetDatabase integration for diagram image imports
+- Memory-efficient handling of multiple diagram renders
+```
+
+---
+
+**Document Status:** Development Prompts v2.0  
+**Purpose:** Standardized actionable prompts for Unity Project Architect development  
+**Coverage:** All stages, steps, and enhancement opportunities with precise implementation guidance
