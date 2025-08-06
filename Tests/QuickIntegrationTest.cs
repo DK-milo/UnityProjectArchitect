@@ -19,18 +19,18 @@ namespace UnityProjectArchitect.Tests
             {
                 // Test 1: Initialize components
                 Console.WriteLine("1. Initializing AI components...");
-                var logger = new TestLogger();
-                var aiAssistant = new AIAssistant(logger);
-                var promptManager = new PromptTemplateManager(logger, GetTestTemplatesPath());
-                var conversationManager = new ConversationManager(logger);
-                var contentValidator = new ContentValidator(logger);
-                var offlineFallbackManager = new OfflineFallbackManager(logger);
+                ILogger logger = new ConsoleLogger();
+                AIAssistant aiAssistant = new AIAssistant(logger);
+                PromptTemplateManager promptManager = new PromptTemplateManager(logger, GetTestTemplatesPath());
+                ConversationManager conversationManager = new ConversationManager(logger);
+                ContentValidator contentValidator = new ContentValidator(logger);
+                OfflineFallbackManager offlineFallbackManager = new OfflineFallbackManager(logger);
 
                 // Test 2: Check basic functionality
                 Console.WriteLine("2. Testing basic component functionality...");
                 
                 // Test AI Assistant
-                var supportedProviders = aiAssistant.GetSupportedProviders();
+                List<AIProvider> supportedProviders = aiAssistant.GetSupportedProviders();
                 if (supportedProviders.Count == 0)
                 {
                     Console.WriteLine("❌ No supported AI providers found");
@@ -39,7 +39,7 @@ namespace UnityProjectArchitect.Tests
                 Console.WriteLine($"✅ AI Assistant supports {supportedProviders.Count} provider(s)");
 
                 // Test Prompt Manager
-                var availablePrompts = promptManager.GetAvailablePrompts();
+                List<string> availablePrompts = promptManager.GetAvailablePrompts();
                 if (availablePrompts.Count == 0)
                 {
                     Console.WriteLine("❌ No prompt templates available");
@@ -58,7 +58,7 @@ namespace UnityProjectArchitect.Tests
 
                 // Test Content Validator
                 string testContent = "# Test Unity Project\n\nThis is a test Unity project for validation.";
-                var validationResult = await contentValidator.ValidateContentAsync(testContent, DocumentationSectionType.GeneralProductDescription);
+                ContentValidationResult validationResult = await contentValidator.ValidateContentAsync(testContent, DocumentationSectionType.GeneralProductDescription);
                 if (validationResult == null)
                 {
                     Console.WriteLine("❌ Content validation failed");
@@ -78,7 +78,7 @@ namespace UnityProjectArchitect.Tests
                 // Test 3: Integration workflow
                 Console.WriteLine("3. Testing integrated workflow...");
                 
-                var testProjectData = new ProjectData
+                ProjectData testProjectData = new ProjectData
                 {
                     ProjectName = "Test Integration Project",
                     ProjectDescription = "A test project for AI integration validation",
@@ -88,13 +88,13 @@ namespace UnityProjectArchitect.Tests
                 };
 
                 // Test offline content generation
-                var testRequest = new AIRequest("Generate test documentation", testProjectData)
+                AIRequest testRequest = new AIRequest("Generate test documentation", testProjectData)
                 {
                     SectionType = DocumentationSectionType.GeneralProductDescription,
                     TargetWordCount = 200
                 };
 
-                var offlineResult = await offlineFallbackManager.GenerateOfflineContentAsync(testRequest);
+                AIOperationResult offlineResult = await offlineFallbackManager.GenerateOfflineContentAsync(testRequest);
                 if (!offlineResult.Success)
                 {
                     Console.WriteLine($"❌ Offline content generation failed: {offlineResult.ErrorMessage}");
@@ -111,7 +111,7 @@ namespace UnityProjectArchitect.Tests
                 }
                 Console.WriteLine("✅ Message added to conversation successfully");
 
-                var conversationHistory = await conversationManager.GetConversationHistoryAsync(conversationId);
+                ConversationHistory conversationHistory = await conversationManager.GetConversationHistoryAsync(conversationId);
                 if (conversationHistory == null || conversationHistory.Messages.Count == 0)
                 {
                     Console.WriteLine("❌ Failed to retrieve conversation history");
@@ -139,24 +139,4 @@ namespace UnityProjectArchitect.Tests
         }
     }
 
-    /// <summary>
-    /// Simple test logger for integration testing
-    /// </summary>
-    public class TestLogger : ILogger
-    {
-        public void Log(string message)
-        {
-            Console.WriteLine($"[LOG] {message}");
-        }
-
-        public void LogError(string error)
-        {
-            Console.WriteLine($"[ERROR] {error}");
-        }
-
-        public void LogWarning(string warning)
-        {
-            Console.WriteLine($"[WARNING] {warning}");
-        }
-    }
 }
