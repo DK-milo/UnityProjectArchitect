@@ -21,24 +21,6 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             UnifiedProjectArchitectWindow.ShowWindow();
         }
         
-        [MenuItem(MenuRoot + "Legacy/Main Window", priority = Priority + 90)]
-        public static void OpenMainWindow()
-        {
-            ProjectArchitectWindow.ShowWindow();
-        }
-        
-        [MenuItem(MenuRoot + "Legacy/Template Creator", priority = Priority + 91)]
-        public static void OpenTemplateCreator()
-        {
-            TemplateCreatorWindow.ShowWindow();
-        }
-        
-        [MenuItem(MenuRoot + "Legacy/AI Test Window", priority = Priority + 92)]
-        public static void OpenAITestWindow()
-        {
-            AITestWindow.ShowWindow();
-        }
-        
         [MenuItem(MenuRoot + "Settings", priority = Priority + 20)]
         public static void OpenSettings()
         {
@@ -82,7 +64,7 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             if (System.IO.Directory.Exists(selectedPath))
             {
                 Debug.Log($"Analyzing folder: {selectedPath}");
-                ProjectArchitectWindow.ShowWindow();
+                UnifiedProjectArchitectWindow.ShowWindow();
             }
             else
             {

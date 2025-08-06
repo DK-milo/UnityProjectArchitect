@@ -27,23 +27,68 @@ An intelligent Unity Editor package that helps you create professional project d
 ## 🚀 Quick Start
 
 ### Installation
+
+#### Option 1: Unity Package Manager (Recommended)
 1. Open Unity Package Manager (`Window > Package Manager`)
 2. Click the `+` button and select `Add package from git URL`
-3. Enter the package URL or import the `.unitypackage` file
-4. The package will appear in `Window > Unity Project Architect`
+3. Enter: `https://github.com/unity-project-architect/unity-project-architect.git`
+4. Click "Add" and wait for installation to complete
+
+#### Option 2: Manual Installation
+1. Download the latest release from [GitHub Releases](https://github.com/unity-project-architect/releases)
+2. Import the `.unitypackage` file into your project
+3. Restart Unity Editor for full integration
 
 ### First Time Setup
-1. Open the main window: `Window > Unity Project Architect > Main Window`
-2. Create a new Project Data Asset for your project
-3. Configure your project type (2D Game, 3D Game, VR Experience, etc.)
-4. *Optional*: Add your Claude API key in Settings for AI-powered features
 
-### Basic Usage
-1. **Create Documentation**: Select documentation sections and click "Generate All Enabled"
-2. **Export Documentation**: Choose Markdown or PDF export format
-3. **Analyze Project**: Click "Analyze Project" for insights and recommendations
-4. **Create Templates**: Use `Window > Unity Project Architect > Template Creator` to design custom templates
-5. **Apply Templates**: Organize your project with pre-built or custom templates
+#### 1. Open Unity Project Architect Studio
+- Go to `Tools > Unity Project Architect > Unity Project Architect Studio`
+- Or use the keyboard shortcut: `Ctrl+Shift+P` (Windows) / `Cmd+Shift+P` (Mac)
+
+#### 2. Create Your First Project Data Asset
+1. Right-click in Project window
+2. Select `Create > Unity Project Architect > Project Data Asset`
+3. Name it `ProjectData` and configure your project details
+
+#### 3. Optional: Configure AI Features
+1. Go to `Edit > Project Settings > Unity Project Architect`
+2. Add your Claude API key for AI-powered documentation
+3. Configure export preferences and template defaults
+
+### Basic Usage Workflow
+
+#### 🎮 Game Concept Studio (Tab 1)
+1. **Describe Your Game**: Enter your game concept in natural language
+2. **Select Documentation Types**: Choose which sections to generate
+3. **Generate**: Click "Generate All Documentation" for AI-powered content
+4. **Export**: Save as Markdown, PDF, or create project structure
+5. **Create Structure**: Use "Create Project Structure" to organize folders
+
+#### 🔍 Project Analyzer (Tab 2)  
+1. **Analyze Current Project**: Click "Analyze Project" for comprehensive insights
+2. **Review Recommendations**: Get actionable suggestions for improvements
+3. **Architecture Detection**: See detected design patterns and dependencies
+4. **Export Analysis**: Save analysis results for team review
+
+#### 📁 Smart Template Creator (Tab 3)
+1. **Design Structure**: Add folders for your project organization
+2. **Configure Settings**: Set project type and template metadata  
+3. **Preview**: Review the folder structure before saving
+4. **Save Template**: Create reusable templates for future projects
+5. **Apply Templates**: Use saved templates in new projects
+
+### 5-Minute Tutorial
+
+Try this quick workflow to experience all features:
+
+1. **Import Sample**: Go to Package Manager > Unity Project Architect > Samples > Import "Basic Project Setup"
+2. **Open Demo**: Navigate to the imported sample and explore the demo assets
+3. **Launch Studio**: Open Unity Project Architect Studio (`Ctrl+Shift+P`)
+4. **Try Each Tab**: 
+   - Tab 1: Use the pre-filled game concept and generate documentation
+   - Tab 2: Analyze the sample project structure  
+   - Tab 3: Create a custom template with your preferred folders
+5. **Export Results**: Save your generated documentation as Markdown
 
 ## 🎮 Unity Editor Integration
 

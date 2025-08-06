@@ -18,7 +18,12 @@
     "workflow",
     "editor-tools",
     "automation",
-    "organization"
+    "organization",
+    "architecture",
+    "code-generation",
+    "best-practices",
+    "productivity",
+    "team-collaboration"
   ],
   "author": {
     "name": "Unity Project Architect Team",
