@@ -275,7 +275,7 @@ namespace UnityProjectArchitect.Core
         public void AddFolder(FolderDefinition folder)
         {
             // For compatibility - convert FolderDefinition to FolderInfo
-            var folderInfo = new FolderInfo
+            FolderInfo folderInfo = new FolderInfo
             {
                 Name = folder.Name,
                 Path = folder.Path,

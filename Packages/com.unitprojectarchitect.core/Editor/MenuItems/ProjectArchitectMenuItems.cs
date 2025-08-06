@@ -15,38 +15,28 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
         private const string MenuRoot = "Tools/Unity Project Architect/";
         private const int Priority = 1000;
         
-        [MenuItem(MenuRoot + "Main Window %#p", priority = Priority)]
+        [MenuItem(MenuRoot + "Unity Project Architect Studio %#p", priority = Priority)]
+        public static void OpenUnifiedWindow()
+        {
+            UnifiedProjectArchitectWindow.ShowWindow();
+        }
+        
+        [MenuItem(MenuRoot + "Legacy/Main Window", priority = Priority + 90)]
         public static void OpenMainWindow()
         {
             ProjectArchitectWindow.ShowWindow();
         }
         
-        [MenuItem(MenuRoot + "Template Creator %#t", priority = Priority + 1)]
+        [MenuItem(MenuRoot + "Legacy/Template Creator", priority = Priority + 91)]
         public static void OpenTemplateCreator()
         {
             TemplateCreatorWindow.ShowWindow();
         }
         
-        [MenuItem(MenuRoot + "Export Documentation/Markdown", priority = Priority + 10)]
-        public static void ExportMarkdown()
+        [MenuItem(MenuRoot + "Legacy/AI Test Window", priority = Priority + 92)]
+        public static void OpenAITestWindow()
         {
-            ProjectArchitectWindow window = EditorWindow.GetWindow<ProjectArchitectWindow>();
-            window.Show();
-            
-            EditorApplication.delayCall += () => {
-                Debug.Log("Export Markdown requested from menu");
-            };
-        }
-        
-        [MenuItem(MenuRoot + "Export Documentation/PDF", priority = Priority + 11)]
-        public static void ExportPDF()
-        {
-            ProjectArchitectWindow window = EditorWindow.GetWindow<ProjectArchitectWindow>();
-            window.Show();
-            
-            EditorApplication.delayCall += () => {
-                Debug.Log("Export PDF requested from menu");
-            };
+            AITestWindow.ShowWindow();
         }
         
         [MenuItem(MenuRoot + "Settings", priority = Priority + 20)]
@@ -172,7 +162,7 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             }
             
             // Validate template before applying
-            var validation = UnityProjectArchitect.Unity.Editor.Utilities.TemplateApplicator.ValidateTemplate(template);
+            TemplateValidationResult validation = UnityProjectArchitect.Unity.Editor.Utilities.TemplateApplicator.ValidateTemplate(template);
             if (!validation.IsValid)
             {
                 string errors = string.Join("\n", validation.Errors);

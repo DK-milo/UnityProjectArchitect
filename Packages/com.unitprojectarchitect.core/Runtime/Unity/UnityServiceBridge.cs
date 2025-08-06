@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityProjectArchitect.Core;
 using UnityProjectArchitect.Services;
+using UnityProjectArchitect.AI.Services;
 
 namespace UnityProjectArchitect.Unity
 {
@@ -15,6 +16,8 @@ namespace UnityProjectArchitect.Unity
         private static IProjectAnalyzer _projectAnalyzer;
         private static IExportService _exportService;
         private static ITemplateManager _templateManager;
+        private static IAIAssistant _aiAssistant;
+        private static UnityDocumentationService _documentationService;
         
         /// <summary>
         /// Initialize Unity service implementations
@@ -28,6 +31,8 @@ namespace UnityProjectArchitect.Unity
                 _projectAnalyzer = new ProjectAnalyzer();
                 _exportService = new ExportService();
                 _templateManager = new TemplateManager();
+                _aiAssistant = new AIAssistant();
+                _documentationService = new UnityDocumentationService();
                 UnityEngine.Debug.Log("Unity Project Architect Service Bridge initialized with DLL services");
             }
             catch (Exception ex)
@@ -74,6 +79,30 @@ namespace UnityProjectArchitect.Unity
         }
         
         /// <summary>
+        /// Get or create AI assistant instance
+        /// </summary>
+        public static IAIAssistant GetAIAssistant()
+        {
+            if (_aiAssistant == null)
+            {
+                Initialize();
+            }
+            return _aiAssistant;
+        }
+        
+        /// <summary>
+        /// Get or create documentation service instance
+        /// </summary>
+        public static UnityDocumentationService GetDocumentationService()
+        {
+            if (_documentationService == null)
+            {
+                Initialize();
+            }
+            return _documentationService;
+        }
+        
+        /// <summary>
         /// Create a validation result for Unity display
         /// </summary>
         public static void ShowValidationResult(ValidationResult result)
@@ -83,7 +112,7 @@ namespace UnityProjectArchitect.Unity
                 if (result.Issues != null && result.Issues.Count > 0)
                 {
                     UnityEngine.Debug.Log($"✅ Validation completed with {result.Issues.Count} informational items");
-                    foreach (var issue in result.Issues)
+                    foreach (UnityProjectArchitect.Core.ValidationIssue issue in result.Issues)
                     {
                         UnityEngine.Debug.Log($"- {issue.Type}: {issue.Message}");
                     }
@@ -99,7 +128,7 @@ namespace UnityProjectArchitect.Unity
                 UnityEngine.Debug.LogWarning($"⚠️ Validation issues found: {issueCount} issues");
                 if (result.Issues != null)
                 {
-                    foreach (var issue in result.Issues)
+                    foreach (UnityProjectArchitect.Core.ValidationIssue issue in result.Issues)
                     {
                         UnityEngine.Debug.LogWarning($"- {issue.Type}: {issue.Message}");
                     }
@@ -206,7 +235,7 @@ namespace UnityProjectArchitect.Unity
         public Task<ExportOperationResult> ExportProjectDocumentationAsync(ProjectData projectData, ExportRequest exportRequest)
         {
             UnityEngine.Debug.LogWarning("Using mock ExportService - real services failed to initialize");
-            var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
+            ExportOperationResult result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
             {
                 Success = false,
                 ErrorMessage = "Mock implementation"
@@ -216,7 +245,7 @@ namespace UnityProjectArchitect.Unity
         
         public Task<ExportOperationResult> ExportSectionAsync(DocumentationSectionData section, ExportRequest exportRequest)
         {
-            var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
+            ExportOperationResult result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
             {
                 Success = false,
                 ErrorMessage = "Mock implementation"
@@ -226,7 +255,7 @@ namespace UnityProjectArchitect.Unity
         
         public Task<ExportOperationResult> ExportMultipleSectionsAsync(System.Collections.Generic.List<DocumentationSectionData> sections, ExportRequest exportRequest)
         {
-            var result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
+            ExportOperationResult result = new ExportOperationResult(exportRequest.Format, exportRequest.OutputPath)
             {
                 Success = false,
                 ErrorMessage = "Mock implementation"
@@ -271,4 +300,84 @@ namespace UnityProjectArchitect.Unity
     }
     
     #endregion
+    
+    /// <summary>
+    /// Unity-specific documentation service that integrates the DLL documentation generators
+    /// with Unity Editor requirements and UI
+    /// </summary>
+    public class UnityDocumentationService
+    {
+        /// <summary>
+        /// Generate content for a specific documentation section using the appropriate DLL generator
+        /// </summary>
+        public async Task<string> GenerateDocumentationSectionAsync(DocumentationSectionData section, ProjectData projectData)
+        {
+            try
+            {
+                // First, perform project analysis to provide data to generators
+                IProjectAnalyzer analyzer = UnityServiceBridge.GetProjectAnalyzer();
+                string projectPath = System.IO.Directory.GetParent(UnityEngine.Application.dataPath).FullName;
+                ProjectAnalysisResult analysisResult = await analyzer.AnalyzeProjectAsync(projectPath);
+                
+                // If analysis fails, create a basic analysis result
+                if (!analysisResult.Success)
+                {
+                    analysisResult = new ProjectAnalysisResult
+                    {
+                        Success = true,
+                        ProjectPath = projectPath,
+                        AnalyzedAt = System.DateTime.Now,
+                        AnalysisTime = System.TimeSpan.FromSeconds(1)
+                    };
+                }
+                
+                // Create the appropriate documentation generator based on section type
+                BaseDocumentationGenerator generator = section.SectionType switch
+                {
+                    DocumentationSectionType.GeneralProductDescription => new GeneralProductDescriptionGenerator(analysisResult),
+                    DocumentationSectionType.SystemArchitecture => new SystemArchitectureGenerator(analysisResult),
+                    DocumentationSectionType.DataModel => new DataModelGenerator(analysisResult),
+                    DocumentationSectionType.APISpecification => new APISpecificationGenerator(analysisResult),
+                    DocumentationSectionType.UserStories => new UserStoriesGenerator(analysisResult),
+                    DocumentationSectionType.WorkTickets => new WorkTicketsGenerator(analysisResult),
+                    _ => throw new System.NotSupportedException($"Documentation section type {section.SectionType} is not supported")
+                };
+                
+                // Generate the content using the DLL generator
+                string generatedContent = await generator.GenerateContentAsync();
+                
+                UnityEngine.Debug.Log($"✅ Generated {section.SectionType} documentation ({generatedContent.Length:N0} characters)");
+                
+                return generatedContent;
+            }
+            catch (System.Exception ex)
+            {
+                string errorMessage = $"Failed to generate {section.SectionType} documentation: {ex.Message}";
+                UnityEngine.Debug.LogError(errorMessage);
+                
+                // Return fallback content with error information
+                return $"# {section.SectionType}\n\n" +
+                       $"**Generation Error:** {errorMessage}\n\n" +
+                       $"*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}*\n\n" +
+                       $"Please check the Unity console for more details about this error.";
+            }
+        }
+        
+        /// <summary>
+        /// Check if a documentation section type is supported
+        /// </summary>
+        public bool CanGenerateSection(DocumentationSectionType sectionType)
+        {
+            return sectionType switch
+            {
+                DocumentationSectionType.GeneralProductDescription => true,
+                DocumentationSectionType.SystemArchitecture => true,
+                DocumentationSectionType.DataModel => true,
+                DocumentationSectionType.APISpecification => true,
+                DocumentationSectionType.UserStories => true,
+                DocumentationSectionType.WorkTickets => true,
+                _ => false
+            };
+        }
+    }
 }

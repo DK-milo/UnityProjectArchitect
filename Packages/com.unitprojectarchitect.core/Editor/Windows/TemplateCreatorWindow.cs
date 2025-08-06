@@ -490,7 +490,7 @@ namespace UnityProjectArchitect.Unity.Editor
                         _folderPaths.Clear();
                         if (_currentTemplate.FolderStructure != null && _currentTemplate.FolderStructure.Folders != null)
                         {
-                            foreach (var folder in _currentTemplate.FolderStructure.Folders)
+                            foreach (FolderStructureData.FolderInfo folder in _currentTemplate.FolderStructure.Folders)
                             {
                                 _folderPaths.Add(folder.Path);
                             }

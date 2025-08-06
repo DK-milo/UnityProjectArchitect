@@ -555,7 +555,7 @@ namespace UnityProjectArchitect.Services
         {
             foreach (FolderDefinition folder in folders)
             {
-                var folderInfo = new FolderStructureData.FolderInfo
+                FolderStructureData.FolderInfo folderInfo = new FolderStructureData.FolderInfo
                 {
                     Name = folder.Name,
                     Path = folder.Path,
@@ -574,9 +574,9 @@ namespace UnityProjectArchitect.Services
             // Update folder structure
             if (template.FolderStructure.Folders.Count > 0)
             {
-                foreach (var folder in template.FolderStructure.Folders)
+                foreach (FolderStructureData.FolderInfo folder in template.FolderStructure.Folders)
                 {
-                    var folderDefinition = new FolderDefinition(folder.Name, FolderType.Custom)
+                    FolderDefinition folderDefinition = new FolderDefinition(folder.Name, FolderType.Custom)
                     {
                         Path = folder.Path,
                         CreatedDate = folder.CreatedDate

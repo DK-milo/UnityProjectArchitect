@@ -126,7 +126,7 @@ namespace UnityProjectArchitect.Unity
             if (_projectData == null) return "No project data";
             
             int enabledSections = 0;
-            foreach (var section in _projectData.DocumentationSections)
+            foreach (DocumentationSectionData section in _projectData.DocumentationSections)
             {
                 if (section.IsEnabled) enabledSections++;
             }

@@ -359,14 +359,41 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             Debug.Log($"Generating documentation for section: {section.SectionType}");
             
-            // TODO: Integrate with AI services from DLL
-            // For now, add placeholder content
-            section.Content = $"Generated content for {section.SectionType} section.\n\nThis is a placeholder until AI integration is complete.";
-            section.Status = DocumentationStatus.Generated;
-            section.LastUpdated = System.DateTime.Now;
-            
-            _currentProject.SaveToJson();
-            Repaint();
+            try
+            {
+                // Show progress indicator
+                section.Status = DocumentationStatus.InProgress;
+                section.LastUpdated = System.DateTime.Now;
+                Repaint();
+                
+                // Get documentation service from Unity bridge
+                UnityDocumentationService documentationService = UnityServiceBridge.GetDocumentationService();
+                
+                // Generate content using actual DLL services
+                string generatedContent = await documentationService.GenerateDocumentationSectionAsync(section, _currentProject.ProjectData);
+                
+                // Update section with generated content
+                section.Content = generatedContent;
+                section.Status = DocumentationStatus.Generated;
+                section.LastUpdated = System.DateTime.Now;
+                
+                _currentProject.SaveToJson();
+                Repaint();
+                
+                Debug.Log($"✅ Successfully generated {section.SectionType} documentation ({generatedContent.Length:N0} characters)");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Failed to generate {section.SectionType} documentation: {ex.Message}");
+                
+                // Set error status and fallback content
+                section.Status = DocumentationStatus.NotStarted;
+                section.Content = $"# {section.SectionType}\n\n**Generation Error:** {ex.Message}\n\n*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}*";
+                section.LastUpdated = System.DateTime.Now;
+                
+                _currentProject.SaveToJson();
+                Repaint();
+            }
         }
         
         private async void ExportDocumentation(ExportFormat format)
