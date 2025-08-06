@@ -134,9 +134,34 @@ namespace UnityProjectArchitect.Unity.Editor.Components
         
         public void UpdateDocumentationSections(List<DocumentationSectionData> sections)
         {
-            _documentationSections = sections;
+            // Debug logging to track duplicate sources
+            UnityEngine.Debug.Log($"[DocumentationStatusView] UpdateDocumentationSections called with {sections?.Count ?? 0} sections");
             
-            if (sections == null || sections.Count == 0)
+            // Filter out duplicates based on SectionType to prevent duplicate UI elements
+            if (sections != null && sections.Count > 0)
+            {
+                Dictionary<DocumentationSectionType, DocumentationSectionData> uniqueSections = new Dictionary<DocumentationSectionType, DocumentationSectionData>();
+                foreach (DocumentationSectionData section in sections)
+                {
+                    if (!uniqueSections.ContainsKey(section.SectionType))
+                    {
+                        uniqueSections[section.SectionType] = section;
+                        UnityEngine.Debug.Log($"[DocumentationStatusView] Added unique section: {section.SectionType}");
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning($"[DocumentationStatusView] Duplicate section found and filtered: {section.SectionType}");
+                    }
+                }
+                _documentationSections = new List<DocumentationSectionData>(uniqueSections.Values);
+                UnityEngine.Debug.Log($"[DocumentationStatusView] Final unique sections count: {_documentationSections.Count}");
+            }
+            else
+            {
+                _documentationSections = sections;
+            }
+            
+            if (_documentationSections == null || _documentationSections.Count == 0)
             {
                 ShowEmptyState();
                 return;
@@ -152,8 +177,8 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             
             Label emptyLabel = new Label("No documentation sections configured. Create a Project Data Asset to get started.");
             emptyLabel.style.color = Color.gray;
-            emptyLabel.style.fontStyle = FontStyle.Italic;
-            emptyLabel.style.textAlign = TextAnchor.MiddleCenter;
+            emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             emptyLabel.style.paddingTop = 20;
             emptyLabel.style.paddingBottom = 20;
             
@@ -168,21 +193,42 @@ namespace UnityProjectArchitect.Unity.Editor.Components
         
         private void RefreshSectionsList()
         {
+            // Force clear and ensure no residual elements
             _sectionsContainer.Clear();
             
-            foreach (DocumentationSectionData section in _documentationSections)
+            // Add a small delay to ensure UI clearing is complete
+            UnityEditor.EditorApplication.delayCall += () =>
             {
-                CreateSectionItem(section);
-            }
+                // Double-check that container is actually empty
+                if (_sectionsContainer.childCount > 0)
+                {
+                    _sectionsContainer.Clear();
+                }
+                
+                // Create fresh UI elements
+                if (_documentationSections != null)
+                {
+                    foreach (DocumentationSectionData section in _documentationSections)
+                    {
+                        CreateSectionItem(section);
+                    }
+                }
+            };
         }
         
         private void CreateSectionItem(DocumentationSectionData section)
         {
             VisualElement sectionCard = new VisualElement();
             sectionCard.style.marginBottom = 8;
-            sectionCard.style.padding = 10;
+            sectionCard.style.paddingTop = 10;
+            sectionCard.style.paddingBottom = 10;
+            sectionCard.style.paddingLeft = 10;
+            sectionCard.style.paddingRight = 10;
             sectionCard.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.4f);
-            sectionCard.style.borderRadius = 5;
+            sectionCard.style.borderTopLeftRadius = 5;
+            sectionCard.style.borderTopRightRadius = 5;
+            sectionCard.style.borderBottomLeftRadius = 5;
+            sectionCard.style.borderBottomRightRadius = 5;
             sectionCard.style.borderBottomWidth = 2;
             sectionCard.style.borderBottomColor = GetStatusColor(section.Status);
             
@@ -213,7 +259,7 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             statusLabel.style.color = GetStatusColor(section.Status);
             statusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             statusLabel.style.minWidth = 80;
-            statusLabel.style.textAlign = TextAnchor.MiddleRight;
+            statusLabel.style.unityTextAlign = TextAnchor.MiddleRight;
             
             headerRow.Add(enabledToggle);
             headerRow.Add(sectionIcon);
@@ -234,8 +280,8 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             wordCountLabel.style.color = Color.gray;
             wordCountLabel.style.marginRight = 15;
             
-            string lastUpdated = section.LastUpdated.HasValue ? 
-                section.LastUpdated.Value.ToString("MMM dd, HH:mm") : 
+            string lastUpdated = section.LastUpdated != default(DateTime) ? 
+                section.LastUpdated.ToString("MMM dd, HH:mm") : 
                 "Never";
             Label lastUpdatedLabel = new Label($"Updated: {lastUpdated}");
             lastUpdatedLabel.style.fontSize = 10;
@@ -357,30 +403,30 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             };
         }
         
-        private string GetSectionIcon(SectionType sectionType)
+        private string GetSectionIcon(DocumentationSectionType sectionType)
         {
             return sectionType switch
             {
-                SectionType.GeneralProductDescription => "📋",
-                SectionType.SystemArchitecture => "🏗️",
-                SectionType.DataModel => "🗄️",
-                SectionType.APISpecification => "🔌",
-                SectionType.UserStories => "👤",
-                SectionType.WorkTickets => "🎫",
+                DocumentationSectionType.GeneralProductDescription => "📋",
+                DocumentationSectionType.SystemArchitecture => "🏗️",
+                DocumentationSectionType.DataModel => "🗄️",
+                DocumentationSectionType.APISpecification => "🔌",
+                DocumentationSectionType.UserStories => "👤",
+                DocumentationSectionType.WorkTickets => "🎫",
                 _ => "📄"
             };
         }
         
-        private string GetSectionDisplayName(SectionType sectionType)
+        private string GetSectionDisplayName(DocumentationSectionType sectionType)
         {
             return sectionType switch
             {
-                SectionType.GeneralProductDescription => "General Description",
-                SectionType.SystemArchitecture => "System Architecture",
-                SectionType.DataModel => "Data Model",
-                SectionType.APISpecification => "API Specification",
-                SectionType.UserStories => "User Stories",
-                SectionType.WorkTickets => "Work Tickets",
+                DocumentationSectionType.GeneralProductDescription => "General Description",
+                DocumentationSectionType.SystemArchitecture => "System Architecture",
+                DocumentationSectionType.DataModel => "Data Model",
+                DocumentationSectionType.APISpecification => "API Specification",
+                DocumentationSectionType.UserStories => "User Stories",
+                DocumentationSectionType.WorkTickets => "Work Tickets",
                 _ => sectionType.ToString()
             };
         }

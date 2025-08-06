@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -23,7 +24,7 @@ namespace UnityProjectArchitect.Unity.Editor
         private VisualElement _documentationContainer;
         private ProgressBar _analysisProgress;
         
-        [MenuItem("Window/Unity Project Architect")]
+        // Menu item removed - using organized menu structure in ProjectArchitectMenuItems.cs instead
         public static void ShowWindow()
         {
             ProjectArchitectWindow window = GetWindow<ProjectArchitectWindow>();
@@ -263,7 +264,17 @@ namespace UnityProjectArchitect.Unity.Editor
                 return;
             }
             
+            // Filter out duplicate sections based on SectionType to prevent duplicate UI elements
+            Dictionary<DocumentationSectionType, DocumentationSectionData> uniqueSections = new Dictionary<DocumentationSectionType, DocumentationSectionData>();
             foreach (DocumentationSectionData section in projectData.DocumentationSections)
+            {
+                if (!uniqueSections.ContainsKey(section.SectionType))
+                {
+                    uniqueSections[section.SectionType] = section;
+                }
+            }
+            
+            foreach (DocumentationSectionData section in uniqueSections.Values)
             {
                 CreateDocumentationSectionItem(section);
             }

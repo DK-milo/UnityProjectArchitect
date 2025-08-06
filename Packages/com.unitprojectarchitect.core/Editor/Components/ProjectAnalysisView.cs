@@ -155,8 +155,8 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             
             Label emptyLabel = new Label("No analysis data available. Run project analysis to see results.");
             emptyLabel.style.color = Color.gray;
-            emptyLabel.style.fontStyle = FontStyle.Italic;
-            emptyLabel.style.textAlign = TextAnchor.MiddleCenter;
+            emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             emptyLabel.style.paddingTop = 20;
             emptyLabel.style.paddingBottom = 20;
             
@@ -171,7 +171,7 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             {
                 Label noMetricsLabel = new Label("No metrics available");
                 noMetricsLabel.style.color = Color.gray;
-                noMetricsLabel.style.fontStyle = FontStyle.Italic;
+                noMetricsLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 _metricsContainer.Add(noMetricsLabel);
                 return;
             }
@@ -192,9 +192,15 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             card.style.flexDirection = FlexDirection.Row;
             card.style.alignItems = Align.Center;
             card.style.marginBottom = 5;
-            card.style.padding = 5;
+            card.style.paddingTop = 5;
+            card.style.paddingBottom = 5;
+            card.style.paddingLeft = 5;
+            card.style.paddingRight = 5;
             card.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.3f);
-            card.style.borderRadius = 3;
+            card.style.borderTopLeftRadius = 3;
+            card.style.borderTopRightRadius = 3;
+            card.style.borderBottomLeftRadius = 3;
+            card.style.borderBottomRightRadius = 3;
             
             Label iconLabel = new Label(icon);
             iconLabel.style.fontSize = 16;
@@ -219,9 +225,15 @@ namespace UnityProjectArchitect.Unity.Editor.Components
         {
             VisualElement errorCard = new VisualElement();
             errorCard.style.marginTop = 5;
-            errorCard.style.padding = 5;
+            errorCard.style.paddingTop = 5;
+            errorCard.style.paddingBottom = 5;
+            errorCard.style.paddingLeft = 5;
+            errorCard.style.paddingRight = 5;
             errorCard.style.backgroundColor = new Color(0.8f, 0.2f, 0.2f, 0.3f);
-            errorCard.style.borderRadius = 3;
+            errorCard.style.borderTopLeftRadius = 3;
+            errorCard.style.borderTopRightRadius = 3;
+            errorCard.style.borderBottomLeftRadius = 3;
+            errorCard.style.borderBottomRightRadius = 3;
             
             Label errorLabel = new Label($"❌ Error: {errorMessage}");
             errorLabel.style.color = new Color(1.0f, 0.8f, 0.8f);
@@ -252,9 +264,15 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             insightCard.style.flexDirection = FlexDirection.Row;
             insightCard.style.alignItems = Align.FlexStart;
             insightCard.style.marginBottom = 5;
-            insightCard.style.padding = 8;
+            insightCard.style.paddingTop = 8;
+            insightCard.style.paddingBottom = 8;
+            insightCard.style.paddingLeft = 8;
+            insightCard.style.paddingRight = 8;
             insightCard.style.backgroundColor = GetSeverityColor(severity);
-            insightCard.style.borderRadius = 3;
+            insightCard.style.borderTopLeftRadius = 3;
+            insightCard.style.borderTopRightRadius = 3;
+            insightCard.style.borderBottomLeftRadius = 3;
+            insightCard.style.borderBottomRightRadius = 3;
             
             Label severityIcon = new Label(GetSeverityIcon(severity));
             severityIcon.style.fontSize = 14;
@@ -310,9 +328,15 @@ namespace UnityProjectArchitect.Unity.Editor.Components
         {
             VisualElement recommendationCard = new VisualElement();
             recommendationCard.style.marginBottom = 5;
-            recommendationCard.style.padding = 8;
+            recommendationCard.style.paddingTop = 8;
+            recommendationCard.style.paddingBottom = 8;
+            recommendationCard.style.paddingLeft = 8;
+            recommendationCard.style.paddingRight = 8;
             recommendationCard.style.backgroundColor = new Color(0.15f, 0.25f, 0.35f, 0.4f);
-            recommendationCard.style.borderRadius = 3;
+            recommendationCard.style.borderTopLeftRadius = 3;
+            recommendationCard.style.borderTopRightRadius = 3;
+            recommendationCard.style.borderBottomLeftRadius = 3;
+            recommendationCard.style.borderBottomRightRadius = 3;
             
             VisualElement headerRow = new VisualElement();
             headerRow.style.flexDirection = FlexDirection.Row;
@@ -329,16 +353,28 @@ namespace UnityProjectArchitect.Unity.Editor.Components
             
             Label priorityTag = new Label(priority.ToString());
             priorityTag.style.fontSize = 10;
-            priorityTag.style.padding = 2;
+            priorityTag.style.paddingTop = 2;
+            priorityTag.style.paddingBottom = 2;
+            priorityTag.style.paddingLeft = 2;
+            priorityTag.style.paddingRight = 2;
             priorityTag.style.marginRight = 5;
             priorityTag.style.backgroundColor = GetPriorityColor(priority);
-            priorityTag.style.borderRadius = 2;
+            priorityTag.style.borderTopLeftRadius = 2;
+            priorityTag.style.borderTopRightRadius = 2;
+            priorityTag.style.borderBottomLeftRadius = 2;
+            priorityTag.style.borderBottomRightRadius = 2;
             
             Label effortTag = new Label($"Effort: {effort}");
             effortTag.style.fontSize = 10;
-            effortTag.style.padding = 2;
+            effortTag.style.paddingTop = 2;
+            effortTag.style.paddingBottom = 2;
+            effortTag.style.paddingLeft = 2;
+            effortTag.style.paddingRight = 2;
             effortTag.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.6f);
-            effortTag.style.borderRadius = 2;
+            effortTag.style.borderTopLeftRadius = 2;
+            effortTag.style.borderTopRightRadius = 2;
+            effortTag.style.borderBottomLeftRadius = 2;
+            effortTag.style.borderBottomRightRadius = 2;
             
             tagsContainer.Add(priorityTag);
             tagsContainer.Add(effortTag);

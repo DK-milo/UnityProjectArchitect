@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
 using UnityProjectArchitect.Unity.Editor;
+using UnityProjectArchitect.Unity;
+using UnityProjectArchitect.Core;
 
 namespace UnityProjectArchitect.Unity.Editor.MenuItems
 {
@@ -13,32 +15,19 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
         private const string MenuRoot = "Tools/Unity Project Architect/";
         private const int Priority = 1000;
         
-        [MenuItem(MenuRoot + "Main Window", priority = Priority)]
+        [MenuItem(MenuRoot + "Main Window %#p", priority = Priority)]
         public static void OpenMainWindow()
         {
             ProjectArchitectWindow.ShowWindow();
         }
         
-        [MenuItem(MenuRoot + "Template Creator", priority = Priority + 1)]
+        [MenuItem(MenuRoot + "Template Creator %#t", priority = Priority + 1)]
         public static void OpenTemplateCreator()
         {
             TemplateCreatorWindow.ShowWindow();
         }
         
-        [MenuItem(MenuRoot + "Quick Analysis", priority = Priority + 10)]
-        public static void QuickProjectAnalysis()
-        {
-            ProjectArchitectWindow window = EditorWindow.GetWindow<ProjectArchitectWindow>();
-            window.Show();
-            
-            // Force analysis on next frame to ensure window is fully initialized
-            EditorApplication.delayCall += () => {
-                Debug.Log("Running quick project analysis...");
-                // The analysis will be triggered through the window's interface
-            };
-        }
-        
-        [MenuItem(MenuRoot + "Export Documentation/Markdown", priority = Priority + 20)]
+        [MenuItem(MenuRoot + "Export Documentation/Markdown", priority = Priority + 10)]
         public static void ExportMarkdown()
         {
             ProjectArchitectWindow window = EditorWindow.GetWindow<ProjectArchitectWindow>();
@@ -49,7 +38,7 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             };
         }
         
-        [MenuItem(MenuRoot + "Export Documentation/PDF", priority = Priority + 21)]
+        [MenuItem(MenuRoot + "Export Documentation/PDF", priority = Priority + 11)]
         public static void ExportPDF()
         {
             ProjectArchitectWindow window = EditorWindow.GetWindow<ProjectArchitectWindow>();
@@ -60,7 +49,7 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             };
         }
         
-        [MenuItem(MenuRoot + "Settings", priority = Priority + 30)]
+        [MenuItem(MenuRoot + "Settings", priority = Priority + 20)]
         public static void OpenSettings()
         {
             // Open Unity Project Settings for Unity Project Architect
@@ -142,7 +131,7 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
         [MenuItem("Assets/Unity Project Architect/Create Template Configuration", priority = Priority + 102)]
         public static void CreateTemplateConfiguration()
         {
-            TemplateConfiguration template = ScriptableObject.CreateInstance<TemplateConfiguration>();
+            TemplateConfigurationSO template = ScriptableObject.CreateInstance<TemplateConfigurationSO>();
             template.Initialize("New Template", "Custom project template", ProjectType.General);
             
             string path = "Assets/Templates/NewTemplate.asset";
@@ -165,17 +154,58 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             Debug.Log($"Created Template Configuration at: {uniquePath}");
         }
         
-        // Window menu items
-        [MenuItem("Window/Unity Project Architect/Main Window", priority = Priority)]
-        public static void WindowMenuMainWindow()
+        [MenuItem("Assets/Unity Project Architect/Apply Template", priority = Priority + 103)]
+        public static void ApplyTemplate()
         {
-            OpenMainWindow();
+            UnityEngine.Object[] selection = Selection.objects;
+            if (selection.Length != 1)
+            {
+                EditorUtility.DisplayDialog("Invalid Selection", "Please select exactly one Template Configuration asset.", "OK");
+                return;
+            }
+            
+            TemplateConfigurationSO template = selection[0] as TemplateConfigurationSO;
+            if (template == null)
+            {
+                EditorUtility.DisplayDialog("Invalid Selection", "Please select a Template Configuration asset.", "OK");
+                return;
+            }
+            
+            // Validate template before applying
+            var validation = UnityProjectArchitect.Unity.Editor.Utilities.TemplateApplicator.ValidateTemplate(template);
+            if (!validation.IsValid)
+            {
+                string errors = string.Join("\n", validation.Errors);
+                EditorUtility.DisplayDialog("Template Validation Failed", $"Cannot apply template:\n\n{errors}", "OK");
+                return;
+            }
+            
+            // Show warnings if any
+            if (validation.Warnings.Count > 0)
+            {
+                string warnings = string.Join("\n", validation.Warnings);
+                bool proceed = EditorUtility.DisplayDialog("Template Warnings", 
+                    $"Template has warnings:\n\n{warnings}\n\nDo you want to proceed?", "Apply", "Cancel");
+                if (!proceed)
+                    return;
+            }
+            
+            // Confirm application
+            bool confirmed = EditorUtility.DisplayDialog("Apply Template", 
+                $"Apply template '{template.TemplateName}' to the current project?\n\n" +
+                $"This will create folders and scenes as defined in the template.", "Apply", "Cancel");
+            
+            if (confirmed)
+            {
+                UnityProjectArchitect.Unity.Editor.Utilities.TemplateApplicator.ApplyTemplate(template);
+            }
         }
         
-        [MenuItem("Window/Unity Project Architect/Template Creator", priority = Priority + 1)]
-        public static void WindowMenuTemplateCreator()
+        [MenuItem("Assets/Unity Project Architect/Apply Template", validate = true)]
+        public static bool ValidateApplyTemplate()
         {
-            OpenTemplateCreator();
+            if (Selection.objects.Length != 1) return false;
+            return Selection.objects[0] is TemplateConfigurationSO;
         }
         
         // Help menu items
@@ -197,17 +227,5 @@ namespace UnityProjectArchitect.Unity.Editor.MenuItems
             Application.OpenURL("https://github.com/UnityProjectArchitect/Feature-Requests");
         }
         
-        // Shortcut keys
-        [MenuItem("Tools/Unity Project Architect/Main Window %#p", priority = Priority)]
-        public static void ShortcutMainWindow()
-        {
-            OpenMainWindow();
-        }
-        
-        [MenuItem("Tools/Unity Project Architect/Template Creator %#t", priority = Priority + 1)]
-        public static void ShortcutTemplateCreator()
-        {
-            OpenTemplateCreator();
-        }
     }
 }

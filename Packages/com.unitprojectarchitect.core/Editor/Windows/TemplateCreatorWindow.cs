@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityProjectArchitect.Unity;
 using UnityProjectArchitect.Core;
+using UnityProjectArchitect.Unity.Editor.Utilities;
 
 namespace UnityProjectArchitect.Unity.Editor
 {
@@ -26,11 +27,10 @@ namespace UnityProjectArchitect.Unity.Editor
         private Button _loadButton;
         private Button _previewButton;
         
-        private TemplateConfiguration _currentTemplate;
+        private TemplateConfigurationSO _currentTemplate;
         private List<string> _folderPaths = new List<string>();
-        private List<SceneTemplate> _sceneTemplates = new List<SceneTemplate>();
+        private List<SceneTemplateData> _sceneTemplates = new List<SceneTemplateData>();
         
-        [MenuItem("Window/Unity Project Architect/Template Creator")]
         public static void ShowWindow()
         {
             TemplateCreatorWindow window = GetWindow<TemplateCreatorWindow>();
@@ -41,7 +41,7 @@ namespace UnityProjectArchitect.Unity.Editor
         
         private void OnEnable()
         {
-            _currentTemplate = ScriptableObject.CreateInstance<TemplateConfiguration>();
+            _currentTemplate = ScriptableObject.CreateInstance<TemplateConfigurationSO>();
             _currentTemplate.Initialize("New Template", "Custom project template", ProjectType.General);
             
             CreateUI();
@@ -206,10 +206,10 @@ namespace UnityProjectArchitect.Unity.Editor
             // Add default scene if none exist
             if (_sceneTemplates.Count == 0)
             {
-                SceneTemplate defaultScene = new SceneTemplate();
+                SceneTemplateData defaultScene = new SceneTemplateData();
                 defaultScene.SceneName = "MainScene";
                 defaultScene.ScenePath = "Scenes/MainScene.unity";
-                defaultScene.IsDefault = true;
+                defaultScene.IsMainScene = true;
                 _sceneTemplates.Add(defaultScene);
             }
             
@@ -240,10 +240,16 @@ namespace UnityProjectArchitect.Unity.Editor
             
             _saveButton = new Button(SaveTemplate) { text = "💾 Save Template" };
             _saveButton.style.flexGrow = 1;
+            _saveButton.style.marginRight = 5;
+            
+            Button applyButton = new Button(ApplyTemplate) { text = "🚀 Apply Template" };
+            applyButton.style.flexGrow = 1;
+            applyButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 0.8f);
             
             buttonContainer.Add(_loadButton);
             buttonContainer.Add(_previewButton);
             buttonContainer.Add(_saveButton);
+            buttonContainer.Add(applyButton);
             
             actionsContainer.Add(actionsLabel);
             actionsContainer.Add(buttonContainer);
@@ -266,7 +272,7 @@ namespace UnityProjectArchitect.Unity.Editor
             {
                 Label emptyLabel = new Label("No folders configured. Click 'Add Folder' to start.");
                 emptyLabel.style.color = Color.gray;
-                emptyLabel.style.fontStyle = FontStyle.Italic;
+                emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 _folderStructureContainer.Add(emptyLabel);
                 return;
             }
@@ -312,7 +318,7 @@ namespace UnityProjectArchitect.Unity.Editor
             {
                 Label emptyLabel = new Label("No scenes configured. Click 'Add Scene' to start.");
                 emptyLabel.style.color = Color.gray;
-                emptyLabel.style.fontStyle = FontStyle.Italic;
+                emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 _sceneConfigContainer.Add(emptyLabel);
                 return;
             }
@@ -327,9 +333,15 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             VisualElement sceneItem = new VisualElement();
             sceneItem.style.marginBottom = 10;
-            sceneItem.style.padding = 5;
+            sceneItem.style.paddingTop = 5;
+            sceneItem.style.paddingBottom = 5;
+            sceneItem.style.paddingLeft = 5;
+            sceneItem.style.paddingRight = 5;
             sceneItem.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.3f);
-            sceneItem.style.borderRadius = 5;
+            sceneItem.style.borderTopLeftRadius = 5;
+            sceneItem.style.borderTopRightRadius = 5;
+            sceneItem.style.borderBottomLeftRadius = 5;
+            sceneItem.style.borderBottomRightRadius = 5;
             
             VisualElement headerRow = new VisualElement();
             headerRow.style.flexDirection = FlexDirection.Row;
@@ -346,7 +358,7 @@ namespace UnityProjectArchitect.Unity.Editor
             });
             
             Toggle defaultToggle = new Toggle("Default");
-            defaultToggle.value = _sceneTemplates[index].IsDefault;
+            defaultToggle.value = _sceneTemplates[index].IsMainScene;
             defaultToggle.style.marginRight = 5;
             defaultToggle.RegisterValueChangedCallback(evt => {
                 if (evt.newValue)
@@ -354,13 +366,13 @@ namespace UnityProjectArchitect.Unity.Editor
                     // Only one scene can be default
                     for (int j = 0; j < _sceneTemplates.Count; j++)
                     {
-                        _sceneTemplates[j].IsDefault = (j == index);
+                        _sceneTemplates[j].IsMainScene = (j == index);
                     }
                     RefreshSceneConfiguration();
                 }
                 else
                 {
-                    _sceneTemplates[index].IsDefault = false;
+                    _sceneTemplates[index].IsMainScene = false;
                 }
                 RefreshSaveButton();
             });
@@ -406,10 +418,10 @@ namespace UnityProjectArchitect.Unity.Editor
         
         private void AddSceneTemplate()
         {
-            SceneTemplate newScene = new SceneTemplate();
+            SceneTemplateData newScene = new SceneTemplateData();
             newScene.SceneName = "NewScene";
             newScene.ScenePath = "Scenes/NewScene.unity";
-            newScene.IsDefault = false;
+            newScene.IsMainScene = false;
             
             _sceneTemplates.Add(newScene);
             RefreshSceneConfiguration();
@@ -429,8 +441,8 @@ namespace UnityProjectArchitect.Unity.Editor
         private void UpdateFolderStructure()
         {
             FolderStructureData folderStructure = new FolderStructureData();
-            folderStructure.Folders = new List<string>(_folderPaths);
-            folderStructure.Files = new List<string>(); // Structure-only templates don't create files
+            folderStructure.Folders = _folderPaths.ConvertAll(path => new FolderStructureData.FolderInfo { Path = path });
+            folderStructure.Files = new List<FolderStructureData.FileInfo>(); // Structure-only templates don't create files
             
             _currentTemplate.UpdateFolderStructure(folderStructure);
         }
@@ -464,7 +476,7 @@ namespace UnityProjectArchitect.Unity.Editor
                 string relativePath = FileUtil.GetProjectRelativePath(path);
                 if (!string.IsNullOrEmpty(relativePath))
                 {
-                    TemplateConfiguration loadedTemplate = AssetDatabase.LoadAssetAtPath<TemplateConfiguration>(relativePath);
+                    TemplateConfigurationSO loadedTemplate = AssetDatabase.LoadAssetAtPath<TemplateConfigurationSO>(relativePath);
                     if (loadedTemplate != null)
                     {
                         _currentTemplate = loadedTemplate;
@@ -478,7 +490,10 @@ namespace UnityProjectArchitect.Unity.Editor
                         _folderPaths.Clear();
                         if (_currentTemplate.FolderStructure != null && _currentTemplate.FolderStructure.Folders != null)
                         {
-                            _folderPaths.AddRange(_currentTemplate.FolderStructure.Folders);
+                            foreach (var folder in _currentTemplate.FolderStructure.Folders)
+                            {
+                                _folderPaths.Add(folder.Path);
+                            }
                         }
                         
                         // Update scene templates
@@ -528,9 +543,9 @@ namespace UnityProjectArchitect.Unity.Editor
             preview.AppendLine();
             
             preview.AppendLine("Scene Configuration:");
-            foreach (SceneTemplate scene in _sceneTemplates)
+            foreach (SceneTemplateData scene in _sceneTemplates)
             {
-                string defaultMarker = scene.IsDefault ? " (Default)" : "";
+                string defaultMarker = scene.IsMainScene ? " (Default)" : "";
                 preview.AppendLine($"  🎬 {scene.SceneName}{defaultMarker}");
                 preview.AppendLine($"     Path: {scene.ScenePath}");
             }
@@ -546,10 +561,6 @@ namespace UnityProjectArchitect.Unity.Editor
                 return;
             }
             
-            // Update template with current data
-            UpdateFolderStructure();
-            _currentTemplate.UpdateSceneTemplates(_sceneTemplates);
-            
             string path = EditorUtility.SaveFilePanelInProject(
                 "Save Template Configuration",
                 _currentTemplate.TemplateName,
@@ -558,13 +569,94 @@ namespace UnityProjectArchitect.Unity.Editor
             
             if (!string.IsNullOrEmpty(path))
             {
-                AssetDatabase.CreateAsset(_currentTemplate, path);
+                // Create a new ScriptableObject instance for saving to avoid conflicts
+                TemplateConfigurationSO templateToSave = ScriptableObject.CreateInstance<TemplateConfigurationSO>();
+                templateToSave.Initialize(_currentTemplate.TemplateName, _currentTemplate.Description, _currentTemplate.Type);
+                
+                // Update template with current data
+                UpdateFolderStructure();
+                templateToSave.UpdateFolderStructure(_currentTemplate.FolderStructure);
+                templateToSave.UpdateSceneTemplates(_sceneTemplates);
+                
+                AssetDatabase.CreateAsset(templateToSave, path);
                 AssetDatabase.SaveAssets();
                 
                 EditorUtility.DisplayDialog("Template Saved", 
-                    $"Template '{_currentTemplate.TemplateName}' saved successfully to {path}", "OK");
+                    $"Template '{templateToSave.TemplateName}' saved successfully to {path}", "OK");
                 
-                Debug.Log($"Template saved: {_currentTemplate.TemplateName} at {path}");
+                Debug.Log($"Template saved: {templateToSave.TemplateName} at {path}");
+                
+                // Reset current template to a new instance for the next template creation
+                ResetTemplate();
+            }
+        }
+        
+        private void ResetTemplate()
+        {
+            // Create a new template instance for the next template
+            _currentTemplate = ScriptableObject.CreateInstance<TemplateConfigurationSO>();
+            _currentTemplate.Initialize("New Template", "Custom project template", ProjectType.General);
+            
+            // Reset UI fields
+            _templateNameField.value = _currentTemplate.TemplateName;
+            _templateDescriptionField.value = _currentTemplate.Description;
+            _projectTypeField.value = _currentTemplate.Type.ToString();
+            
+            // Reset folder paths to defaults
+            _folderPaths.Clear();
+            _folderPaths.Add("Scripts/Managers");
+            _folderPaths.Add("Scripts/UI");
+            _folderPaths.Add("Art/Textures");
+            _folderPaths.Add("Art/Materials");
+            _folderPaths.Add("Scenes");
+            _folderPaths.Add("Documentation");
+            
+            // Reset scene templates to defaults
+            _sceneTemplates.Clear();
+            SceneTemplateData defaultScene = new SceneTemplateData();
+            defaultScene.SceneName = "MainScene";
+            defaultScene.ScenePath = "Scenes/MainScene.unity";
+            defaultScene.IsMainScene = true;
+            _sceneTemplates.Add(defaultScene);
+            
+            // Refresh the UI
+            RefreshUI();
+        }
+        
+        private void ApplyTemplate()
+        {
+            // Validate template before applying
+            TemplateValidationResult validation = TemplateApplicator.ValidateTemplate(_currentTemplate);
+            if (!validation.IsValid)
+            {
+                string errors = string.Join("\n", validation.Errors);
+                EditorUtility.DisplayDialog("Template Validation Failed", $"Cannot apply template:\n\n{errors}", "OK");
+                return;
+            }
+            
+            // Show warnings if any
+            if (validation.Warnings.Count > 0)
+            {
+                string warnings = string.Join("\n", validation.Warnings);
+                bool proceed = EditorUtility.DisplayDialog("Template Warnings", 
+                    $"Template has warnings:\n\n{warnings}\n\nDo you want to proceed?", "Apply", "Cancel");
+                if (!proceed)
+                    return;
+            }
+            
+            // Update template with current data before applying
+            UpdateFolderStructure();
+            _currentTemplate.UpdateSceneTemplates(_sceneTemplates);
+            
+            // Confirm application
+            bool confirmed = EditorUtility.DisplayDialog("Apply Template", 
+                $"Apply template '{_currentTemplate.TemplateName}' to the current project?\n\n" +
+                $"This will create {_folderPaths.Count} folders and {_sceneTemplates.Count} scenes as defined in the template.", 
+                "Apply", "Cancel");
+            
+            if (confirmed)
+            {
+                TemplateApplicator.ApplyTemplate(_currentTemplate);
             }
         }
     }
