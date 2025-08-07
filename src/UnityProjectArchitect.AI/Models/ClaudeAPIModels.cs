@@ -6,13 +6,13 @@ namespace UnityProjectArchitect.Core.AI
     [Serializable]
     public class ClaudeAPIRequest
     {
-        public string model { get; set; } = "claude-3-sonnet-20240229";
+        public string model { get; set; } = "claude-3-5-sonnet-20241022";
         public int max_tokens { get; set; } = 4000;
         public List<ClaudeMessage> messages { get; set; }
-        public ClaudeSystemMessage system { get; set; }
+        public string system { get; set; }
         public float temperature { get; set; } = 0.7f;
         public List<string> stop_sequences { get; set; }
-        public string stream { get; set; } = "false";
+        public bool stream { get; set; } = false;
 
         public ClaudeAPIRequest()
         {
@@ -25,7 +25,7 @@ namespace UnityProjectArchitect.Core.AI
             messages.Add(new ClaudeMessage("user", userMessage));
             if (!string.IsNullOrEmpty(systemPrompt))
             {
-                system = new ClaudeSystemMessage(systemPrompt);
+                system = systemPrompt;
             }
         }
     }
@@ -154,7 +154,7 @@ namespace UnityProjectArchitect.Core.AI
     {
         public string apiKey { get; set; }
         public string baseUrl { get; set; } = "https://api.anthropic.com/v1/messages";
-        public string defaultModel { get; set; } = "claude-3-sonnet-20240229";
+        public string defaultModel { get; set; } = "claude-3-5-sonnet-20241022";
         public int maxTokens { get; set; } = 4000;
         public float temperature { get; set; } = 0.7f;
         public int timeoutSeconds { get; set; } = 60;
@@ -255,9 +255,9 @@ namespace UnityProjectArchitect.Core.AI
         private static readonly Dictionary<ClaudeModel, string> ModelNames = new Dictionary<ClaudeModel, string>
         {
             { ClaudeModel.Claude3Haiku, "claude-3-haiku-20240307" },
-            { ClaudeModel.Claude3Sonnet, "claude-3-sonnet-20240229" },
+            { ClaudeModel.Claude3Sonnet, "claude-3-5-sonnet-20241022" },
             { ClaudeModel.Claude3Opus, "claude-3-opus-20240229" },
-            { ClaudeModel.Claude35Sonnet, "claude-3-5-sonnet-20240620" }
+            { ClaudeModel.Claude35Sonnet, "claude-3-5-sonnet-20241022" }
         };
 
         private static readonly Dictionary<ClaudeModel, int> ModelTokenLimits = new Dictionary<ClaudeModel, int>

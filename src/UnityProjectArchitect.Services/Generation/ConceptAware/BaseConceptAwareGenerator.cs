@@ -18,12 +18,21 @@ namespace UnityProjectArchitect.Services.ConceptAware
         protected readonly string gameDescription;
         protected readonly DocumentationSectionType sectionType;
         protected readonly GameConcept gameConcept;
+        protected IAIAssistant _injectedAIAssistant;
 
         protected BaseConceptAwareGenerator(string gameDescription, DocumentationSectionType sectionType)
         {
             this.gameDescription = gameDescription ?? throw new ArgumentNullException(nameof(gameDescription));
             this.sectionType = sectionType;
             this.gameConcept = ParseGameConcept(gameDescription);
+        }
+
+        /// <summary>
+        /// Inject a configured AI assistant to use instead of creating a new one
+        /// </summary>
+        public virtual void SetAIAssistant(IAIAssistant aiAssistant)
+        {
+            _injectedAIAssistant = aiAssistant;
         }
 
         public abstract Task<string> GenerateContentAsync();

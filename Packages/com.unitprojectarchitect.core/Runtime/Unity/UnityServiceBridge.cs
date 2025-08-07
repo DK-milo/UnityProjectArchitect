@@ -479,16 +479,19 @@ namespace UnityProjectArchitect.Unity
             try
             {
                 // Use concept-aware generators that work with game descriptions
+                // Get configured AI assistant to inject
+                IAIAssistant configuredAI = UnityServiceBridge.GetAIAssistant();
+                
                 return sectionType switch
                 {
                     DocumentationSectionType.GeneralProductDescription => 
-                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualProductDescriptionGenerator(gameDescription).GenerateContentAsync(),
+                        await GenerateWithInjectedAI(new UnityProjectArchitect.Services.ConceptAware.ConceptualProductDescriptionGenerator(gameDescription), configuredAI),
                     DocumentationSectionType.UserStories => 
-                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualUserStoriesGenerator(gameDescription).GenerateContentAsync(),
+                        await GenerateWithInjectedAI(new UnityProjectArchitect.Services.ConceptAware.ConceptualUserStoriesGenerator(gameDescription), configuredAI),
                     DocumentationSectionType.WorkTickets => 
-                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualWorkTicketsGenerator(gameDescription).GenerateContentAsync(),
+                        await GenerateWithInjectedAI(new UnityProjectArchitect.Services.ConceptAware.ConceptualWorkTicketsGenerator(gameDescription), configuredAI),
                     DocumentationSectionType.SystemArchitecture => 
-                        await GenerateConceptualArchitecture(gameDescription),
+                        await GenerateWithInjectedAI(new UnityProjectArchitect.Services.ConceptAware.ConceptualSystemArchitectureGenerator(gameDescription), configuredAI),
                     DocumentationSectionType.DataModel => 
                         await GenerateConceptualDataModel(gameDescription),
                     DocumentationSectionType.APISpecification => 
@@ -572,7 +575,8 @@ namespace UnityProjectArchitect.Unity
                         {
                             Provider = UnityProjectArchitect.Core.AIProvider.Claude,
                             MaxTokens = 4000,
-                            Temperature = 0.7f
+                            Temperature = 0.7f,
+                            TimeoutSeconds = 60
                         }
                     };
 
@@ -677,7 +681,8 @@ Based on the game concept, the following system architecture is recommended:
                         {
                             Provider = UnityProjectArchitect.Core.AIProvider.Claude,
                             MaxTokens = 4000,
-                            Temperature = 0.7f
+                            Temperature = 0.7f,
+                            TimeoutSeconds = 60
                         }
                     };
 
@@ -796,7 +801,8 @@ public class GameSettings
                         {
                             Provider = UnityProjectArchitect.Core.AIProvider.Claude,
                             MaxTokens = 4000,
-                            Temperature = 0.7f
+                            Temperature = 0.7f,
+                            TimeoutSeconds = 60
                         }
                     };
 
@@ -995,6 +1001,15 @@ public interface ICombatSystem
             return apis.ToString();
         }
         
+        /// <summary>
+        /// Helper method to inject configured AI assistant and generate content
+        /// </summary>
+        private async Task<string> GenerateWithInjectedAI(UnityProjectArchitect.Services.ConceptAware.BaseConceptAwareGenerator generator, IAIAssistant aiAssistant)
+        {
+            generator.SetAIAssistant(aiAssistant);
+            return await generator.GenerateContentAsync();
+        }
+
         /// <summary>
         /// Check if a documentation section type is supported
         /// </summary>

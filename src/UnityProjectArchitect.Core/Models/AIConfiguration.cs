@@ -7,7 +7,7 @@ namespace UnityProjectArchitect.Core
     {
         public string ApiKey { get; set; } = "";
         public AIProvider Provider { get; set; } = AIProvider.Claude;
-        public string Model { get; set; } = "claude-3-sonnet-20240229";
+        public string Model { get; set; } = "claude-3-5-sonnet-20241022";
         public int MaxTokens { get; set; } = 4000;
         public float Temperature { get; set; } = 0.7f;
         public int TimeoutSeconds { get; set; } = 60;

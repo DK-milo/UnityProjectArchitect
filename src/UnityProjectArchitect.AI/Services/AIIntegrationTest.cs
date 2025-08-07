@@ -275,7 +275,7 @@ This document provides a comprehensive overview of the test system.";
                 id = "mock-response-123",
                 type = "message",
                 role = "assistant",
-                model = "claude-3-sonnet-20240229",
+                model = "claude-3-5-sonnet-20241022",
                 stop_reason = "end_turn",
                 usage = new ClaudeUsage
                 {
