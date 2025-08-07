@@ -255,7 +255,7 @@ namespace UnityProjectArchitect.AI.Prompts
             // File information
             if (projectData.FolderStructure != null && projectData.FolderStructure.Files != null && projectData.FolderStructure.Files.Count > 0)
             {
-                var fileExtensions = projectData.FolderStructure.Files
+                List<string> fileExtensions = projectData.FolderStructure.Files
                     .GroupBy(f => f.Extension)
                     .Take(8)
                     .Select(g => $"{g.Key} ({g.Count()})")
@@ -402,7 +402,7 @@ namespace UnityProjectArchitect.AI.Prompts
             {
                 if (analysisResult.Performance.Issues != null && analysisResult.Performance.Issues.Count > 0)
                 {
-                    var criticalIssues = analysisResult.Performance.Issues
+                    List<PerformanceIssue> criticalIssues = analysisResult.Performance.Issues
                         .Where(i => i.Impact == PerformanceImpact.Critical || i.Impact == PerformanceImpact.High)
                         .Take(5)
                         .ToList();
@@ -410,7 +410,7 @@ namespace UnityProjectArchitect.AI.Prompts
                     if (criticalIssues.Count > 0)
                     {
                         context.AppendLine($"- Critical Performance Issues: {criticalIssues.Count}");
-                        foreach (var issue in criticalIssues.Take(3))
+                        foreach (PerformanceIssue issue in criticalIssues.Take(3))
                         {
                             context.AppendLine($"  • {issue.Type}: {TruncateText(issue.Description, 80)}");
                         }
@@ -438,7 +438,7 @@ namespace UnityProjectArchitect.AI.Prompts
                 context.AppendLine($"- Total Issues: {analysisResult.Issues.Count} identified");
                 
                 // Group issues by type if possible
-                var issueTypes = analysisResult.Issues
+                List<string> issueTypes = analysisResult.Issues
                     .GroupBy(i => i.GetType().Name)
                     .Select(g => $"{g.Key}: {g.Count()}")
                     .ToList();

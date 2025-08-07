@@ -58,7 +58,7 @@ namespace UnityProjectArchitect.AI.Services
                 using System.Net.Http.HttpResponseMessage response = await _httpClient.PostAsync(url, stringContent);
                 
                 Dictionary<string, string> responseHeaders = new Dictionary<string, string>();
-                foreach (var header in response.Headers)
+                foreach (KeyValuePair<string, IEnumerable<string>> header in response.Headers)
                 {
                     responseHeaders[header.Key] = string.Join(", ", header.Value);
                 }

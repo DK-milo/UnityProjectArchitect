@@ -419,7 +419,7 @@ namespace UnityProjectArchitect.Services
                         sb.AppendLine($"**Basic Usage - {primaryInterface.Name}:**");
                         sb.AppendLine("```csharp");
                         sb.AppendLine($"// Initialize the service");
-                        sb.AppendLine($"var service = new {primaryInterface.Name.Substring(1)}(); // Assuming I-prefix removal");
+                        sb.AppendLine($"{primaryInterface.Name.Substring(1)} service = new {primaryInterface.Name.Substring(1)}(); // Assuming I-prefix removal");
                         sb.AppendLine();
 
                         foreach (MethodSignature method in primaryInterface.Methods.Take(3))
@@ -442,7 +442,7 @@ namespace UnityProjectArchitect.Services
                     sb.AppendLine($"**ScriptableObject Usage - {scriptableObject.Name}:**");
                     sb.AppendLine("```csharp");
                     sb.AppendLine($"// Create asset instance");
-                    sb.AppendLine($"var data = ScriptableObject.CreateInstance<{scriptableObject.Name}>();");
+                    sb.AppendLine($"{scriptableObject.Name} data = ScriptableObject.CreateInstance<{scriptableObject.Name}>();");
                     sb.AppendLine();
 
                     IEnumerable<PropertyDefinition> publicProperties = scriptableObject.Properties
@@ -546,7 +546,7 @@ namespace UnityProjectArchitect.Services
             string parameters = string.Join(", ", method.Parameters.Select(p => GetSampleValue(p.Type)));
             bool isAsync = method.ReturnType.Contains("Task");
             string awaitKeyword = isAsync ? "await " : "";
-            string assignment = method.ReturnType != "void" && !method.ReturnType.Contains("Task") ? "var result = " : "";
+            string assignment = method.ReturnType != "void" && !method.ReturnType.Contains("Task") ? $"{method.ReturnType} result = " : "";
             
             return $"{assignment}{awaitKeyword}service.{method.Name}({parameters});";
         }

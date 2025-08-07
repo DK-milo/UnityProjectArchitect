@@ -635,7 +635,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                     section.LastUpdated = System.DateTime.Now;
                     
                     // Add section to project data if not already present
-                    var existingSection = _conceptProject.ProjectData.DocumentationSections
+                    DocumentationSectionData existingSection = _conceptProject.ProjectData.DocumentationSections
                         .FirstOrDefault(s => s.SectionType == sectionType);
                     if (existingSection != null)
                     {
@@ -706,15 +706,15 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 
                 if (result.Success)
                 {
-                    _statusLabel.text = "✅ Documentation exported successfully!";
-                    _statusLabel.style.color = Color.green;
-                    
-                    // Ask if user wants to open the export folder
-                    bool openFolder = EditorUtility.DisplayDialog("Export Complete", 
+                _statusLabel.text = "✅ Documentation exported successfully!";
+                _statusLabel.style.color = Color.green;
+                
+                // Ask if user wants to open the export folder
+                bool openFolder = EditorUtility.DisplayDialog("Export Complete", 
                         $"Documentation exported successfully to:\n{result.OutputPath}\n\nOpen folder?", "Open Folder", "Close");
-                        
-                    if (openFolder)
-                    {
+                    
+                if (openFolder)
+                {
                         string folderPath = System.IO.Path.GetDirectoryName(result.OutputPath);
                         System.Diagnostics.Process.Start("explorer.exe", folderPath.Replace('/', '\\'));
                     }

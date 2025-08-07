@@ -409,7 +409,7 @@ namespace UnityProjectArchitect.Core
             HashSet<string> visited = new HashSet<string>();
             HashSet<string> recursionStack = new HashSet<string>();
 
-            foreach (var node in Nodes)
+            foreach (DependencyNode node in Nodes)
             {
                 if (!visited.Contains(node.Id))
                 {

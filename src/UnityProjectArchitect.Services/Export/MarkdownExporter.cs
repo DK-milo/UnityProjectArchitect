@@ -19,11 +19,13 @@ namespace UnityProjectArchitect.Services
 
         private readonly Dictionary<string, MarkdownTemplate> _templates;
         private readonly StringBuilder _builder;
+        private readonly MermaidRenderer _mermaidRenderer;
 
         public MarkdownExporter()
         {
             _templates = new Dictionary<string, MarkdownTemplate>();
             _builder = new StringBuilder();
+            _mermaidRenderer = new MermaidRenderer();
             InitializeDefaultTemplates();
         }
 
@@ -114,7 +116,10 @@ namespace UnityProjectArchitect.Services
                 new ExportOption { Name = "GenerateTOC", Description = "Auto-generate table of contents", IsEnabled = true },
                 new ExportOption { Name = "IncludeMetadata", Description = "Add project metadata header", IsEnabled = true },
                 new ExportOption { Name = "UseEmoji", Description = "Include emoji in section headers", IsEnabled = true },
-                new ExportOption { Name = "LinkStyle", Description = "Link style: inline, reference, or auto", IsEnabled = true }
+                new ExportOption { Name = "LinkStyle", Description = "Link style: inline, reference, or auto", IsEnabled = true },
+                new ExportOption { Name = "RenderMermaidDiagrams", Description = "Render Mermaid diagrams to images", IsEnabled = true },
+                new ExportOption { Name = "MermaidTheme", Description = "Mermaid diagram theme (default, dark, forest, neutral)", IsEnabled = true },
+                new ExportOption { Name = "MermaidFormat", Description = "Output format for diagrams (PNG, SVG, PDF)", IsEnabled = true }
             };
         }
 
@@ -134,7 +139,25 @@ namespace UnityProjectArchitect.Services
                 }
             }
 
-            return processedTemplate + _builder.ToString();
+            string finalContent = processedTemplate + _builder.ToString();
+
+            // Render Mermaid diagrams if enabled and available
+            bool renderDiagrams = GetOption<bool>(options, "RenderMermaidDiagrams", true);
+            if (renderDiagrams)
+            {
+                try
+                {
+                    MermaidRenderOptions renderOptions = CreateMermaidRenderOptions(options);
+                    finalContent = await _mermaidRenderer.RenderDiagramsInContentAsync(finalContent, renderOptions);
+                    Debug.Log("Mermaid diagrams rendered successfully in Markdown export");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"Failed to render Mermaid diagrams in Markdown export: {ex.Message}");
+                }
+            }
+
+            return finalContent;
         }
 
         private Dictionary<string, object> CreateTemplateVariables(ExportContent content, ExportOptions options)
@@ -415,6 +438,28 @@ namespace UnityProjectArchitect.Services
 ---
 
 ";
+        }
+
+        private MermaidRenderOptions CreateMermaidRenderOptions(ExportOptions options)
+        {
+            return new MermaidRenderOptions
+            {
+                Theme = GetOption<string>(options, "MermaidTheme", "default"),
+                OutputFormat = GetMermaidOutputFormat(GetOption<string>(options, "MermaidFormat", "PNG")),
+                FallbackToSyntax = true,
+                BackgroundColor = "white",
+                Scale = 1.0
+            };
+        }
+
+        private MermaidOutputFormat GetMermaidOutputFormat(string format)
+        {
+            return format?.ToUpperInvariant() switch
+            {
+                "SVG" => MermaidOutputFormat.SVG,
+                "PDF" => MermaidOutputFormat.PDF,
+                _ => MermaidOutputFormat.PNG
+            };
         }
 
         private class MarkdownTemplate

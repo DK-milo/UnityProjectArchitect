@@ -66,6 +66,15 @@ namespace UnityProjectArchitect.Services
 
         private string GeneratePrintReadyHtml(string htmlContent, PDFGenerationOptions options)
         {
+            // Check if htmlContent is already a complete HTML document
+            if (htmlContent.TrimStart().StartsWith("<!DOCTYPE html", StringComparison.OrdinalIgnoreCase) ||
+                htmlContent.TrimStart().StartsWith("<html", StringComparison.OrdinalIgnoreCase))
+            {
+                // Content is already a complete HTML document, just add our print instructions
+                return InsertPrintInstructions(htmlContent, options);
+            }
+            
+            // Content is just HTML fragments, wrap it in a complete document
             return $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -268,6 +277,49 @@ namespace UnityProjectArchitect.Services
     </div>
 </body>
 </html>";
+        }
+
+        private string InsertPrintInstructions(string htmlContent, PDFGenerationOptions options)
+        {
+            // Insert print instructions after the opening <body> tag
+            string printInstructions = @"
+    <div class=""print-instructions no-print"">
+        <h3>📄 Convert to PDF</h3>
+        <p><strong>To generate a PDF from this document:</strong></p>
+        <ol>
+            <li>Press <kbd>Ctrl+P</kbd> (or <kbd>Cmd+P</kbd> on Mac)</li>
+            <li>Choose ""Save as PDF"" as the destination</li>
+            <li>Click ""More settings"" and ensure ""Headers and footers"" is unchecked</li>
+            <li>Set margins to ""Minimum"" for best results</li>
+            <li>Click ""Save"" and choose your desired location</li>
+        </ol>
+        <p><em>This instruction box will not appear in the printed PDF.</em></p>
+    </div>";
+
+            // Find the opening <body> tag and insert instructions after it
+            int bodyIndex = htmlContent.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
+            if (bodyIndex == -1)
+            {
+                bodyIndex = htmlContent.IndexOf("<body ", StringComparison.OrdinalIgnoreCase);
+                if (bodyIndex != -1)
+                {
+                    // Find the end of the opening tag
+                    int closeIndex = htmlContent.IndexOf('>', bodyIndex);
+                    if (closeIndex != -1)
+                    {
+                        bodyIndex = closeIndex;
+                    }
+                }
+            }
+            
+            if (bodyIndex != -1)
+            {
+                int insertIndex = bodyIndex + htmlContent.Substring(bodyIndex).IndexOf('>') + 1;
+                return htmlContent.Insert(insertIndex, printInstructions);
+            }
+            
+            // Fallback: couldn't find body tag, return original content
+            return htmlContent;
         }
 
         private string GeneratePDFInstructions(string htmlFilePath)

@@ -254,7 +254,7 @@ namespace UnityProjectArchitect.Core
 
         public static ValidationResult Failure(string errorMessage)
         {
-            var result = new ValidationResult
+            ValidationResult result = new ValidationResult
             {
                 _isValid = false,
                 ErrorMessage = errorMessage,
@@ -321,7 +321,7 @@ namespace UnityProjectArchitect.Core
             if (result.HasBlockers)
             {
                 report += "🚫 **BLOCKERS:**\n";
-                foreach (var blocker in result.GetBlockers())
+                foreach (ValidationIssue blocker in result.GetBlockers())
                 {
                     report += $"  • {blocker.Message}\n";
                     if (!string.IsNullOrEmpty(blocker.SuggestedFix))
@@ -333,18 +333,18 @@ namespace UnityProjectArchitect.Core
             if (result.HasWarnings)
             {
                 report += "⚠️  **WARNINGS:**\n";
-                foreach (var warning in result.GetIssuesBySeverity(ValidationSeverity.Warning))
+                foreach (ValidationIssue warning in result.GetIssuesBySeverity(ValidationSeverity.Warning))
                 {
                     report += $"  • {warning.Message}\n";
                 }
                 report += "\n";
             }
 
-            var infoIssues = result.GetIssuesBySeverity(ValidationSeverity.Info);
+            List<ValidationIssue> infoIssues = result.GetIssuesBySeverity(ValidationSeverity.Info);
             if (infoIssues.Count > 0)
             {
                 report += "ℹ️  **INFO:**\n";
-                foreach (var info in infoIssues)
+                foreach (ValidationIssue info in infoIssues)
                 {
                     report += $"  • {info.Message}\n";
                 }

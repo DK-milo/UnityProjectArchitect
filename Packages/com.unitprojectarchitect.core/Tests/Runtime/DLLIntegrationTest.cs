@@ -27,16 +27,16 @@ namespace UnityProjectArchitect.Unity.Tests
             // Test that services can be retrieved without throwing exceptions
             Assert.DoesNotThrow(() =>
             {
-                var projectAnalyzer = UnityServiceBridge.GetProjectAnalyzer();
+                IProjectAnalyzer projectAnalyzer = UnityServiceBridge.GetProjectAnalyzer();
                 Assert.IsNotNull(projectAnalyzer, "ProjectAnalyzer should not be null");
                 
-                var exportService = UnityServiceBridge.GetExportService();
+                IExportService exportService = UnityServiceBridge.GetExportService();
                 Assert.IsNotNull(exportService, "ExportService should not be null");
                 
-                var templateManager = UnityServiceBridge.GetTemplateManager();
+                ITemplateManager templateManager = UnityServiceBridge.GetTemplateManager();
                 Assert.IsNotNull(templateManager, "TemplateManager should not be null");
                 
-                var documentationService = UnityServiceBridge.GetDocumentationService();
+                IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
                 Assert.IsNotNull(documentationService, "DocumentationService should not be null");
             });
         }
@@ -44,17 +44,17 @@ namespace UnityProjectArchitect.Unity.Tests
         [UnityTest]
         public System.Collections.IEnumerator TestProjectAnalyzerBasicFunctionality()
         {
-            var analyzer = UnityServiceBridge.GetProjectAnalyzer();
+            IProjectAnalyzer analyzer = UnityServiceBridge.GetProjectAnalyzer();
             Assert.IsNotNull(analyzer, "ProjectAnalyzer should be available");
 
             // Test basic validation (should not throw)
-            var validationTask = analyzer.ValidateProjectStructureAsync(Application.dataPath);
+            Task<ValidationResult> validationTask = analyzer.ValidateProjectStructureAsync(Application.dataPath);
             
             yield return new WaitUntil(() => validationTask.IsCompleted);
             
             Assert.IsTrue(validationTask.IsCompletedSuccessfully, "Validation task should complete successfully");
             
-            var result = validationTask.Result;
+            ValidationResult result = validationTask.Result;
             Assert.IsNotNull(result, "Validation result should not be null");
             
             Debug.Log($"✅ Project validation completed: {result.IsValid}");
@@ -63,18 +63,18 @@ namespace UnityProjectArchitect.Unity.Tests
         [UnityTest]
         public System.Collections.IEnumerator TestExportServiceBasicFunctionality()
         {
-            var exportService = UnityServiceBridge.GetExportService();
+            IExportService exportService = UnityServiceBridge.GetExportService();
             Assert.IsNotNull(exportService, "ExportService should be available");
 
             // Test getting supported formats
-            var formats = exportService.GetSupportedFormats();
+            List<ExportFormat> formats = exportService.GetSupportedFormats();
             Assert.IsNotNull(formats, "Supported formats should not be null");
             Assert.IsTrue(formats.Count > 0, "Should support at least one export format");
             
             Debug.Log($"✅ Export service supports {formats.Count} formats");
             
             // Test capabilities
-            var capabilities = exportService.GetCapabilities();
+            ExportCapabilities capabilities = exportService.GetCapabilities();
             Assert.IsNotNull(capabilities, "Capabilities should not be null");
             
             yield return null; // Complete immediately for this test
@@ -86,13 +86,13 @@ namespace UnityProjectArchitect.Unity.Tests
             // Test that we can create instances of DLL types
             Assert.DoesNotThrow(() =>
             {
-                var projectData = new ProjectData();
+                ProjectData projectData = new ProjectData();
                 Assert.IsNotNull(projectData, "ProjectData should be creatable");
                 
-                var validationResult = new ValidationResult();
+                ValidationResult validationResult = new ValidationResult();
                 Assert.IsNotNull(validationResult, "ValidationResult should be creatable");
                 
-                var exportRequest = new ExportRequest(ExportFormat.Markdown, "test/path");
+                ExportRequest exportRequest = new ExportRequest(ExportFormat.Markdown, "test/path");
                 Assert.IsNotNull(exportRequest, "ExportRequest should be creatable");
                 Assert.AreEqual(ExportFormat.Markdown, exportRequest.Format);
                 
@@ -106,10 +106,10 @@ namespace UnityProjectArchitect.Unity.Tests
             // Test that enums from DLLs work correctly
             Assert.DoesNotThrow(() =>
             {
-                var projectType = ProjectType.Game3D;
-                var unityVersion = UnityVersion.Unity2023_3;
-                var docStatus = DocumentationStatus.InProgress;
-                var exportFormat = ExportFormat.PDF;
+                ProjectType projectType = ProjectType.Game3D;
+                UnityVersion unityVersion = UnityVersion.Unity2023_3;
+                DocumentationStatus docStatus = DocumentationStatus.InProgress;
+                ExportFormat exportFormat = ExportFormat.PDF;
                 
                 Debug.Log($"✅ Enum values accessible: {projectType}, {unityVersion}, {docStatus}, {exportFormat}");
             });
@@ -118,17 +118,17 @@ namespace UnityProjectArchitect.Unity.Tests
         [UnityTest]
         public System.Collections.IEnumerator TestUserStoriesGeneratorIntegration()
         {
-            var documentationService = UnityServiceBridge.GetDocumentationService();
+            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
             // Create test project data
-            var projectData = new ProjectData();
+            ProjectData projectData = new ProjectData();
             projectData.UpdateProjectName("Test Unity Project");
             projectData.UpdateDescription("Test project for User Stories generation");
             projectData.UpdateProjectType(ProjectType.Game3D);
 
             // Create User Stories section
-            var userStoriesSection = new DocumentationSectionData
+            DocumentationSectionData userStoriesSection = new DocumentationSectionData
             {
                 SectionType = DocumentationSectionType.UserStories,
                 IsEnabled = true,
@@ -136,7 +136,7 @@ namespace UnityProjectArchitect.Unity.Tests
             };
 
             // Test User Stories generation
-            var generationTask = documentationService.GenerateDocumentationSectionAsync(userStoriesSection, projectData);
+            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(userStoriesSection, projectData);
             
             yield return new WaitUntil(() => generationTask.IsCompleted);
             
@@ -155,17 +155,17 @@ namespace UnityProjectArchitect.Unity.Tests
         [UnityTest]
         public System.Collections.IEnumerator TestWorkTicketsGeneratorIntegration()
         {
-            var documentationService = UnityServiceBridge.GetDocumentationService();
+            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
             // Create test project data
-            var projectData = new ProjectData();
+            ProjectData projectData = new ProjectData();
             projectData.UpdateProjectName("Test Unity Project");
             projectData.UpdateDescription("Test project for Work Tickets generation");
             projectData.UpdateProjectType(ProjectType.Game3D);
 
             // Create Work Tickets section
-            var workTicketsSection = new DocumentationSectionData
+            DocumentationSectionData workTicketsSection = new DocumentationSectionData
             {
                 SectionType = DocumentationSectionType.WorkTickets,
                 IsEnabled = true,
@@ -173,7 +173,7 @@ namespace UnityProjectArchitect.Unity.Tests
             };
 
             // Test Work Tickets generation
-            var generationTask = documentationService.GenerateDocumentationSectionAsync(workTicketsSection, projectData);
+            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(workTicketsSection, projectData);
             
             yield return new WaitUntil(() => generationTask.IsCompleted);
             
@@ -192,17 +192,17 @@ namespace UnityProjectArchitect.Unity.Tests
         [UnityTest]
         public System.Collections.IEnumerator TestAllDocumentationGeneratorsIntegration()
         {
-            var documentationService = UnityServiceBridge.GetDocumentationService();
+            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
             // Create test project data
-            var projectData = new ProjectData();
+            ProjectData projectData = new ProjectData();
             projectData.UpdateProjectName("Full Test Project");
             projectData.UpdateDescription("Complete test for all documentation generators");
             projectData.UpdateProjectType(ProjectType.Game3D);
 
             // Test all supported documentation section types
-            var sectionTypes = new[]
+            DocumentationSectionType[] sectionTypes = new[]
             {
                 DocumentationSectionType.GeneralProductDescription,
                 DocumentationSectionType.SystemArchitecture,
@@ -219,7 +219,7 @@ namespace UnityProjectArchitect.Unity.Tests
             {
                 if (documentationService.CanGenerateSection(sectionType))
                 {
-                    var section = new DocumentationSectionData
+                    DocumentationSectionData section = new DocumentationSectionData
                     {
                         SectionType = sectionType,
                         IsEnabled = true,
@@ -228,7 +228,7 @@ namespace UnityProjectArchitect.Unity.Tests
 
                     Debug.Log($"Testing {sectionType} generator...");
 
-                    var generationTask = documentationService.GenerateDocumentationSectionAsync(section, projectData);
+                    Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(section, projectData);
                     yield return new WaitUntil(() => generationTask.IsCompleted);
 
                     if (generationTask.IsCompletedSuccessfully)

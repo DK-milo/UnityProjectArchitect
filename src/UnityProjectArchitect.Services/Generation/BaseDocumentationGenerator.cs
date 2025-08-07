@@ -13,11 +13,15 @@ namespace UnityProjectArchitect.Services
     {
         protected readonly ProjectAnalysisResult analysisResult;
         protected readonly DocumentationSectionType sectionType;
+        private static MermaidRenderer _mermaidRenderer;
 
         protected BaseDocumentationGenerator(ProjectAnalysisResult analysisResult, DocumentationSectionType sectionType)
         {
             this.analysisResult = analysisResult ?? throw new ArgumentNullException(nameof(analysisResult));
             this.sectionType = sectionType;
+            
+            // Initialize shared MermaidRenderer instance
+            _mermaidRenderer ??= new MermaidRenderer();
         }
 
         public abstract Task<string> GenerateContentAsync();
@@ -209,6 +213,71 @@ namespace UnityProjectArchitect.Services
             sb.AppendLine("---\n");
             
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Renders Mermaid diagrams in content if MermaidRenderer is available
+        /// </summary>
+        protected virtual async Task<string> RenderMermaidDiagramsAsync(string content, MermaidRenderOptions options = null)
+        {
+            if (_mermaidRenderer == null) return content;
+            
+            try
+            {
+                bool isMermaidAvailable = await _mermaidRenderer.IsMermaidCliAvailableAsync();
+                if (!isMermaidAvailable)
+                {
+                    Debug.LogWarning("Mermaid CLI not available - diagrams will remain as syntax");
+                    return content;
+                }
+
+                return await _mermaidRenderer.RenderDiagramsInContentAsync(content, options);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to render Mermaid diagrams: {ex}");
+                return content;
+            }
+        }
+
+        /// <summary>
+        /// Creates a Mermaid code block with the specified type and content
+        /// </summary>
+        protected virtual string CreateMermaidDiagram(string diagramType, string title, params string[] lines)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("```mermaid");
+            sb.AppendLine(diagramType);
+            
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.AppendLine($"    %% {title}");
+            }
+            
+            foreach (string line in lines)
+            {
+                sb.AppendLine($"    {line}");
+            }
+            
+            sb.AppendLine("```");
+            sb.AppendLine();
+            
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Cleanup MermaidRenderer resources
+        /// </summary>
+        protected static void CleanupMermaidRenderer()
+        {
+            try
+            {
+                _mermaidRenderer?.Cleanup();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error cleaning up MermaidRenderer: {ex}");
+            }
         }
     }
 }

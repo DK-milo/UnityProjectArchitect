@@ -317,6 +317,10 @@ namespace UnityProjectArchitect.Services
         {
             if (string.IsNullOrEmpty(text)) return "";
 
+            // First escape HTML entities in plain text to prevent issues
+            text = EscapeHtml(text);
+            
+            // Then convert markdown to HTML tags (after escaping)
             // Bold
             text = System.Text.RegularExpressions.Regex.Replace(text, @"\*\*(.*?)\*\*", "<strong>$1</strong>");
             
@@ -329,7 +333,7 @@ namespace UnityProjectArchitect.Services
             // Links
             text = System.Text.RegularExpressions.Regex.Replace(text, @"\[(.*?)\]\((.*?)\)", "<a href=\"$2\">$1</a>");
 
-            return EscapeHtml(text);
+            return text;
         }
 
         private string EscapeHtml(string text)
