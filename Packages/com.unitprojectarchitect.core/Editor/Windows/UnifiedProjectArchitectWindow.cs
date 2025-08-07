@@ -62,6 +62,9 @@ namespace UnityProjectArchitect.Unity.Editor
         private Label _templateStatusLabel;
         private List<string> _customFolders;
         private TemplateConfigurationSO _currentTemplate;
+        private bool _compactMode;
+        private int _baseFontSize;
+        private string _textSizeSetting;
         
         public static void ShowWindow()
         {
@@ -75,6 +78,9 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             // Initialize Unity service bridge
             UnityServiceBridge.Initialize();
+            _compactMode = EditorPrefs.GetBool("UnityProjectArchitect.CompactMode", false);
+            _textSizeSetting = EditorPrefs.GetString("UnityProjectArchitect.TextSize", "Normal");
+            _baseFontSize = GetBaseFontSize(_textSizeSetting);
             CreateUI();
         }
         
@@ -82,11 +88,17 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             _rootElement = rootVisualElement;
             _rootElement.Clear();
+            _baseFontSize = GetBaseFontSize(_textSizeSetting);
             
+            // Add top header bar for modern look and quick status
+            VisualElement topHeader = CreateTopHeaderBar();
+            _rootElement.Add(topHeader);
+
             // Main container with horizontal layout
             VisualElement mainContainer = new VisualElement();
             mainContainer.style.flexDirection = FlexDirection.Row;
             mainContainer.style.flexGrow = 1;
+            mainContainer.style.marginTop = 6;
             
             // Create left side tab buttons
             CreateTabNavigation();
@@ -104,20 +116,58 @@ namespace UnityProjectArchitect.Unity.Editor
             CreateAllTabs();
             SwitchToTab(0);
         }
+
+        private enum TextSizeOption
+        {
+            Small,
+            Normal,
+            Large,
+            ExtraLarge
+        }
+
+        private int GetBaseFontSize(string setting)
+        {
+            switch (setting)
+            {
+                case "Small":
+                    return 12;
+                case "Large":
+                    return 16;
+                case "ExtraLarge":
+                    return 18;
+                case "Normal":
+                default:
+                    return 14;
+            }
+        }
+
+        private TextSizeOption TextSizeFromString(string setting)
+        {
+            return setting switch
+            {
+                "Small" => TextSizeOption.Small,
+                "Large" => TextSizeOption.Large,
+                "ExtraLarge" => TextSizeOption.ExtraLarge,
+                _ => TextSizeOption.Normal
+            };
+        }
         
         private void CreateTabNavigation()
         {
             _tabButtonsContainer = new VisualElement();
-            _tabButtonsContainer.style.width = 200;
-            _tabButtonsContainer.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+            _tabButtonsContainer.style.width = 220;
+            _tabButtonsContainer.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 1f);
             _tabButtonsContainer.style.paddingTop = 10;
             _tabButtonsContainer.style.paddingBottom = 10;
             _tabButtonsContainer.style.paddingLeft = 5;
             _tabButtonsContainer.style.paddingRight = 5;
+            _tabButtonsContainer.style.borderRightWidth = 1;
+            _tabButtonsContainer.style.borderRightColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+            _tabButtonsContainer.style.fontSize = _baseFontSize;
             
             // Header
             Label headerLabel = new Label("Unity Project Architect Studio");
-            headerLabel.style.fontSize = 14;
+            headerLabel.style.fontSize = _baseFontSize + 0;
             headerLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             headerLabel.style.color = Color.white;
             headerLabel.style.marginBottom = 20;
@@ -135,11 +185,16 @@ namespace UnityProjectArchitect.Unity.Editor
         private Button CreateTabButton(int tabIndex, string icon, string tabName)
         {
             Button tabButton = new Button(() => SwitchToTab(tabIndex));
-            tabButton.style.height = 60;
+            tabButton.style.height = _compactMode ? 44 : 56;
             tabButton.style.marginBottom = 5;
-            tabButton.style.fontSize = 12;
+            tabButton.style.fontSize = _baseFontSize - 2;
             tabButton.style.unityTextAlign = TextAnchor.MiddleLeft;
             tabButton.style.paddingLeft = 10;
+            tabButton.style.borderLeftWidth = 3;
+            tabButton.style.borderLeftColor = new Color(0, 0, 0, 0);
+            tabButton.style.borderTopLeftRadius = 6;
+            tabButton.style.borderBottomLeftRadius = 6;
+            tabButton.style.backgroundColor = new Color(0.20f, 0.20f, 0.20f, 1f);
             
             // Create button content with icon and text
             VisualElement buttonContent = new VisualElement();
@@ -151,12 +206,26 @@ namespace UnityProjectArchitect.Unity.Editor
             iconLabel.style.marginRight = 8;
             
             Label textLabel = new Label(tabName);
-            textLabel.style.fontSize = 11;
+            textLabel.style.fontSize = _baseFontSize;
             textLabel.style.whiteSpace = WhiteSpace.Normal;
             
             buttonContent.Add(iconLabel);
             buttonContent.Add(textLabel);
             tabButton.Add(buttonContent);
+            
+            // Subtle hover interactions on non-active tabs
+            tabButton.RegisterCallback<MouseEnterEvent>(_ => {
+                if (tabIndex != _activeTab)
+                {
+                    tabButton.style.backgroundColor = new Color(0.24f, 0.24f, 0.24f, 1f);
+                }
+            });
+            tabButton.RegisterCallback<MouseLeaveEvent>(_ => {
+                if (tabIndex != _activeTab)
+                {
+                    tabButton.style.backgroundColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+                }
+            });
             
             return tabButton;
         }
@@ -165,10 +234,24 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             _contentContainer = new VisualElement();
             _contentContainer.style.flexGrow = 1;
-            _contentContainer.style.paddingTop = 20;
-            _contentContainer.style.paddingBottom = 20;
-            _contentContainer.style.paddingLeft = 20;
-            _contentContainer.style.paddingRight = 20;
+            _contentContainer.style.paddingTop = _compactMode ? 10 : 16;
+            _contentContainer.style.paddingBottom = _compactMode ? 10 : 16;
+            _contentContainer.style.paddingLeft = _compactMode ? 10 : 16;
+            _contentContainer.style.paddingRight = _compactMode ? 10 : 16;
+            _contentContainer.style.fontSize = _baseFontSize;
+            _contentContainer.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+            _contentContainer.style.borderTopLeftRadius = 8;
+            _contentContainer.style.borderTopRightRadius = 8;
+            _contentContainer.style.borderBottomLeftRadius = 8;
+            _contentContainer.style.borderBottomRightRadius = 8;
+            _contentContainer.style.borderLeftWidth = 1;
+            _contentContainer.style.borderRightWidth = 1;
+            _contentContainer.style.borderTopWidth = 1;
+            _contentContainer.style.borderBottomWidth = 1;
+            _contentContainer.style.borderLeftColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            _contentContainer.style.borderRightColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            _contentContainer.style.borderTopColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            _contentContainer.style.borderBottomColor = new Color(0.20f, 0.20f, 0.20f, 1f);
         }
         
         private void CreateAllTabs()
@@ -188,6 +271,7 @@ namespace UnityProjectArchitect.Unity.Editor
             // Header
             CreateTabHeader(scrollView, "🎮 Game Concept Studio", 
                 "Transform your game ideas into professional documentation and project structure");
+            AddHeaderDivider(scrollView);
             
             // Step 1: Game Description
             CreateGameDescriptionSection(scrollView);
@@ -215,6 +299,7 @@ namespace UnityProjectArchitect.Unity.Editor
             // Header
             CreateTabHeader(scrollView, "🔍 Project Analyzer", 
                 "Analyze your existing Unity project and generate comprehensive documentation");
+            AddHeaderDivider(scrollView);
             
             // Project Configuration Section
             CreateProjectConfigurationSection(scrollView);
@@ -242,6 +327,7 @@ namespace UnityProjectArchitect.Unity.Editor
             // Header
             CreateTabHeader(scrollView, "📁 Smart Template Creator", 
                 "Create intelligent project templates with automatic folder structure suggestions");
+            AddHeaderDivider(scrollView);
             
             // Initialize custom folders list
             _customFolders = new List<string>();
@@ -268,12 +354,12 @@ namespace UnityProjectArchitect.Unity.Editor
             headerContainer.style.marginBottom = 20;
             
             Label titleLabel = new Label(title);
-            titleLabel.style.fontSize = 20;
+            titleLabel.style.fontSize = _baseFontSize + 8;
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.marginBottom = 5;
             
             Label descLabel = new Label(description);
-            descLabel.style.fontSize = 12;
+            descLabel.style.fontSize = _baseFontSize + 0;
             descLabel.style.color = Color.gray;
             descLabel.style.whiteSpace = WhiteSpace.Normal;
             
@@ -281,11 +367,21 @@ namespace UnityProjectArchitect.Unity.Editor
             headerContainer.Add(descLabel);
             parent.Add(headerContainer);
         }
+
+        private void AddHeaderDivider(VisualElement parent)
+        {
+            VisualElement divider = new VisualElement();
+            divider.style.height = 1;
+            divider.style.marginTop = 8;
+            divider.style.marginBottom = 12;
+            divider.style.backgroundColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+            parent.Add(divider);
+        }
         
         private void CreateGameDescriptionSection(ScrollView parent)
         {
             Foldout descriptionFoldout = new Foldout { text = "Step 1: Describe Your Game Concept", value = true };
-            descriptionFoldout.style.marginBottom = 15;
+            StyleFoldout(descriptionFoldout);
             
             Label instructionLabel = new Label("Describe your game idea in detail (use the template for best results):");
             instructionLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -293,7 +389,7 @@ namespace UnityProjectArchitect.Unity.Editor
             
             // Add helpful hint label
             Label hintLabel = new Label("💡 Tip: Click 'Use Template' for the optimal format, or 'Use Example' to see a complete sample");
-            hintLabel.style.fontSize = 10;
+            hintLabel.style.fontSize = _baseFontSize - 3;
             hintLabel.style.color = Color.cyan;
             hintLabel.style.marginBottom = 8;
             hintLabel.style.whiteSpace = WhiteSpace.Normal;
@@ -360,7 +456,7 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateAIConfigurationSection(ScrollView parent)
         {
             Foldout configFoldout = new Foldout { text = "AI Configuration (Optional)", value = false };
-            configFoldout.style.marginBottom = 15;
+            StyleFoldout(configFoldout);
             
             Label keyLabel = new Label("Claude API Key (uses intelligent fallbacks if not provided):");
             keyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -388,7 +484,7 @@ namespace UnityProjectArchitect.Unity.Editor
                 value = EditorPrefs.GetString("UnityProjectArchitect.ClaudeAPIKey", "")
             };
             _apiKeyField.style.flexGrow = 1;
-            _apiKeyField.style.fontSize = 11;
+            _apiKeyField.style.fontSize = _baseFontSize - 1;
             
             _apiKeyField.RegisterValueChangedCallback(evt => {
                 EditorPrefs.SetString("UnityProjectArchitect.ClaudeAPIKey", evt.newValue);
@@ -398,7 +494,7 @@ namespace UnityProjectArchitect.Unity.Editor
             
             // Add status indicator for API key
             Label statusLabel = new Label("🔑 API Key Status: " + (string.IsNullOrEmpty(_apiKeyField.value) ? "Not configured (will use fallback)" : "Configured"));
-            statusLabel.style.fontSize = 10;
+            statusLabel.style.fontSize = _baseFontSize - 3;
             statusLabel.style.color = string.IsNullOrEmpty(_apiKeyField.value) ? new Color(1f, 0.5f, 0f, 1f) : Color.green;
             statusLabel.style.marginTop = 5;
             
@@ -412,20 +508,20 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateDocumentationGenerationSection(ScrollView parent)
         {
             Foldout generationFoldout = new Foldout { text = "Step 2: Generate Documentation", value = true };
-            generationFoldout.style.marginBottom = 15;
+            StyleFoldout(generationFoldout);
             
             _generateDocsButton = new Button(GenerateDocumentationFromConcept) 
             { 
                 text = "✨ Generate Professional Documentation" 
             };
             _generateDocsButton.style.height = 40;
-            _generateDocsButton.style.fontSize = 14;
+            _generateDocsButton.style.fontSize = _baseFontSize + 0;
             _generateDocsButton.style.unityFontStyleAndWeight = FontStyle.Bold;
             _generateDocsButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             
             _statusLabel = new Label("Ready to generate documentation from your game concept");
             _statusLabel.style.marginTop = 10;
-            _statusLabel.style.fontSize = 12;
+            _statusLabel.style.fontSize = _baseFontSize - 1;
             _statusLabel.style.color = Color.green;
             
             generationFoldout.Add(_generateDocsButton);
@@ -437,11 +533,11 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateExportAndStructureSection(ScrollView parent)
         {
             Foldout exportFoldout = new Foldout { text = "Step 3: Export Documentation & Create Project Structure", value = true };
-            exportFoldout.style.marginBottom = 15;
+            StyleFoldout(exportFoldout);
             
             Label instructionLabel = new Label("Choose what to do with your generated documentation:");
             instructionLabel.style.marginBottom = 10;
-            instructionLabel.style.fontSize = 12;
+            instructionLabel.style.fontSize = _baseFontSize - 1;
             
             VisualElement buttonContainer = new VisualElement();
             buttonContainer.style.flexDirection = FlexDirection.Row;
@@ -476,7 +572,7 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateDocumentationResultsSection(ScrollView parent)
         {
             Foldout resultsFoldout = new Foldout { text = "Generated Documentation", value = true };
-            resultsFoldout.style.marginBottom = 15;
+            StyleFoldout(resultsFoldout);
             
             _documentationResults = new VisualElement();
             _documentationResults.style.marginTop = 10;
@@ -522,14 +618,118 @@ namespace UnityProjectArchitect.Unity.Editor
                     int tabIndex = i - 1; // Adjust for header
                     if (tabIndex == _activeTab)
                     {
-                        tabButton.style.backgroundColor = new Color(0.3f, 0.5f, 0.7f, 1f);
+                        tabButton.style.backgroundColor = new Color(0.28f, 0.42f, 0.58f, 1f);
+                        tabButton.style.borderLeftColor = new Color(0.42f, 0.68f, 0.98f, 1f);
                     }
                     else
                     {
-                        tabButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+                        tabButton.style.backgroundColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+                        tabButton.style.borderLeftColor = new Color(0, 0, 0, 0);
                     }
                 }
             }
+        }
+
+        private void StyleFoldout(Foldout foldout)
+        {
+            foldout.style.marginBottom = _compactMode ? 10 : 16;
+            foldout.style.paddingTop = _compactMode ? 4 : 6;
+            foldout.style.paddingBottom = _compactMode ? 4 : 6;
+            foldout.style.paddingLeft = _compactMode ? 6 : 8;
+            foldout.style.paddingRight = _compactMode ? 6 : 8;
+            foldout.style.fontSize = _compactMode ? _baseFontSize - 1 : _baseFontSize;
+            foldout.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 0.7f);
+            foldout.style.borderTopLeftRadius = 6;
+            foldout.style.borderTopRightRadius = 6;
+            foldout.style.borderBottomLeftRadius = 6;
+            foldout.style.borderBottomRightRadius = 6;
+            foldout.style.borderLeftWidth = 1;
+            foldout.style.borderRightWidth = 1;
+            foldout.style.borderTopWidth = 1;
+            foldout.style.borderBottomWidth = 1;
+            foldout.style.borderLeftColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            foldout.style.borderRightColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            foldout.style.borderTopColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+            foldout.style.borderBottomColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+        }
+
+        private VisualElement CreateTopHeaderBar()
+        {
+            VisualElement topBar = new VisualElement();
+            topBar.style.height = 54;
+            topBar.style.flexDirection = FlexDirection.Row;
+            topBar.style.justifyContent = Justify.SpaceBetween;
+            topBar.style.alignItems = Align.Center;
+            topBar.style.paddingLeft = 14;
+            topBar.style.paddingRight = 14;
+            topBar.style.backgroundColor = new Color(0.10f, 0.10f, 0.10f, 1f);
+            topBar.style.borderBottomWidth = 1;
+            topBar.style.borderBottomColor = new Color(0.22f, 0.22f, 0.22f, 1f);
+
+            // Left: Title + subtitle
+            VisualElement left = new VisualElement();
+            left.style.flexDirection = FlexDirection.Column;
+
+            Label title = new Label("🧠 Unity Project Architect Studio");
+            title.style.fontSize = _baseFontSize + 1;
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.style.color = Color.white;
+
+            Label subtitle = new Label("Design, analyze and document your Unity projects");
+            subtitle.style.fontSize = _baseFontSize - 2;
+            subtitle.style.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+
+            left.Add(title);
+            left.Add(subtitle);
+
+            // Right: AI status pill + compact toggle + text size selector
+            VisualElement right = new VisualElement();
+            right.style.flexDirection = FlexDirection.Row;
+            right.style.alignItems = Align.Center;
+            right.style.marginLeft = 8;
+
+            bool aiConfigured = !string.IsNullOrEmpty(EditorPrefs.GetString("UnityProjectArchitect.ClaudeAPIKey", ""));
+            Label aiStatus = new Label(aiConfigured ? "AI: Configured" : "AI: Offline Fallback");
+            aiStatus.style.fontSize = _baseFontSize - 2;
+            aiStatus.style.color = aiConfigured ? new Color(0.15f, 0.40f, 0.15f, 1f) : new Color(0.60f, 0.35f, 0.05f, 1f);
+            aiStatus.style.backgroundColor = aiConfigured ? new Color(0.50f, 0.80f, 0.50f, 0.2f) : new Color(0.95f, 0.70f, 0.35f, 0.15f);
+            aiStatus.style.borderTopLeftRadius = 10;
+            aiStatus.style.borderTopRightRadius = 10;
+            aiStatus.style.borderBottomLeftRadius = 10;
+            aiStatus.style.borderBottomRightRadius = 10;
+            aiStatus.style.paddingLeft = 8;
+            aiStatus.style.paddingRight = 8;
+            aiStatus.style.paddingTop = 4;
+            aiStatus.style.paddingBottom = 4;
+
+            Toggle compactToggle = new Toggle("Compact");
+            compactToggle.value = _compactMode;
+            compactToggle.style.fontSize = _baseFontSize - 2;
+            compactToggle.style.marginLeft = 8;
+            compactToggle.RegisterValueChangedCallback(evt => {
+                _compactMode = evt.newValue;
+                EditorPrefs.SetBool("UnityProjectArchitect.CompactMode", _compactMode);
+                CreateUI();
+            });
+
+            // Text size dropdown
+            EnumField textSizeDropdown = new EnumField("Text Size", TextSizeFromString(_textSizeSetting));
+            textSizeDropdown.style.marginLeft = 10;
+            textSizeDropdown.style.minWidth = 150;
+            textSizeDropdown.RegisterValueChangedCallback(evt => {
+                _textSizeSetting = evt.newValue.ToString();
+                EditorPrefs.SetString("UnityProjectArchitect.TextSize", _textSizeSetting);
+                _baseFontSize = GetBaseFontSize(_textSizeSetting);
+                CreateUI();
+            });
+
+            right.Add(aiStatus);
+            right.Add(compactToggle);
+            right.Add(textSizeDropdown);
+
+            topBar.Add(left);
+            topBar.Add(right);
+            return topBar;
         }
         
         private string GetGameDescriptionTemplate()
@@ -1131,14 +1331,14 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             contentField.style.flexShrink = 1;
             contentField.style.whiteSpace = WhiteSpace.Normal;
             contentField.style.unityTextAlign = TextAnchor.UpperLeft;
-            contentField.style.fontSize = 11;
+            contentField.style.fontSize = _baseFontSize - 1;
             contentField.style.minHeight = 230; // Ensure minimum height for scrolling
             
             contentScrollView.Add(contentField);
             
             int wordCount = string.IsNullOrEmpty(content) ? 0 : content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
             Label statsLabel = new Label($"Generated: {content.Length:N0} characters, {wordCount:N0} words");
-            statsLabel.style.fontSize = 10;
+            statsLabel.style.fontSize = _baseFontSize - 3;
             statsLabel.style.color = Color.gray;
             statsLabel.style.marginTop = 5;
             
@@ -1155,7 +1355,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateProjectConfigurationSection(ScrollView parent)
         {
             Foldout projectFoldout = new Foldout { text = "📁 Project Configuration", value = true };
-            projectFoldout.style.marginBottom = 15;
+            StyleFoldout(projectFoldout);
             
             _projectField = new ObjectField("Project Data Asset")
             {
@@ -1195,7 +1395,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateProjectDocumentationSection(ScrollView parent)
         {
             Foldout documentationFoldout = new Foldout { text = "📖 Documentation Sections", value = true };
-            documentationFoldout.style.marginBottom = 15;
+            StyleFoldout(documentationFoldout);
             
             _documentationContainer = new VisualElement();
             documentationFoldout.Add(_documentationContainer);
@@ -1206,7 +1406,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateProjectExportSection(ScrollView parent)
         {
             Foldout exportFoldout = new Foldout { text = "📤 Export Options", value = false };
-            exportFoldout.style.marginBottom = 15;
+            StyleFoldout(exportFoldout);
             
             Label exportLabel = new Label("Export Formats");
             exportLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -1241,11 +1441,11 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateAnalysisActionsSection(ScrollView parent)
         {
             Foldout actionsContainer = new Foldout { text = "🔧 Analysis Actions", value = true };
-            actionsContainer.style.marginBottom = 15;
+            StyleFoldout(actionsContainer);
             
             _projectStatusLabel = new Label("Ready to analyze project and generate documentation");
             _projectStatusLabel.style.marginBottom = 10;
-            _projectStatusLabel.style.fontSize = 12;
+            _projectStatusLabel.style.fontSize = _baseFontSize - 1;
             _projectStatusLabel.style.color = Color.green;
             
             VisualElement buttonContainer = new VisualElement();
@@ -1389,7 +1589,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             // Word count
             int wordCount = string.IsNullOrEmpty(section.Content) ? 0 : section.Content.Split(' ').Length;
             Label wordCountLabel = new Label($"{wordCount} words");
-            wordCountLabel.style.fontSize = 10;
+            wordCountLabel.style.fontSize = _baseFontSize - 3;
             wordCountLabel.style.color = Color.gray;
             wordCountLabel.style.marginRight = 10;
             wordCountLabel.style.minWidth = 60;
@@ -1622,7 +1822,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateTemplateInfoSection(ScrollView parent)
         {
             Foldout infoFoldout = new Foldout { text = "Template Information", value = true };
-            infoFoldout.style.marginBottom = 15;
+            StyleFoldout(infoFoldout);
             
             Label nameLabel = new Label("Template Name:");
             nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -1664,7 +1864,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             _templateDescriptionField.style.flexShrink = 1;
             _templateDescriptionField.style.whiteSpace = WhiteSpace.Normal;
             _templateDescriptionField.style.unityTextAlign = TextAnchor.UpperLeft;
-            _templateDescriptionField.style.fontSize = 11;
+            _templateDescriptionField.style.fontSize = _baseFontSize - 1;
             _templateDescriptionField.style.minHeight = 60; // Ensure minimum height for scrolling
             
             descFieldScrollView.Add(_templateDescriptionField);
@@ -1680,7 +1880,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateProjectTypeSection(ScrollView parent)
         {
             Foldout typeFoldout = new Foldout { text = "Project Type & Smart Suggestions", value = true };
-            typeFoldout.style.marginBottom = 15;
+            StyleFoldout(typeFoldout);
             
             Label typeLabel = new Label("Project Type:");
             typeLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -1700,10 +1900,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateSmartSuggestionsSection(ScrollView parent)
         {
             Foldout suggestionsFoldout = new Foldout { text = "Smart Folder Suggestions", value = true };
-            suggestionsFoldout.style.marginBottom = 15;
+            StyleFoldout(suggestionsFoldout);
             
             Label instructionLabel = new Label("Based on your project type, here are intelligent folder suggestions:");
-            instructionLabel.style.fontSize = 12;
+            instructionLabel.style.fontSize = _baseFontSize - 1;
             instructionLabel.style.marginBottom = 10;
             instructionLabel.style.whiteSpace = WhiteSpace.Normal;
             
@@ -1722,10 +1922,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateCustomFolderSection(ScrollView parent)
         {
             Foldout customFoldout = new Foldout { text = "Custom Folder Structure", value = true };
-            customFoldout.style.marginBottom = 15;
+            StyleFoldout(customFoldout);
             
             Label instructionLabel = new Label("Add custom folders specific to your project needs:");
-            instructionLabel.style.fontSize = 12;
+            instructionLabel.style.fontSize = _baseFontSize - 1;
             instructionLabel.style.marginBottom = 10;
             
             VisualElement addFolderContainer = new VisualElement();
@@ -1766,10 +1966,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateTemplateActionsSection(ScrollView parent)
         {
             Foldout actionsFoldout = new Foldout { text = "Template Actions", value = true };
-            actionsFoldout.style.marginBottom = 15;
+            StyleFoldout(actionsFoldout);
             
             _templateStatusLabel = new Label("Ready to create template and folders");
-            _templateStatusLabel.style.fontSize = 12;
+            _templateStatusLabel.style.fontSize = _baseFontSize - 1;
             _templateStatusLabel.style.color = Color.green;
             _templateStatusLabel.style.marginBottom = 10;
             
@@ -1804,7 +2004,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 text = "🚀 Create Folders Now"
             };
             createFoldersButton.style.height = 40;
-            createFoldersButton.style.fontSize = 14;
+            createFoldersButton.style.fontSize = _baseFontSize + 0;
             createFoldersButton.style.unityFontStyleAndWeight = FontStyle.Bold;
             createFoldersButton.style.backgroundColor = new Color(0.1f, 0.4f, 0.8f, 1f);
             createFoldersButton.style.marginTop = 5;
@@ -1831,7 +2031,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             if (suggestedFolders.Count == 0)
             {
                 Label noSuggestionsLabel = new Label("No specific suggestions available for this project type.");
-                noSuggestionsLabel.style.fontSize = 10;
+                noSuggestionsLabel.style.fontSize = _baseFontSize - 3;
                 noSuggestionsLabel.style.color = Color.gray;
                 noSuggestionsLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 _suggestedFoldersContainer.Add(noSuggestionsLabel);
@@ -1845,7 +2045,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 value = true 
             };
             suggestionsFoldout.style.marginBottom = 10;
-            suggestionsFoldout.style.fontSize = 12;
+            suggestionsFoldout.style.fontSize = _baseFontSize - 1;
             suggestionsFoldout.style.unityFontStyleAndWeight = FontStyle.Bold;
             
             // Add all suggestions to the expandable section
@@ -1858,7 +2058,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             
             // Add summary label
             Label summaryLabel = new Label($"💡 {suggestedFolders.Count} intelligent folder suggestions for {selectedType} projects");
-            summaryLabel.style.fontSize = 10;
+            summaryLabel.style.fontSize = _baseFontSize - 3;
             summaryLabel.style.color = Color.cyan;
             summaryLabel.style.marginTop = 10;
             summaryLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
@@ -1884,7 +2084,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             card.style.borderLeftColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             
             Label folderLabel = new Label($"📁 {folderName}");
-            folderLabel.style.fontSize = 11;
+            folderLabel.style.fontSize = _baseFontSize - 1;
             folderLabel.style.flexGrow = 1;
             folderLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
             
@@ -1893,7 +2093,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 text = "➕ Add"
             };
             addButton.style.height = 24;
-            addButton.style.fontSize = 10;
+            addButton.style.fontSize = _baseFontSize - 3;
             addButton.style.width = 50;
             addButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             addButton.style.borderTopLeftRadius = 3;
@@ -1942,7 +2142,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             if (_customFolders.Count == 0)
             {
                 Label emptyLabel = new Label("No custom folders added yet. Use suggestions above or add your own.");
-                emptyLabel.style.fontSize = 10;
+                emptyLabel.style.fontSize = _baseFontSize - 3;
                 emptyLabel.style.color = Color.gray;
                 emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 _folderStructureContainer.Add(emptyLabel);
@@ -1955,7 +2155,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             }
             
             Label countLabel = new Label($"Total folders: {_customFolders.Count}");
-            countLabel.style.fontSize = 10;
+            countLabel.style.fontSize = _baseFontSize - 3;
             countLabel.style.color = Color.gray;
             countLabel.style.marginTop = 10;
             _folderStructureContainer.Add(countLabel);
@@ -1978,7 +2178,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             card.style.borderBottomRightRadius = 3;
             
             Label folderLabel = new Label($"📁 {folderName}");
-            folderLabel.style.fontSize = 11;
+            folderLabel.style.fontSize = _baseFontSize - 1;
             folderLabel.style.flexGrow = 1;
             
             Button removeButton = new Button(() => RemoveCustomFolder(folderName))
@@ -1986,7 +2186,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 text = "✕"
             };
             removeButton.style.height = 18;
-            removeButton.style.fontSize = 10;
+            removeButton.style.fontSize = _baseFontSize - 3;
             removeButton.style.width = 25;
             removeButton.style.backgroundColor = new Color(0.7f, 0.2f, 0.2f, 0.8f);
             
