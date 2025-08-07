@@ -78,6 +78,9 @@ namespace UnityProjectArchitect.Services
                     return errorResult;
                 }
 
+                // Add OutputPath to FormatSpecificOptions
+                exportRequest.Options.FormatSpecificOptions["OutputPath"] = exportRequest.OutputPath;
+
                 // Perform the export
                 ExportOperationResult result = await formatter.FormatAsync(exportContent, exportRequest.Options);
                 result.Format = exportRequest.Format;
@@ -151,6 +154,9 @@ namespace UnityProjectArchitect.Services
 
                 OnExportProgress?.Invoke("Exporting section...", 0.5f);
 
+                // Add OutputPath to FormatSpecificOptions
+                exportRequest.Options.FormatSpecificOptions["OutputPath"] = exportRequest.OutputPath;
+
                 ExportOperationResult result = await formatter.FormatAsync(exportContent, exportRequest.Options);
                 result.Format = exportRequest.Format;
                 result.OutputPath = exportRequest.OutputPath;
@@ -218,6 +224,9 @@ namespace UnityProjectArchitect.Services
                 }
 
                 OnExportProgress?.Invoke("Exporting sections...", 0.5f);
+
+                // Add OutputPath to FormatSpecificOptions
+                exportRequest.Options.FormatSpecificOptions["OutputPath"] = exportRequest.OutputPath;
 
                 ExportOperationResult result = await formatter.FormatAsync(exportContent, exportRequest.Options);
                 result.Format = exportRequest.Format;
@@ -423,7 +432,7 @@ namespace UnityProjectArchitect.Services
 
         private IExportFormatter GetFormatter(ExportFormat format)
         {
-            return _formatters.ContainsKey(format) ? _formatters[format] : null;
+            return _formatters.TryGetValue(format, out IExportFormatter formatter) ? formatter : null;
         }
 
         private ExportContent BuildExportContent(ProjectData projectData, ExportRequest exportRequest)
@@ -493,18 +502,7 @@ namespace UnityProjectArchitect.Services
                     result.GeneratedFiles.Add(outputPath);
                 }
 
-                // Handle HTML content for PDF (would need actual PDF generation library)
-                if (result.Format == ExportFormat.PDF && result.Metadata.ContainsKey("html_content"))
-                {
-                    string htmlContent = result.Metadata["html_content"].ToString();
-                    string htmlPath = Path.ChangeExtension(await GetOutputPathAsync(exportRequest), "html");
-                    
-                    await File.WriteAllTextAsync(htmlPath, htmlContent);
-                    
-                    // Note: Actual PDF generation would require a library like wkhtmltopdf or similar
-                    // For now, we're just creating the HTML file
-                    Debug.LogWarning("PDF generation requires additional libraries. HTML file created instead.");
-                }
+                // PDF exports are handled directly by PDFExporter (HTML files with conversion instructions)
             }
             catch (Exception ex)
             {

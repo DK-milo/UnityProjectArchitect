@@ -57,7 +57,6 @@ namespace UnityProjectArchitect.Unity.Editor
         private EnumField _projectTypeField;
         private VisualElement _folderStructureContainer;
         private VisualElement _suggestedFoldersContainer;
-        private Button _generateSuggestionsButton;
         private Button _saveTemplateButton;
         private Button _previewTemplateButton;
         private Label _templateStatusLabel;
@@ -1488,6 +1487,18 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             {
                 ExportOperationResult result = await exportService.ExportProjectDocumentationAsync(_currentProjectAsset.ProjectData, request);
                 
+                if (result.GeneratedFiles != null && result.GeneratedFiles.Count > 0)
+                {
+                    Debug.LogError($"  - Generated files: {string.Join(", ", result.GeneratedFiles)}");
+                }
+                Debug.LogError($"  - Metadata keys: {(result.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none")}");
+                if (result.Metadata != null && result.Metadata.ContainsKey("fallback_mode"))
+                {
+                    Debug.LogError($"  - FALLBACK MODE: {result.Metadata["fallback_mode"]}");
+                    string fallbackReason = result.Metadata.ContainsKey("fallback_reason") ? result.Metadata["fallback_reason"].ToString() : "unknown";
+                    Debug.LogError($"  - FALLBACK REASON: {fallbackReason}");
+                }
+                
                 if (result.Success)
                 {
                     EditorUtility.DisplayDialog("Export Complete", 
@@ -1646,17 +1657,8 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 OnProjectTypeChanged((ProjectType)evt.newValue);
             });
             
-            _generateSuggestionsButton = new Button(GenerateSmartSuggestions)
-            {
-                text = "🧠 Generate Smart Folder Suggestions"
-            };
-            _generateSuggestionsButton.style.height = 35;
-            _generateSuggestionsButton.style.marginTop = 10;
-            _generateSuggestionsButton.style.backgroundColor = new Color(0.2f, 0.5f, 0.7f, 1f);
-            
             typeFoldout.Add(typeLabel);
             typeFoldout.Add(_projectTypeField);
-            typeFoldout.Add(_generateSuggestionsButton);
             
             parent.Add(typeFoldout);
         }
@@ -1732,14 +1734,15 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             Foldout actionsFoldout = new Foldout { text = "Template Actions", value = true };
             actionsFoldout.style.marginBottom = 15;
             
-            _templateStatusLabel = new Label("Ready to create template");
+            _templateStatusLabel = new Label("Ready to create template and folders");
             _templateStatusLabel.style.fontSize = 12;
             _templateStatusLabel.style.color = Color.green;
             _templateStatusLabel.style.marginBottom = 10;
             
-            VisualElement buttonContainer = new VisualElement();
-            buttonContainer.style.flexDirection = FlexDirection.Row;
-            buttonContainer.style.marginBottom = 10;
+            // First row: Preview and Save Template
+            VisualElement firstButtonContainer = new VisualElement();
+            firstButtonContainer.style.flexDirection = FlexDirection.Row;
+            firstButtonContainer.style.marginBottom = 10;
             
             _previewTemplateButton = new Button(PreviewTemplate)
             {
@@ -1758,11 +1761,23 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             _saveTemplateButton.style.marginLeft = 5;
             _saveTemplateButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             
-            buttonContainer.Add(_previewTemplateButton);
-            buttonContainer.Add(_saveTemplateButton);
+            firstButtonContainer.Add(_previewTemplateButton);
+            firstButtonContainer.Add(_saveTemplateButton);
+            
+            // Second row: Create Folders Now (highlighted button)
+            Button createFoldersButton = new Button(CreateFoldersNow)
+            {
+                text = "🚀 Create Folders Now"
+            };
+            createFoldersButton.style.height = 40;
+            createFoldersButton.style.fontSize = 14;
+            createFoldersButton.style.unityFontStyleAndWeight = FontStyle.Bold;
+            createFoldersButton.style.backgroundColor = new Color(0.1f, 0.4f, 0.8f, 1f);
+            createFoldersButton.style.marginTop = 5;
             
             actionsFoldout.Add(_templateStatusLabel);
-            actionsFoldout.Add(buttonContainer);
+            actionsFoldout.Add(firstButtonContainer);
+            actionsFoldout.Add(createFoldersButton);
             
             parent.Add(actionsFoldout);
         }
@@ -1779,54 +1794,90 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             ProjectType selectedType = (ProjectType)_projectTypeField.value;
             List<string> suggestedFolders = GetSmartFolderStructure(selectedType);
             
-            // Create suggestion cards
-            foreach (string folder in suggestedFolders.Take(12)) // Show first 12 suggestions
+            if (suggestedFolders.Count == 0)
             {
-                CreateSuggestionCard(folder);
+                Label noSuggestionsLabel = new Label("No specific suggestions available for this project type.");
+                noSuggestionsLabel.style.fontSize = 10;
+                noSuggestionsLabel.style.color = Color.gray;
+                noSuggestionsLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+                _suggestedFoldersContainer.Add(noSuggestionsLabel);
+                return;
             }
             
-            if (suggestedFolders.Count > 12)
+            // Create expandable section for all suggestions
+            Foldout suggestionsFoldout = new Foldout 
+            { 
+                text = $"📁 Smart Folder Suggestions ({suggestedFolders.Count} folders)", 
+                value = true 
+            };
+            suggestionsFoldout.style.marginBottom = 10;
+            suggestionsFoldout.style.fontSize = 12;
+            suggestionsFoldout.style.unityFontStyleAndWeight = FontStyle.Bold;
+            
+            // Add all suggestions to the expandable section
+            for (int i = 0; i < suggestedFolders.Count; i++)
             {
-                Label moreLabel = new Label($"+ {suggestedFolders.Count - 12} more suggestions available");
-                moreLabel.style.fontSize = 10;
-                moreLabel.style.color = Color.gray;
-                moreLabel.style.marginTop = 10;
-                _suggestedFoldersContainer.Add(moreLabel);
+                CreateSuggestionCard(suggestedFolders[i], suggestionsFoldout);
             }
+            
+            _suggestedFoldersContainer.Add(suggestionsFoldout);
+            
+            // Add summary label
+            Label summaryLabel = new Label($"💡 {suggestedFolders.Count} intelligent folder suggestions for {selectedType} projects");
+            summaryLabel.style.fontSize = 10;
+            summaryLabel.style.color = Color.cyan;
+            summaryLabel.style.marginTop = 10;
+            summaryLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            _suggestedFoldersContainer.Add(summaryLabel);
         }
         
-        private void CreateSuggestionCard(string folderName)
+        private void CreateSuggestionCard(string folderName, VisualElement parentContainer = null)
         {
             VisualElement card = new VisualElement();
             card.style.flexDirection = FlexDirection.Row;
             card.style.alignItems = Align.Center;
             card.style.marginBottom = 5;
-            card.style.paddingTop = 5;
-            card.style.paddingBottom = 5;
-            card.style.paddingLeft = 8;
-            card.style.paddingRight = 8;
-            card.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.3f);
-            card.style.borderTopLeftRadius = 3;
-            card.style.borderTopRightRadius = 3;
-            card.style.borderBottomLeftRadius = 3;
-            card.style.borderBottomRightRadius = 3;
+            card.style.paddingTop = 8;
+            card.style.paddingBottom = 8;
+            card.style.paddingLeft = 10;
+            card.style.paddingRight = 10;
+            card.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.4f);
+            card.style.borderTopLeftRadius = 4;
+            card.style.borderTopRightRadius = 4;
+            card.style.borderBottomLeftRadius = 4;
+            card.style.borderBottomRightRadius = 4;
+            card.style.borderLeftWidth = 2;
+            card.style.borderLeftColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             
             Label folderLabel = new Label($"📁 {folderName}");
             folderLabel.style.fontSize = 11;
             folderLabel.style.flexGrow = 1;
+            folderLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
             
             Button addButton = new Button(() => AddSuggestedFolder(folderName))
             {
-                text = "Add"
+                text = "➕ Add"
             };
-            addButton.style.height = 20;
+            addButton.style.height = 24;
             addButton.style.fontSize = 10;
-            addButton.style.width = 40;
+            addButton.style.width = 50;
+            addButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 1f);
+            addButton.style.borderTopLeftRadius = 3;
+            addButton.style.borderTopRightRadius = 3;
+            addButton.style.borderBottomLeftRadius = 3;
+            addButton.style.borderBottomRightRadius = 3;
             
             card.Add(folderLabel);
             card.Add(addButton);
             
-            _suggestedFoldersContainer.Add(card);
+            if (parentContainer != null)
+            {
+                parentContainer.Add(card);
+            }
+            else
+            {
+                _suggestedFoldersContainer.Add(card);
+            }
         }
         
         private void AddSuggestedFolder(string folderName)
@@ -2030,6 +2081,157 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             }
             
             _saveTemplateButton.SetEnabled(true);
+        }
+        
+        private void CreateFoldersNow()
+        {
+            if (_customFolders.Count == 0)
+            {
+                EditorUtility.DisplayDialog("No Folders to Create", 
+                    "No folders have been added yet. Please add some custom folders or use the smart suggestions before creating folders.", 
+                    "OK");
+                return;
+            }
+            
+            // Create detailed preview with confirmation dialog
+            string folderPreview = CreateFolderPreview();
+            bool confirmed = EditorUtility.DisplayDialog("🚀 Create Folders - Preview & Confirmation", 
+                folderPreview, 
+                "✅ Create Folders Now", "❌ Cancel");
+                
+            if (!confirmed) return;
+            
+            _templateStatusLabel.text = "🚀 Creating folder structure...";
+            _templateStatusLabel.style.color = Color.yellow;
+            
+            try
+            {
+                List<string> createdFolders = new List<string>();
+                List<string> skippedFolders = new List<string>();
+                
+                foreach (string folderPath in _customFolders)
+                {
+                    if (CreateFolderIfNotExistsWithCheck(folderPath))
+                    {
+                        createdFolders.Add(folderPath);
+                    }
+                    else
+                    {
+                        skippedFolders.Add(folderPath);
+                    }
+                }
+                
+                // Refresh the Asset Database to show new folders
+                AssetDatabase.Refresh();
+                
+                _templateStatusLabel.text = "✅ Folders created successfully!";
+                _templateStatusLabel.style.color = Color.green;
+                
+                // Create detailed success message
+                System.Text.StringBuilder resultMessage = new System.Text.StringBuilder();
+                resultMessage.AppendLine($"🎉 Folder creation completed successfully!\n");
+                
+                if (createdFolders.Count > 0)
+                {
+                    resultMessage.AppendLine($"✅ Created {createdFolders.Count} new folders:");
+                    foreach (string folder in createdFolders)
+                    {
+                        resultMessage.AppendLine($"  📁 Assets/{folder}");
+                    }
+                    resultMessage.AppendLine();
+                }
+                
+                if (skippedFolders.Count > 0)
+                {
+                    resultMessage.AppendLine($"⏭️ Skipped {skippedFolders.Count} existing folders:");
+                    foreach (string folder in skippedFolders)
+                    {
+                        resultMessage.AppendLine($"  📁 Assets/{folder}");
+                    }
+                    resultMessage.AppendLine();
+                }
+                
+                resultMessage.AppendLine("📂 Check your Assets folder in the Project window to see the new folder structure.");
+                resultMessage.AppendLine("💡 You can now start organizing your project files into these folders!");
+                
+                EditorUtility.DisplayDialog("🎉 Folders Created Successfully!", resultMessage.ToString(), "Great!");
+                    
+                Debug.Log($"✅ Created {createdFolders.Count} folders from Smart Template Creator (skipped {skippedFolders.Count} existing)");
+            }
+            catch (System.Exception ex)
+            {
+                _templateStatusLabel.text = $"❌ Folder creation failed: {ex.Message}";
+                _templateStatusLabel.style.color = Color.red;
+                Debug.LogError($"Folder creation failed: {ex}");
+                
+                EditorUtility.DisplayDialog("❌ Creation Failed", 
+                    $"Folder creation failed: {ex.Message}\n\nCheck the Console for more details.", "OK");
+            }
+        }
+        
+        private string CreateFolderPreview()
+        {
+            System.Text.StringBuilder preview = new System.Text.StringBuilder();
+            preview.AppendLine($"🚀 You are about to create {_customFolders.Count} folders in your Unity project:\n");
+            
+            ProjectType selectedType = (ProjectType)_projectTypeField.value;
+            preview.AppendLine($"📋 Template: {_templateNameField.value}");
+            preview.AppendLine($"🎯 Project Type: {selectedType}");
+            preview.AppendLine($"📁 Total Folders: {_customFolders.Count}");
+            preview.AppendLine();
+            preview.AppendLine("📂 Folder Structure to Create:");
+            
+            List<string> sortedFolders = _customFolders.OrderBy(f => f).ToList();
+            foreach (string folder in sortedFolders)
+            {
+                string assetsPath = $"Assets/{folder}";
+                bool exists = AssetDatabase.IsValidFolder(assetsPath);
+                string status = exists ? " (already exists - will skip)" : " (new)";
+                string icon = exists ? "⏭️" : "📁";
+                preview.AppendLine($"  {icon} {folder}{status}");
+            }
+            
+            preview.AppendLine();
+            preview.AppendLine("ℹ️  Information:");
+            preview.AppendLine("  • All folders will be created in the Assets directory");
+            preview.AppendLine("  • Existing folders will be skipped without modification");
+            preview.AppendLine("  • Folder structure will be created with proper hierarchy");
+            preview.AppendLine("  • Asset Database will be refreshed automatically");
+            
+            return preview.ToString();
+        }
+        
+        private bool CreateFolderIfNotExistsWithCheck(string folderPath)
+        {
+            string assetsPath = "Assets/" + folderPath;
+            
+            if (AssetDatabase.IsValidFolder(assetsPath))
+            {
+                return false; // Folder already exists, skipped
+            }
+            
+            // Split path and create parent directories if needed
+            string[] pathParts = folderPath.Split('/');
+            string currentPath = "Assets";
+            
+            for (int i = 0; i < pathParts.Length; i++)
+            {
+                string nextPath = currentPath + "/" + pathParts[i];
+                
+                if (!AssetDatabase.IsValidFolder(nextPath))
+                {
+                    string guid = AssetDatabase.CreateFolder(currentPath, pathParts[i]);
+                    if (string.IsNullOrEmpty(guid))
+                    {
+                        Debug.LogError($"Failed to create folder: {nextPath}");
+                        return false;
+                    }
+                }
+                
+                currentPath = nextPath;
+            }
+            
+            return true; // Folder was created successfully
         }
         
         #endregion

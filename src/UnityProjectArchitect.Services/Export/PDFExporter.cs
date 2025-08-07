@@ -20,14 +20,13 @@ namespace UnityProjectArchitect.Services
 
         private readonly MarkdownExporter _markdownExporter;
         private readonly Dictionary<string, PDFTemplate> _templates;
-        private readonly PandocIntegration _pandocIntegration;
-        private bool _pandocInitialized;
+        private readonly UnityWebPDFGenerator _webPdfGenerator;
 
         public PDFExporter()
         {
             _markdownExporter = new MarkdownExporter();
             _templates = new Dictionary<string, PDFTemplate>();
-            _pandocIntegration = new PandocIntegration();
+            _webPdfGenerator = new UnityWebPDFGenerator();
             InitializeDefaultTemplates();
         }
 
@@ -38,13 +37,8 @@ namespace UnityProjectArchitect.Services
 
             try
             {
-                // Step 1: Initialize Pandoc if not already done
-                if (!_pandocInitialized)
-                {
-                    _pandocInitialized = await _pandocIntegration.InitializeAsync();
-                }
 
-                // Step 2: Generate Markdown content
+                // Step 1: Generate Markdown content
                 ExportOptions markdownOptions = CreateMarkdownOptions(options);
                 ExportOperationResult markdownResult = await _markdownExporter.FormatAsync(content, markdownOptions);
                 
@@ -55,50 +49,47 @@ namespace UnityProjectArchitect.Services
                     return result;
                 }
 
-                string markdownContent = markdownResult.Metadata["content"] as string;
+                string markdownContent = markdownResult.Metadata["content"] as string ?? "";
                 
-                // Step 3: Convert Markdown to HTML
+                // Step 2: Convert Markdown to HTML
                 string htmlContent = await ConvertMarkdownToHtmlAsync(markdownContent, options);
                 
-                // Step 4: Apply PDF-specific formatting and styling
+                // Step 3: Apply PDF-specific formatting and styling
                 string styledHtml = await ApplyPDFStylingAsync(htmlContent, content, options);
                 
-                // Step 5: Generate PDF metadata
+                // Step 4: Generate PDF metadata
                 PDFMetadata pdfMetadata = GeneratePDFMetadata(content, options);
                 
-                // Step 6: Generate PDF using Pandoc (if available) or fallback to HTML
-                if (_pandocIntegration.IsAvailable)
+                // Step 5: Generate print-ready HTML using Unity web rendering
+                string baseOutputPath = GetOption<string>(options, "OutputPath", null) ?? Path.GetTempPath();
+                string filename = $"{content.Title ?? "Documentation"}_{DateTime.Now:yyyyMMdd_HHmmss}.html";
+                string outputPath = Path.Combine(baseOutputPath, filename);
+                
+                UnityWebPDFGenerator.PDFGenerationOptions pdfOptions = new UnityWebPDFGenerator.PDFGenerationOptions
                 {
-                    string outputPath = Path.Combine(Path.GetTempPath(), $"{content.Title ?? "Documentation"}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-                    PandocOptions pandocOptions = CreatePandocOptions(options, pdfMetadata);
-                    
-                    PandocResult pandocResult = await _pandocIntegration.ConvertHtmlToPdfAsync(styledHtml, outputPath, pandocOptions);
-                    
-                    if (pandocResult.Success)
-                    {
-                        result.Success = true;
-                        result.GeneratedFiles.Add(outputPath);
-                        result.TotalSizeBytes = pandocResult.FileSizeBytes;
-                        result.ExportTime = DateTime.Now - startTime;
-                        result.Metadata["pdf_path"] = outputPath;
-                        result.Metadata["pandoc_processing_time"] = pandocResult.ProcessingTime;
-                        
-                        Debug.Log($"PDF generated successfully: {pandocResult.FormattedFileSize} in {pandocResult.ProcessingTime.TotalSeconds:F1}s at {outputPath}");
-                    }
-                    else
-                    {
-                        // Pandoc failed, fall back to HTML export
-                        Debug.LogWarning($"Pandoc PDF generation failed: {pandocResult.ErrorMessage}. Falling back to HTML export.");
-                        result = await GenerateFallbackHtmlResult(content, styledHtml, markdownContent, startTime);
-                    }
+                    Title = pdfMetadata.Title,
+                    Author = pdfMetadata.Author,
+                    UseSystemBrowser = GetOption<bool>(options, "UseSystemBrowser", true),
+                    OutputFormat = "html"
+                };
+
+                UnityWebPDFGenerator.PDFGenerationResult pdfResult = await _webPdfGenerator.GeneratePDFFromHtmlAsync(styledHtml, outputPath, pdfOptions);
+                
+                if (pdfResult.Success)
+                {
+                    result.Success = true;
+                    result.GeneratedFiles.Add(outputPath);
+                    result.TotalSizeBytes = pdfResult.FileSizeBytes;
+                    result.ExportTime = DateTime.Now - startTime;
+                    result.Metadata["pdf_path"] = outputPath;
+                    result.Metadata["processing_time"] = pdfResult.ProcessingTime;
+                    result.Metadata["html_instructions"] = pdfResult.Instructions;
                 }
                 else
                 {
-                    // Pandoc not available, fall back to HTML export
-                    ValidationResult pandocValidation = _pandocIntegration.ValidateInstallation();
-                    string pandocMessage = pandocValidation.IsValid ? "Pandoc not initialized" : string.Join(", ", pandocValidation.Errors);
-                    Debug.LogWarning($"Pandoc not available: {pandocMessage}. Falling back to HTML export.");
-                    result = await GenerateFallbackHtmlResult(content, styledHtml, markdownContent, startTime);
+                    result.Success = false;
+                    result.ErrorMessage = $"PDF generation failed: {pdfResult.ErrorMessage}";
+                    Debug.LogError($"PDFExporter HTML generation error: {pdfResult.ErrorMessage}");
                 }
 
                 result.Statistics = GenerateStatistics(content, markdownContent, styledHtml);
@@ -163,9 +154,9 @@ namespace UnityProjectArchitect.Services
         {
             return new ExportTemplate("default", "Default PDF", ExportFormat.PDF)
             {
-                Description = "Standard PDF documentation template with professional styling",
+                Description = "Standard PDF documentation template with professional styling using HTML-to-PDF conversion",
                 Author = "Unity Project Architect",
-                Version = "1.0",
+                Version = "2.0",
                 TemplateContent = GetDefaultTemplateContent()
             };
         }
@@ -175,20 +166,11 @@ namespace UnityProjectArchitect.Services
             return new List<ExportOption>
             {
                 new ExportOption { Name = "TemplateId", Description = "Template to use for PDF export", IsEnabled = true },
-                new ExportOption { Name = "PageSize", Description = "PDF page size: A4, Letter, Legal", IsEnabled = true },
-                new ExportOption { Name = "Orientation", Description = "Page orientation: Portrait, Landscape", IsEnabled = true },
                 new ExportOption { Name = "IncludeHeaderFooter", Description = "Add header and footer to pages", IsEnabled = true },
                 new ExportOption { Name = "IncludePageNumbers", Description = "Add page numbers", IsEnabled = true },
                 new ExportOption { Name = "IncludeTOC", Description = "Generate table of contents", IsEnabled = true },
                 new ExportOption { Name = "FontFamily", Description = "Font family for body text", IsEnabled = true },
-                new ExportOption { Name = "FontSize", Description = "Base font size in points", IsEnabled = true },
-                new ExportOption { Name = "MarginTop", Description = "Top page margin", IsEnabled = true },
-                new ExportOption { Name = "MarginBottom", Description = "Bottom page margin", IsEnabled = true },
-                new ExportOption { Name = "MarginLeft", Description = "Left page margin", IsEnabled = true },
-                new ExportOption { Name = "MarginRight", Description = "Right page margin", IsEnabled = true },
-                new ExportOption { Name = "IncludeBookmarks", Description = "Add PDF bookmarks for navigation", IsEnabled = true },
-                new ExportOption { Name = "CompressImages", Description = "Compress embedded images", IsEnabled = true },
-                new ExportOption { Name = "PrintOptimized", Description = "Optimize for printing vs screen viewing", IsEnabled = false }
+                new ExportOption { Name = "FontSize", Description = "Base font size in points", IsEnabled = true }
             };
         }
 
@@ -389,20 +371,6 @@ namespace UnityProjectArchitect.Services
                 styledHtml.AppendLine("</div>");
             }
 
-            // Table of Contents
-            if (GetOption<bool>(options, "IncludeTOC", true))
-            {
-                string toc = GenerateTableOfContents(htmlContent);
-                if (!string.IsNullOrEmpty(toc))
-                {
-                    styledHtml.AppendLine("<div class=\"toc\">");
-                    styledHtml.AppendLine("<h2>Table of Contents</h2>");
-                    styledHtml.AppendLine(toc);
-                    styledHtml.AppendLine("</div>");
-                    styledHtml.AppendLine("<div class=\"page-break\"></div>");
-                }
-            }
-
             // Main content
             styledHtml.AppendLine("<div class=\"content\">");
             styledHtml.AppendLine(htmlContent);
@@ -426,22 +394,8 @@ namespace UnityProjectArchitect.Services
         {
             StringBuilder css = new StringBuilder();
             
-            string pageSize = GetOption<string>(options, "PageSize", "A4");
-            string orientation = GetOption<string>(options, "Orientation", "Portrait");
             string fontFamily = GetOption<string>(options, "FontFamily", "Arial");
             string fontSize = GetOption<string>(options, "FontSize", "11");
-            string marginTop = GetOption<string>(options, "MarginTop", "1in");
-            string marginBottom = GetOption<string>(options, "MarginBottom", "1in");
-            string marginLeft = GetOption<string>(options, "MarginLeft", "1in");
-            string marginRight = GetOption<string>(options, "MarginRight", "1in");
-
-            css.AppendLine("@page {");
-            css.AppendLine($"  size: {pageSize} {orientation.ToLower()};");
-            css.AppendLine($"  margin-top: {marginTop};");
-            css.AppendLine($"  margin-bottom: {marginBottom};");
-            css.AppendLine($"  margin-left: {marginLeft};");
-            css.AppendLine($"  margin-right: {marginRight};");
-            css.AppendLine("}");
 
             css.AppendLine("body {");
             css.AppendLine($"  font-family: {fontFamily}, sans-serif;");
@@ -478,9 +432,6 @@ namespace UnityProjectArchitect.Services
 
             css.AppendLine(".header { text-align: center; margin-bottom: 2em; }");
             css.AppendLine(".footer { text-align: center; margin-top: 2em; font-size: 9pt; color: #666; }");
-            css.AppendLine(".toc { margin-bottom: 2em; }");
-            css.AppendLine(".toc ul { list-style-type: none; }");
-            css.AppendLine(".page-break { page-break-after: always; }");
 
             // Add template-specific styles
             if (!string.IsNullOrEmpty(template.CSS))
@@ -491,31 +442,6 @@ namespace UnityProjectArchitect.Services
             }
 
             return css.ToString();
-        }
-
-        private string GenerateTableOfContents(string htmlContent)
-        {
-            if (string.IsNullOrEmpty(htmlContent)) return "";
-
-            StringBuilder toc = new StringBuilder();
-            System.Text.RegularExpressions.Regex headerRegex = new System.Text.RegularExpressions.Regex(@"<h([1-6])>(.*?)</h[1-6]>");
-            System.Text.RegularExpressions.MatchCollection matches = headerRegex.Matches(htmlContent);
-
-            if (matches.Count == 0) return "";
-
-            toc.AppendLine("<ul class=\"toc-list\">");
-            
-            foreach (System.Text.RegularExpressions.Match match in matches)
-            {
-                int level = int.Parse(match.Groups[1].Value);
-                string text = match.Groups[2].Value;
-                string indent = new string(' ', (level - 1) * 2);
-                
-                toc.AppendLine($"{indent}<li>{text}</li>");
-            }
-            
-            toc.AppendLine("</ul>");
-            return toc.ToString();
         }
 
         private PDFMetadata GeneratePDFMetadata(ExportContent content, ExportOptions options)
@@ -610,87 +536,26 @@ namespace UnityProjectArchitect.Services
 
         private string GetDefaultTemplateContent()
         {
-            return "Default PDF template with professional styling and layout.";
-        }
-
-        private PandocOptions CreatePandocOptions(ExportOptions options, PDFMetadata metadata)
-        {
-            string recommendedEngine = Task.Run(async () => await _pandocIntegration.GetRecommendedEngineAsync()).Result;
-            
-            return new PandocOptions
-            {
-                PdfEngine = GetOption<string>(options, "PdfEngine", recommendedEngine),
-                PageSize = GetOption<string>(options, "PageSize", "A4"),
-                MarginTop = GetOption<string>(options, "MarginTop", "1in"),
-                MarginBottom = GetOption<string>(options, "MarginBottom", "1in"),
-                MarginLeft = GetOption<string>(options, "MarginLeft", "1in"),
-                MarginRight = GetOption<string>(options, "MarginRight", "1in"),
-                FontFamily = GetOption<string>(options, "FontFamily", "Arial"),
-                FontSize = GetOption<int>(options, "FontSize", 11),
-                IncludeTableOfContents = GetOption<bool>(options, "IncludeTOC", true),
-                TocDepth = GetOption<int>(options, "TocDepth", 3),
-                IncludeBookmarks = GetOption<bool>(options, "IncludeBookmarks", true),
-                NumberSections = GetOption<bool>(options, "NumberSections", false),
-                TimeoutMs = GetOption<int>(options, "TimeoutMs", 120000),
-                Variables = new Dictionary<string, string>
-                {
-                    ["title"] = metadata.Title,
-                    ["author"] = metadata.Author,
-                    ["subject"] = metadata.Subject,
-                    ["keywords"] = metadata.Keywords
-                }
-            };
-        }
-
-        private async Task<ExportOperationResult> GenerateFallbackHtmlResult(ExportContent content, string styledHtml, string markdownContent, DateTime startTime)
-        {
-            ExportOperationResult result = new ExportOperationResult(ExportFormat.PDF, "");
-            
-            try
-            {
-                // Generate HTML file as fallback
-                string outputPath = Path.Combine(Path.GetTempPath(), $"{content.Title ?? "Documentation"}_{DateTime.Now:yyyyMMdd_HHmmss}.html");
-                await File.WriteAllTextAsync(outputPath, styledHtml, Encoding.UTF8);
-                
-                result.Success = true;
-                result.GeneratedFiles.Add(outputPath);
-                result.TotalSizeBytes = new System.IO.FileInfo(outputPath).Length;
-                result.ExportTime = DateTime.Now - startTime;
-                result.Metadata["html_path"] = outputPath;
-                result.Metadata["html_content"] = styledHtml;
-                result.Metadata["fallback_mode"] = true;
-                result.Metadata["fallback_reason"] = "Pandoc not available - exported as HTML";
-                
-                Debug.Log($"PDF fallback HTML generated: {result.FormattedSize} in {result.ExportTime.TotalSeconds:F1}s at {outputPath}");
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = $"Fallback HTML generation failed: {ex.Message}";
-                Debug.LogError($"PDFExporter fallback error: {ex}");
-            }
-            
-            return result;
+            return "Default PDF template with professional styling and layout using HTML-to-PDF conversion via browser printing.";
         }
 
         private class PDFTemplate
         {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public string CSS { get; set; }
+            public string Id { get; set; } = "";
+            public string Name { get; set; } = "";
+            public string CSS { get; set; } = "";
         }
 
         private class PDFMetadata
         {
-            public string Title { get; set; }
-            public string Author { get; set; }
-            public string Subject { get; set; }
-            public string Keywords { get; set; }
-            public string Creator { get; set; }
-            public string Producer { get; set; }
+            public string Title { get; set; } = "";
+            public string Author { get; set; } = "";
+            public string Subject { get; set; } = "";
+            public string Keywords { get; set; } = "";
+            public string Creator { get; set; } = "";
+            public string Producer { get; set; } = "";
             public DateTime CreationDate { get; set; }
             public DateTime ModificationDate { get; set; }
         }
-
     }
 }
