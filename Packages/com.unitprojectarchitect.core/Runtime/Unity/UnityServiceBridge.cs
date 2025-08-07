@@ -324,41 +324,19 @@ namespace UnityProjectArchitect.Unity
         {
             try
             {
-                // First, perform project analysis to provide data to generators
-                IProjectAnalyzer analyzer = UnityServiceBridge.GetProjectAnalyzer();
-                string projectPath = System.IO.Directory.GetParent(UnityEngine.Application.dataPath).FullName;
-                ProjectAnalysisResult analysisResult = await analyzer.AnalyzeProjectAsync(projectPath);
+                // Check if this is a concept project (has description but minimal actual project content)
+                bool isConceptProject = IsConceptProject(projectData);
                 
-                // If analysis fails, create a basic analysis result
-                if (!analysisResult.Success)
+                if (isConceptProject && !string.IsNullOrEmpty(projectData.ProjectDescription))
                 {
-                    analysisResult = new ProjectAnalysisResult
-                    {
-                        Success = true,
-                        ProjectPath = projectPath,
-                        AnalyzedAt = System.DateTime.Now,
-                        AnalysisTime = System.TimeSpan.FromSeconds(1)
-                    };
+                    UnityEngine.Debug.Log($"🎯 Detected concept project - using concept-aware generator for {section.SectionType}");
+                    return await GenerateFromConceptAsync(section.SectionType, projectData.ProjectDescription);
                 }
-                
-                // Create the appropriate documentation generator based on section type
-                BaseDocumentationGenerator generator = section.SectionType switch
+                else
                 {
-                    DocumentationSectionType.GeneralProductDescription => new GeneralProductDescriptionGenerator(analysisResult),
-                    DocumentationSectionType.SystemArchitecture => new SystemArchitectureGenerator(analysisResult),
-                    DocumentationSectionType.DataModel => new DataModelGenerator(analysisResult),
-                    DocumentationSectionType.APISpecification => new APISpecificationGenerator(analysisResult),
-                    DocumentationSectionType.UserStories => new UserStoriesGenerator(analysisResult),
-                    DocumentationSectionType.WorkTickets => new WorkTicketsGenerator(analysisResult),
-                    _ => throw new System.NotSupportedException($"Documentation section type {section.SectionType} is not supported")
-                };
-                
-                // Generate the content using the DLL generator
-                string generatedContent = await generator.GenerateContentAsync();
-                
-                UnityEngine.Debug.Log($"✅ Generated {section.SectionType} documentation ({generatedContent.Length:N0} characters)");
-                
-                return generatedContent;
+                    UnityEngine.Debug.Log($"🔍 Detected existing project - using project analysis for {section.SectionType}");
+                    return await GenerateFromProjectAnalysisAsync(section, projectData);
+                }
             }
             catch (System.Exception ex)
             {
@@ -371,6 +349,431 @@ namespace UnityProjectArchitect.Unity
                        $"*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}*\n\n" +
                        $"Please check the Unity console for more details about this error.";
             }
+        }
+        
+        /// <summary>
+        /// Determine if this is a concept project vs existing project
+        /// </summary>
+        private bool IsConceptProject(ProjectData projectData)
+        {
+            // Check if we have any meaningful description (lowered threshold for short concepts)
+            bool hasDescription = !string.IsNullOrEmpty(projectData.ProjectDescription) && 
+                                 projectData.ProjectDescription.Trim().Length > 10;
+            
+            // Check if project name suggests it's a concept (contains "AI Generated", etc.)
+            bool hasConceptualName = projectData.ProjectName.Contains("AI Generated") || 
+                                   projectData.ProjectName.Contains("Concept") ||
+                                   projectData.ProjectName.Contains("Test") ||
+                                   projectData.ProjectName == "My project";
+            
+            // If we have any description and conceptual indicators, treat as concept
+            if (hasDescription && hasConceptualName)
+            {
+                return true;
+            }
+            
+            // Also check if the description contains typical game concept markers or game-related keywords
+            if (hasDescription)
+            {
+                string description = projectData.ProjectDescription.ToLower();
+                bool hasConceptMarkers = description.Contains("**") || // Markdown formatting
+                                       description.Contains("core gameplay") ||
+                                       description.Contains("key features") ||
+                                       description.Contains("target audience") ||
+                                       description.Contains("art style") ||
+                                       description.Contains("development time");
+                
+                // Also check for game-related keywords that suggest a concept
+                bool hasGameKeywords = description.Contains("game") ||
+                                     description.Contains("clone") ||
+                                     description.Contains("platformer") ||
+                                     description.Contains("rpg") ||
+                                     description.Contains("adventure") ||
+                                     description.Contains("puzzle") ||
+                                     description.Contains("shooter") ||
+                                     description.Contains("simulation") ||
+                                     description.Contains("strategy") ||
+                                     description.Contains("want to create") ||
+                                     description.Contains("idea for") ||
+                                     description.Contains("mario") ||
+                                     description.Contains("zelda") ||
+                                     description.Contains("player") ||
+                                     description.Contains("multiplayer") ||
+                                     description.Contains("2d") ||
+                                     description.Contains("3d");
+                
+                if (hasConceptMarkers || hasGameKeywords)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Generate documentation from game concept using concept-aware generators
+        /// </summary>
+        private async Task<string> GenerateFromConceptAsync(DocumentationSectionType sectionType, string gameDescription)
+        {
+            try
+            {
+                // Use concept-aware generators that work with game descriptions
+                return sectionType switch
+                {
+                    DocumentationSectionType.GeneralProductDescription => 
+                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualProductDescriptionGenerator(gameDescription).GenerateContentAsync(),
+                    DocumentationSectionType.UserStories => 
+                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualUserStoriesGenerator(gameDescription).GenerateContentAsync(),
+                    DocumentationSectionType.WorkTickets => 
+                        await new UnityProjectArchitect.Services.ConceptAware.ConceptualWorkTicketsGenerator(gameDescription).GenerateContentAsync(),
+                    DocumentationSectionType.SystemArchitecture => 
+                        await GenerateConceptualArchitecture(gameDescription),
+                    DocumentationSectionType.DataModel => 
+                        await GenerateConceptualDataModel(gameDescription),
+                    DocumentationSectionType.APISpecification => 
+                        await GenerateConceptualAPISpec(gameDescription),
+                    _ => $"# {sectionType}\n\n**Concept-aware generation not yet implemented for this section type.**\n\n*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}*"
+                };
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogError($"Concept-aware generation failed for {sectionType}: {ex.Message}");
+                
+                // Fallback to a basic template
+                return $"# {sectionType}\n\n" +
+                       $"**Based on Game Concept:** {gameDescription.Split('\n')[0]}\n\n" +
+                       $"*This section would contain {sectionType.ToString().ToLower()} information based on the game concept.*\n\n" +
+                       $"*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}*";
+            }
+        }
+        
+        /// <summary>
+        /// Generate documentation from existing project analysis
+        /// </summary>
+        private async Task<string> GenerateFromProjectAnalysisAsync(DocumentationSectionData section, ProjectData projectData)
+        {
+            // First, perform project analysis to provide data to generators
+            IProjectAnalyzer analyzer = UnityServiceBridge.GetProjectAnalyzer();
+            string projectPath = System.IO.Directory.GetParent(UnityEngine.Application.dataPath).FullName;
+            ProjectAnalysisResult analysisResult = await analyzer.AnalyzeProjectAsync(projectPath);
+            
+            // If analysis fails, create a basic analysis result
+            if (!analysisResult.Success)
+            {
+                analysisResult = new ProjectAnalysisResult
+                {
+                    Success = true,
+                    ProjectPath = projectPath,
+                    AnalyzedAt = System.DateTime.Now,
+                    AnalysisTime = System.TimeSpan.FromSeconds(1)
+                };
+            }
+            
+            // Create the appropriate documentation generator based on section type
+            BaseDocumentationGenerator generator = section.SectionType switch
+            {
+                DocumentationSectionType.GeneralProductDescription => new GeneralProductDescriptionGenerator(analysisResult),
+                DocumentationSectionType.SystemArchitecture => new SystemArchitectureGenerator(analysisResult),
+                DocumentationSectionType.DataModel => new DataModelGenerator(analysisResult),
+                DocumentationSectionType.APISpecification => new APISpecificationGenerator(analysisResult),
+                DocumentationSectionType.UserStories => new UserStoriesGenerator(analysisResult),
+                DocumentationSectionType.WorkTickets => new WorkTicketsGenerator(analysisResult),
+                _ => throw new System.NotSupportedException($"Documentation section type {section.SectionType} is not supported")
+            };
+            
+            // Generate the content using the DLL generator
+            string generatedContent = await generator.GenerateContentAsync();
+            
+            UnityEngine.Debug.Log($"✅ Generated {section.SectionType} documentation ({generatedContent.Length:N0} characters)");
+            
+            return generatedContent;
+        }
+        
+        /// <summary>
+        /// Generate conceptual system architecture based on game description
+        /// </summary>
+        private async Task<string> GenerateConceptualArchitecture(string gameDescription)
+        {
+            // Simple conceptual architecture generator
+            return await Task.FromResult($@"<!-- Generated by ConceptualArchitectureGenerator -->
+# System Architecture
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
+
+## Architecture Overview
+
+Based on the game concept, the following system architecture is recommended:
+
+### Core Systems
+
+- **Game Manager**: Central controller for game state and flow
+- **Player Controller**: Handles player input and character movement
+- **Scene Management**: Manages level loading and transitions
+- **UI System**: User interface components and navigation
+- **Audio Manager**: Sound effects and music management
+- **Save/Load System**: Persistent data management
+
+### Game-Specific Systems
+
+{GenerateGameSpecificSystems(gameDescription)}
+
+### Recommended Architecture Pattern
+
+**Component-Based Architecture** - Unity's entity-component system approach
+- Modular components for different game behaviors
+- Easy to extend and maintain
+- Good performance characteristics
+- Well-suited for Unity development
+
+### Data Flow
+
+1. **Input Layer**: Player input collection and processing
+2. **Game Logic Layer**: Core gameplay mechanics and rules
+3. **Presentation Layer**: Visual and audio feedback
+4. **Persistence Layer**: Save data and settings management
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualArchitectureGenerator
+- Based on game concept analysis
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+
+<!-- End ConceptualArchitectureGenerator -->");
+        }
+        
+        /// <summary>
+        /// Generate conceptual data model based on game description
+        /// </summary>
+        private async Task<string> GenerateConceptualDataModel(string gameDescription)
+        {
+            return await Task.FromResult($@"<!-- Generated by ConceptualDataModelGenerator -->
+# Data Model
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
+
+## Data Architecture Overview
+
+Based on the game concept, the following data model is recommended:
+
+### Core Data Classes
+
+```csharp
+// Player data
+[Serializable]
+public class PlayerData
+{{
+    public string playerName;
+    public Vector3 position;
+    public float health;
+    public int level;
+}}
+
+// Game settings
+[Serializable]
+public class GameSettings
+{{
+    public float masterVolume;
+    public float musicVolume;
+    public float sfxVolume;
+    public bool fullscreen;
+}}
+```
+
+### Game-Specific Data
+
+{GenerateGameSpecificDataModel(gameDescription)}
+
+### ScriptableObject Templates
+
+- **GameConfig**: Global game configuration and balancing values
+- **LevelData**: Information about game levels or stages
+- **ItemDatabase**: Collectible items and their properties
+- **AudioBank**: Sound effects and music references
+
+### Data Persistence Strategy
+
+- **PlayerPrefs**: Simple settings and preferences
+- **JSON Files**: Complex game state and progress
+- **ScriptableObjects**: Design-time data and configuration
+- **Binary Serialization**: Performance-critical save data
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualDataModelGenerator
+- Based on game concept analysis
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+
+<!-- End ConceptualDataModelGenerator -->");
+        }
+        
+        /// <summary>
+        /// Generate conceptual API specification based on game description
+        /// </summary>
+        private async Task<string> GenerateConceptualAPISpec(string gameDescription)
+        {
+            return await Task.FromResult($@"<!-- Generated by ConceptualAPISpecGenerator -->
+# API Specification
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
+
+## Public API Overview
+
+Based on the game concept, the following public APIs are recommended:
+
+### Core Game APIs
+
+```csharp
+// Game management
+public interface IGameManager
+{{
+    void StartGame();
+    void PauseGame();
+    void EndGame();
+    GameState CurrentState {{ get; }}
+}}
+
+// Player management
+public interface IPlayerController
+{{
+    void MovePlayer(Vector3 direction);
+    void HandleInput(InputAction action);
+    PlayerData GetPlayerData();
+}}
+```
+
+### Game-Specific APIs
+
+{GenerateGameSpecificAPIs(gameDescription)}
+
+### Event System
+
+```csharp
+// Game events
+public static class GameEvents
+{{
+    public static event System.Action<GameState> OnGameStateChanged;
+    public static event System.Action<PlayerData> OnPlayerDataChanged;
+    public static event System.Action<float> OnScoreChanged;
+}}
+```
+
+### Integration Points
+
+- **Unity Input System**: Modern input handling
+- **Unity Audio**: Sound and music integration
+- **Unity UI Toolkit**: Modern UI development
+- **Unity Analytics**: Player behavior tracking
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualAPISpecGenerator
+- Based on game concept analysis
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+
+<!-- End ConceptualAPISpecGenerator -->");
+        }
+        
+        private string GenerateGameSpecificSystems(string gameDescription)
+        {
+            string description = gameDescription.ToLower();
+            System.Text.StringBuilder systems = new System.Text.StringBuilder();
+            
+            if (description.Contains("inventory") || description.Contains("item"))
+                systems.AppendLine("- **Inventory System**: Item collection and management");
+            if (description.Contains("combat") || description.Contains("battle"))
+                systems.AppendLine("- **Combat System**: Battle mechanics and damage calculation");
+            if (description.Contains("dialogue") || description.Contains("conversation"))
+                systems.AppendLine("- **Dialogue System**: NPC conversations and story progression");
+            if (description.Contains("quest") || description.Contains("mission"))
+                systems.AppendLine("- **Quest System**: Mission tracking and completion");
+            if (description.Contains("multiplayer") || description.Contains("online"))
+                systems.AppendLine("- **Network System**: Multiplayer functionality and synchronization");
+            if (description.Contains("procedural") || description.Contains("random"))
+                systems.AppendLine("- **Procedural Generation**: Dynamic content creation");
+            
+            return systems.Length > 0 ? systems.ToString() : "- **Core Gameplay System**: Main game mechanics implementation";
+        }
+        
+        private string GenerateGameSpecificDataModel(string gameDescription)
+        {
+            string description = gameDescription.ToLower();
+            System.Text.StringBuilder dataModel = new System.Text.StringBuilder();
+            
+            dataModel.AppendLine("```csharp");
+            
+            if (description.Contains("inventory") || description.Contains("item"))
+            {
+                dataModel.AppendLine(@"// Inventory system
+[Serializable]
+public class InventoryData
+{
+    public List<ItemData> items;
+    public int maxCapacity;
+}
+
+[Serializable]
+public class ItemData
+{
+    public string itemId;
+    public string itemName;
+    public int quantity;
+}");
+            }
+            
+            if (description.Contains("level") || description.Contains("stage"))
+            {
+                dataModel.AppendLine(@"
+// Level progression
+[Serializable]
+public class LevelData
+{
+    public int levelNumber;
+    public string levelName;
+    public bool isUnlocked;
+    public float bestTime;
+}");
+            }
+            
+            dataModel.AppendLine("```");
+            return dataModel.ToString();
+        }
+        
+        private string GenerateGameSpecificAPIs(string gameDescription)
+        {
+            string description = gameDescription.ToLower();
+            System.Text.StringBuilder apis = new System.Text.StringBuilder();
+            
+            apis.AppendLine("```csharp");
+            
+            if (description.Contains("inventory"))
+            {
+                apis.AppendLine(@"// Inventory management
+public interface IInventorySystem
+{
+    bool AddItem(ItemData item);
+    bool RemoveItem(string itemId);
+    List<ItemData> GetAllItems();
+}");
+            }
+            
+            if (description.Contains("combat"))
+            {
+                apis.AppendLine(@"
+// Combat system
+public interface ICombatSystem
+{
+    void AttackTarget(GameObject target);
+    void TakeDamage(float damage);
+    bool IsAlive();
+}");
+            }
+            
+            apis.AppendLine("```");
+            return apis.ToString();
         }
         
         /// <summary>

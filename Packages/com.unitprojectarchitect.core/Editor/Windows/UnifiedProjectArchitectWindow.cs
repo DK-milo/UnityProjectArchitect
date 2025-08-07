@@ -287,35 +287,71 @@ namespace UnityProjectArchitect.Unity.Editor
             Foldout descriptionFoldout = new Foldout { text = "Step 1: Describe Your Game Concept", value = true };
             descriptionFoldout.style.marginBottom = 15;
             
-            Label instructionLabel = new Label("Describe your game idea in detail:");
+            Label instructionLabel = new Label("Describe your game idea in detail (use the template for best results):");
             instructionLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             instructionLabel.style.marginBottom = 5;
+            
+            // Add helpful hint label
+            Label hintLabel = new Label("💡 Tip: Click 'Use Template' for the optimal format, or 'Use Example' to see a complete sample");
+            hintLabel.style.fontSize = 10;
+            hintLabel.style.color = Color.cyan;
+            hintLabel.style.marginBottom = 8;
+            hintLabel.style.whiteSpace = WhiteSpace.Normal;
+            
+            // Create a ScrollView for the text field with proper scroll functionality
+            ScrollView textFieldScrollView = new ScrollView();
+            textFieldScrollView.style.height = 200;
+            textFieldScrollView.style.marginBottom = 10;
+            textFieldScrollView.style.borderTopLeftRadius = 3;
+            textFieldScrollView.style.borderTopRightRadius = 3;
+            textFieldScrollView.style.borderBottomLeftRadius = 3;
+            textFieldScrollView.style.borderBottomRightRadius = 3;
+            textFieldScrollView.style.borderLeftWidth = 1;
+            textFieldScrollView.style.borderRightWidth = 1;
+            textFieldScrollView.style.borderTopWidth = 1;
+            textFieldScrollView.style.borderBottomWidth = 1;
+            textFieldScrollView.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            textFieldScrollView.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            textFieldScrollView.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            textFieldScrollView.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f, 1f);
             
             _gameDescriptionField = new TextField()
             {
                 multiline = true,
                 value = GetExampleGameDescription()
             };
-            _gameDescriptionField.style.height = 150;
-            _gameDescriptionField.style.marginBottom = 10;
+            _gameDescriptionField.style.flexGrow = 1;
+            _gameDescriptionField.style.flexShrink = 1;
+            _gameDescriptionField.style.whiteSpace = WhiteSpace.Normal;
+            _gameDescriptionField.style.unityTextAlign = TextAnchor.UpperLeft;
+            _gameDescriptionField.style.minHeight = 180; // Ensure minimum height for scrolling
+            
+            textFieldScrollView.Add(_gameDescriptionField);
             
             VisualElement buttonContainer = new VisualElement();
             buttonContainer.style.flexDirection = FlexDirection.Row;
             
+            Button templateButton = new Button(() => {
+                _gameDescriptionField.value = GetGameDescriptionTemplate();
+            }) { text = "📋 Use Template" };
+            
             Button exampleButton = new Button(() => {
                 _gameDescriptionField.value = GetExampleGameDescription();
             }) { text = "📝 Use Example" };
+            exampleButton.style.marginLeft = 5;
             
             Button clearButton = new Button(() => {
                 _gameDescriptionField.value = "";
             }) { text = "🗑️ Clear" };
             clearButton.style.marginLeft = 5;
             
+            buttonContainer.Add(templateButton);
             buttonContainer.Add(exampleButton);
             buttonContainer.Add(clearButton);
             
             descriptionFoldout.Add(instructionLabel);
-            descriptionFoldout.Add(_gameDescriptionField);
+            descriptionFoldout.Add(hintLabel);
+            descriptionFoldout.Add(textFieldScrollView);
             descriptionFoldout.Add(buttonContainer);
             
             parent.Add(descriptionFoldout);
@@ -330,17 +366,45 @@ namespace UnityProjectArchitect.Unity.Editor
             keyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             keyLabel.style.marginBottom = 5;
             
+            // Create a container for the API key field with better styling
+            VisualElement apiKeyContainer = new VisualElement();
+            apiKeyContainer.style.marginBottom = 10;
+            apiKeyContainer.style.borderTopLeftRadius = 3;
+            apiKeyContainer.style.borderTopRightRadius = 3;
+            apiKeyContainer.style.borderBottomLeftRadius = 3;
+            apiKeyContainer.style.borderBottomRightRadius = 3;
+            apiKeyContainer.style.borderLeftWidth = 1;
+            apiKeyContainer.style.borderRightWidth = 1;
+            apiKeyContainer.style.borderTopWidth = 1;
+            apiKeyContainer.style.borderBottomWidth = 1;
+            apiKeyContainer.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            apiKeyContainer.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            apiKeyContainer.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            apiKeyContainer.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            
             _apiKeyField = new TextField()
             {
                 isPasswordField = true,
                 value = EditorPrefs.GetString("UnityProjectArchitect.ClaudeAPIKey", "")
             };
+            _apiKeyField.style.flexGrow = 1;
+            _apiKeyField.style.fontSize = 11;
+            
             _apiKeyField.RegisterValueChangedCallback(evt => {
                 EditorPrefs.SetString("UnityProjectArchitect.ClaudeAPIKey", evt.newValue);
             });
             
+            apiKeyContainer.Add(_apiKeyField);
+            
+            // Add status indicator for API key
+            Label statusLabel = new Label("🔑 API Key Status: " + (string.IsNullOrEmpty(_apiKeyField.value) ? "Not configured (will use fallback)" : "Configured"));
+            statusLabel.style.fontSize = 10;
+            statusLabel.style.color = string.IsNullOrEmpty(_apiKeyField.value) ? new Color(1f, 0.5f, 0f, 1f) : Color.green;
+            statusLabel.style.marginTop = 5;
+            
             configFoldout.Add(keyLabel);
-            configFoldout.Add(_apiKeyField);
+            configFoldout.Add(apiKeyContainer);
+            configFoldout.Add(statusLabel);
             
             parent.Add(configFoldout);
         }
@@ -466,6 +530,28 @@ namespace UnityProjectArchitect.Unity.Editor
                     }
                 }
             }
+        }
+        
+        private string GetGameDescriptionTemplate()
+        {
+            return @"**Your Game Title**
+
+[Brief description of your game concept]
+
+**Core Gameplay:**
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+**Key Features:**
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+**Target Audience:** [Your target players]
+**Platform:** [PC/Console/Mobile/etc.]
+**Art Style:** [Visual style description]
+**Development Time:** [Timeline estimate]";
         }
         
         private string GetExampleGameDescription()
@@ -1128,13 +1214,38 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.marginBottom = 5;
             
+            // Create a ScrollView for the content with proper scroll functionality
+            ScrollView contentScrollView = new ScrollView();
+            contentScrollView.style.height = 250;
+            contentScrollView.style.marginBottom = 5;
+            contentScrollView.style.borderTopLeftRadius = 3;
+            contentScrollView.style.borderTopRightRadius = 3;
+            contentScrollView.style.borderBottomLeftRadius = 3;
+            contentScrollView.style.borderBottomRightRadius = 3;
+            contentScrollView.style.borderLeftWidth = 1;
+            contentScrollView.style.borderRightWidth = 1;
+            contentScrollView.style.borderTopWidth = 1;
+            contentScrollView.style.borderBottomWidth = 1;
+            contentScrollView.style.borderLeftColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+            contentScrollView.style.borderRightColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+            contentScrollView.style.borderTopColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+            contentScrollView.style.borderBottomColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+            contentScrollView.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+            
             TextField contentField = new TextField()
             {
                 multiline = true,
                 value = content,
                 isReadOnly = true
             };
-            contentField.style.height = 200;
+            contentField.style.flexGrow = 1;
+            contentField.style.flexShrink = 1;
+            contentField.style.whiteSpace = WhiteSpace.Normal;
+            contentField.style.unityTextAlign = TextAnchor.UpperLeft;
+            contentField.style.fontSize = 11;
+            contentField.style.minHeight = 230; // Ensure minimum height for scrolling
+            
+            contentScrollView.Add(contentField);
             
             int wordCount = string.IsNullOrEmpty(content) ? 0 : content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
             Label statsLabel = new Label($"Generated: {content.Length:N0} characters, {wordCount:N0} words");
@@ -1143,7 +1254,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             statsLabel.style.marginTop = 5;
             
             card.Add(titleLabel);
-            card.Add(contentField);
+            card.Add(contentScrollView);
             card.Add(statsLabel);
             
             _documentationResults.Add(card);
@@ -1627,18 +1738,41 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             descLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             descLabel.style.marginBottom = 5;
             
+            // Create a ScrollView for the description field with proper scroll functionality
+            ScrollView descFieldScrollView = new ScrollView();
+            descFieldScrollView.style.height = 80;
+            descFieldScrollView.style.marginBottom = 10;
+            descFieldScrollView.style.borderTopLeftRadius = 3;
+            descFieldScrollView.style.borderTopRightRadius = 3;
+            descFieldScrollView.style.borderBottomLeftRadius = 3;
+            descFieldScrollView.style.borderBottomRightRadius = 3;
+            descFieldScrollView.style.borderLeftWidth = 1;
+            descFieldScrollView.style.borderRightWidth = 1;
+            descFieldScrollView.style.borderTopWidth = 1;
+            descFieldScrollView.style.borderBottomWidth = 1;
+            descFieldScrollView.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            descFieldScrollView.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            descFieldScrollView.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            descFieldScrollView.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            
             _templateDescriptionField = new TextField()
             {
                 multiline = true,
                 value = "A smart template with intelligent folder suggestions"
             };
-            _templateDescriptionField.style.height = 60;
-            _templateDescriptionField.style.marginBottom = 10;
+            _templateDescriptionField.style.flexGrow = 1;
+            _templateDescriptionField.style.flexShrink = 1;
+            _templateDescriptionField.style.whiteSpace = WhiteSpace.Normal;
+            _templateDescriptionField.style.unityTextAlign = TextAnchor.UpperLeft;
+            _templateDescriptionField.style.fontSize = 11;
+            _templateDescriptionField.style.minHeight = 60; // Ensure minimum height for scrolling
+            
+            descFieldScrollView.Add(_templateDescriptionField);
             
             infoFoldout.Add(nameLabel);
             infoFoldout.Add(_templateNameField);
             infoFoldout.Add(descLabel);
-            infoFoldout.Add(_templateDescriptionField);
+            infoFoldout.Add(descFieldScrollView);
             
             parent.Add(infoFoldout);
         }
