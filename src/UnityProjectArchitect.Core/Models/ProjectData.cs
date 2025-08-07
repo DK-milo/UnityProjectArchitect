@@ -194,6 +194,7 @@ namespace UnityProjectArchitect.Core
 
     public enum ExportFormat
     {
+        None,
         Markdown,
         PDF,
         HTML,

@@ -411,7 +411,7 @@ namespace UnityProjectArchitect.Unity.Editor
         
         private void CreateDocumentationGenerationSection(ScrollView parent)
         {
-            Foldout generationFoldout = new Foldout { text = "Step 2: Generate AI-Powered Documentation", value = true };
+            Foldout generationFoldout = new Foldout { text = "Step 2: Generate Documentation", value = true };
             generationFoldout.style.marginBottom = 15;
             
             _generateDocsButton = new Button(GenerateDocumentationFromConcept) 
@@ -629,6 +629,25 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                     
                     string content = await docService.GenerateDocumentationSectionAsync(section, _conceptProject.ProjectData);
                     
+                    // Store the content in the section for export
+                    section.Content = content;
+                    section.Status = DocumentationStatus.Generated;
+                    section.LastUpdated = System.DateTime.Now;
+                    
+                    // Add section to project data if not already present
+                    var existingSection = _conceptProject.ProjectData.DocumentationSections
+                        .FirstOrDefault(s => s.SectionType == sectionType);
+                    if (existingSection != null)
+                    {
+                        existingSection.Content = content;
+                        existingSection.Status = DocumentationStatus.Generated;
+                        existingSection.LastUpdated = System.DateTime.Now;
+                    }
+                    else
+                    {
+                        _conceptProject.ProjectData.DocumentationSections.Add(section);
+                    }
+                    
                     CreateDocumentationCard(sectionType.ToString(), content);
                 }
                 
@@ -665,19 +684,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 return;
             }
             
-            // Let user choose export format and location
-            string[] exportOptions = { "Markdown (.md)", "Combined Markdown File", "Cancel" };
-            int choice = EditorUtility.DisplayDialogComplex("Export Documentation", 
-                "Choose export format:", "Markdown (.md)", "Combined Markdown", "Cancel");
-                
-            if (choice == 2) return; // Cancel
-            
-            // Choose export directory
-            string exportPath = EditorUtility.SaveFolderPanel("Choose Export Directory", "Assets", "Documentation");
-            if (string.IsNullOrEmpty(exportPath))
-            {
-                return; // User cancelled
-            }
+            // Use the same export dialog as Project Analyzer tab
+            ExportFormat format = ShowExportFormatDialog();
+            if (format == ExportFormat.None) return; // User cancelled
             
             _exportDocsButton.SetEnabled(false);
             _statusLabel.text = "📄 Exporting documentation...";
@@ -685,25 +694,38 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             
             try
             {
-                if (choice == 0) // Individual Markdown files
-                {
-                    await ExportIndividualMarkdownFiles(exportPath);
-                }
-                else if (choice == 1) // Combined Markdown file
-                {
-                    await ExportCombinedMarkdownFile(exportPath);
-                }
+                // Use the same export service as Project Analyzer
+                IExportService exportService = UnityServiceBridge.GetExportService();
                 
-                _statusLabel.text = "✅ Documentation exported successfully!";
-                _statusLabel.style.color = Color.green;
+                ExportRequest request = new ExportRequest(format, "Assets/Documentation/")
+                {
+                    FileName = $"{_conceptProject.ProjectData.ProjectName}_Documentation"
+                };
                 
-                // Ask if user wants to open the export folder
-                bool openFolder = EditorUtility.DisplayDialog("Export Complete", 
-                    $"Documentation exported to:\n{exportPath}\n\nOpen folder?", "Open Folder", "Close");
+                ExportOperationResult result = await exportService.ExportProjectDocumentationAsync(_conceptProject.ProjectData, request);
+                
+                if (result.Success)
+                {
+                    _statusLabel.text = "✅ Documentation exported successfully!";
+                    _statusLabel.style.color = Color.green;
                     
-                if (openFolder)
+                    // Ask if user wants to open the export folder
+                    bool openFolder = EditorUtility.DisplayDialog("Export Complete", 
+                        $"Documentation exported successfully to:\n{result.OutputPath}\n\nOpen folder?", "Open Folder", "Close");
+                        
+                    if (openFolder)
+                    {
+                        string folderPath = System.IO.Path.GetDirectoryName(result.OutputPath);
+                        System.Diagnostics.Process.Start("explorer.exe", folderPath.Replace('/', '\\'));
+                    }
+                }
+                else
                 {
-                    System.Diagnostics.Process.Start("explorer.exe", exportPath.Replace('/', '\\'));
+                    _statusLabel.text = $"❌ Export failed: {result.ErrorMessage}";
+                    _statusLabel.style.color = Color.red;
+                    
+                    EditorUtility.DisplayDialog("Export Failed", 
+                        $"Export failed: {result.ErrorMessage}", "OK");
                 }
             }
             catch (System.Exception ex)
@@ -719,152 +741,20 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             _exportDocsButton.SetEnabled(true);
         }
         
-        private async Task ExportIndividualMarkdownFiles(string exportPath)
+        private ExportFormat ShowExportFormatDialog()
         {
-            List<DocumentationSectionData> sections = _conceptProject.ProjectData.DocumentationSections;
-            int exportedCount = 0;
-            
-            foreach (DocumentationSectionData section in sections)
+            int choice = EditorUtility.DisplayDialogComplex("Export Documentation", 
+                "Choose export format:", "📄 Markdown (.md)", "📑 PDF", "Cancel");
+                
+            return choice switch
             {
-                if (!string.IsNullOrEmpty(section.Content))
-                {
-                    string fileName = GetSafeFileName($"{section.SectionType}.md");
-                    string filePath = System.IO.Path.Combine(exportPath, fileName);
-                    
-                    string markdownContent = CreateMarkdownContent(section);
-                    await System.IO.File.WriteAllTextAsync(filePath, markdownContent);
-                    exportedCount++;
-                }
-            }
-            
-            // Also export project overview
-            string overviewPath = System.IO.Path.Combine(exportPath, "ProjectOverview.md");
-            string overviewContent = CreateProjectOverviewMarkdown();
-            await System.IO.File.WriteAllTextAsync(overviewPath, overviewContent);
-            exportedCount++;
-            
-            Debug.Log($"✅ Exported {exportedCount} documentation files to {exportPath}");
+                0 => ExportFormat.Markdown,
+                1 => ExportFormat.PDF,
+                _ => ExportFormat.None // Cancel or close
+            };
         }
         
-        private async Task ExportCombinedMarkdownFile(string exportPath)
-        {
-            string fileName = GetSafeFileName($"{_conceptProject.ProjectData.ProjectName}_Documentation.md");
-            string filePath = System.IO.Path.Combine(exportPath, fileName);
-            
-            string combinedContent = CreateCombinedMarkdownContent();
-            await System.IO.File.WriteAllTextAsync(filePath, combinedContent);
-            
-            Debug.Log($"✅ Exported combined documentation to {filePath}");
-        }
-        
-        private string CreateMarkdownContent(DocumentationSectionData section)
-        {
-            return $@"# {section.SectionType}
 
-**Project:** {_conceptProject.ProjectData.ProjectName}  
-**Generated:** {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}  
-**AI Mode:** {section.AIMode}  
-
----
-
-{section.Content}
-
----
-
-*Generated with Unity Project Architect Studio*
-";
-        }
-        
-        private string CreateProjectOverviewMarkdown()
-        {
-            ProjectData projectData = _conceptProject.ProjectData;
-            return $@"# Project Overview: {projectData.ProjectName}
-
-**Project Type:** {projectData.ProjectType}  
-**Unity Version:** {projectData.TargetUnityVersion}  
-**Created:** {projectData.CreatedDate:yyyy-MM-dd HH:mm:ss}  
-**Last Modified:** {projectData.LastModifiedDate:yyyy-MM-dd HH:mm:ss}  
-
-## Project Description
-
-{projectData.ProjectDescription}
-
-## Documentation Sections
-
-{string.Join("\n", projectData.DocumentationSections.Where(s => !string.IsNullOrEmpty(s.Content)).Select(s => $"- {s.SectionType} ({s.Status})"))}
-
-## Team Information
-
-**Team Name:** {(string.IsNullOrEmpty(projectData.TeamName) ? "Not specified" : projectData.TeamName)}  
-**Contact Email:** {(string.IsNullOrEmpty(projectData.ContactEmail) ? "Not specified" : projectData.ContactEmail)}  
-**Repository:** {(string.IsNullOrEmpty(projectData.RepositoryUrl) ? "Not specified" : projectData.RepositoryUrl)}  
-
----
-
-*Generated with Unity Project Architect Studio*
-";
-        }
-        
-        private string CreateCombinedMarkdownContent()
-        {
-            ProjectData projectData = _conceptProject.ProjectData;
-            System.Text.StringBuilder content = new System.Text.StringBuilder();
-            
-            // Header
-            content.AppendLine($"# {projectData.ProjectName} - Complete Documentation");
-            content.AppendLine();
-            content.AppendLine($"**Generated:** {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}**  ");
-            content.AppendLine($"**Project Type:** {projectData.ProjectType}**  ");
-            content.AppendLine($"**Unity Version:** {projectData.TargetUnityVersion}**  ");
-            content.AppendLine();
-            content.AppendLine("---");
-            content.AppendLine();
-            
-            // Table of Contents
-            content.AppendLine("## Table of Contents");
-            content.AppendLine();
-            int sectionNumber = 1;
-            foreach (DocumentationSectionData section in projectData.DocumentationSections.Where(s => !string.IsNullOrEmpty(s.Content)))
-            {
-                content.AppendLine($"{sectionNumber}. [{section.SectionType}](#{section.SectionType.ToString().ToLower().Replace(" ", "-")})");
-                sectionNumber++;
-            }
-            content.AppendLine();
-            content.AppendLine("---");
-            content.AppendLine();
-            
-            // Project Description
-            content.AppendLine("## Project Description");
-            content.AppendLine();
-            content.AppendLine(projectData.ProjectDescription);
-            content.AppendLine();
-            content.AppendLine("---");
-            content.AppendLine();
-            
-            // Documentation Sections
-            foreach (DocumentationSectionData section in projectData.DocumentationSections.Where(s => !string.IsNullOrEmpty(s.Content)))
-            {
-                content.AppendLine($"## {section.SectionType}");
-                content.AppendLine();
-                content.AppendLine(section.Content);
-                content.AppendLine();
-                content.AppendLine("---");
-                content.AppendLine();
-            }
-            
-            // Footer
-            content.AppendLine("*Generated with Unity Project Architect Studio*");
-            
-            return content.ToString();
-        }
-        
-        private string GetSafeFileName(string fileName)
-        {
-            // Remove invalid characters for file names
-            string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars()));
-            string invalidRegStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
-            return System.Text.RegularExpressions.Regex.Replace(fileName, invalidRegStr, "_");
-        }
         
         private void CreateProjectStructure()
         {
@@ -2175,7 +2065,7 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 }
                 
                 // Save template as asset
-                string templatePath = $"Assets/Templates/{GetSafeFileName(_templateNameField.value)}.asset";
+                string templatePath = $"Assets/Templates/{SanitizeFileName(_templateNameField.value)}.asset";
                 
                 // Ensure Templates directory exists
                 string directory = "Assets/Templates";
@@ -2366,6 +2256,14 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             }
             
             return true; // Folder was created successfully
+        }
+        
+        private string SanitizeFileName(string fileName)
+        {
+            // Remove invalid characters for file names
+            string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars()));
+            string invalidRegStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
+            return System.Text.RegularExpressions.Regex.Replace(fileName, invalidRegStr, "_");
         }
         
         #endregion

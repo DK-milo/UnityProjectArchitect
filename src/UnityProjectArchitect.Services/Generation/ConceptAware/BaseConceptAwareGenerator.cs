@@ -114,12 +114,26 @@ namespace UnityProjectArchitect.Services.ConceptAware
         {
             string lowerDesc = description.ToLower();
             
+            // VR detection
             if (lowerDesc.Contains("vr") || lowerDesc.Contains("virtual reality"))
                 return ProjectType.VR;
-            if (lowerDesc.Contains("ar") || lowerDesc.Contains("augmented reality"))
+            
+            // AR detection - be more specific to avoid false positives like "adventure", "character", etc.
+            if (lowerDesc.Contains("augmented reality") || 
+                Regex.IsMatch(lowerDesc, @"\bar\b") || // whole word "ar" only
+                lowerDesc.Contains("ar app") ||
+                lowerDesc.Contains("ar game") ||
+                lowerDesc.Contains("real-world integration") ||
+                lowerDesc.Contains("camera overlay") ||
+                lowerDesc.Contains("arkit") ||
+                lowerDesc.Contains("arcore"))
                 return ProjectType.AR;
+            
+            // Platform detection
             if (lowerDesc.Contains("mobile") || lowerDesc.Contains("android") || lowerDesc.Contains("ios"))
                 return ProjectType.Mobile;
+            
+            // 2D/3D detection
             if (lowerDesc.Contains("2d") || lowerDesc.Contains("pixel") || lowerDesc.Contains("sprite"))
                 return ProjectType.Game2D;
             if (lowerDesc.Contains("3d") || lowerDesc.Contains("three dimensional"))
