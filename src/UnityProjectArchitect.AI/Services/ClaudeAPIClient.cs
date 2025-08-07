@@ -70,54 +70,57 @@ namespace UnityProjectArchitect.AI.Services
 
         public async Task<ClaudeAPIResponse> SendRequestAsync(ClaudeAPIRequest request)
         {
-            _logger.Log($"[AI DEBUG] SendRequestAsync: IsConfigured={IsConfigured}, Request model={request.model}, MaxTokens={request.max_tokens}, Temp={request.temperature}");
             if (!IsConfigured)
             {
-                _logger.LogError("[AI DEBUG] Claude API client is not properly configured");
                 ClaudeAPIResponse errorResponse = new ClaudeAPIResponse
                 {
                     error = new ClaudeError("configuration_error", "Claude API client is not properly configured")
                 };
                 return errorResponse;
             }
+
             try
             {
                 OnStatusUpdate?.Invoke("Preparing API request...");
                 OnProgress?.Invoke(0.1f);
+
                 ValidationResult validation = ValidateRequest(request);
                 if (!validation.IsValid)
                 {
-                    _logger.LogError($"[AI DEBUG] Request validation failed: {validation.ErrorMessage}");
                     return new ClaudeAPIResponse
                     {
                         error = new ClaudeError("validation_error", validation.ErrorMessage)
                     };
                 }
+
                 OnStatusUpdate?.Invoke("Checking rate limits...");
                 OnProgress?.Invoke(0.2f);
+
                 if (!await WaitForRateLimit(request))
                 {
-                    _logger.LogError("[AI DEBUG] Rate limit exceeded, please try again later");
                     return new ClaudeAPIResponse
                     {
                         error = new ClaudeError("rate_limit_error", "Rate limit exceeded, please try again later")
                     };
                 }
+
                 OnStatusUpdate?.Invoke("Sending request to Claude API...");
                 OnProgress?.Invoke(0.3f);
-                _logger.Log($"[AI DEBUG] Sending HTTP request to endpoint: {_configuration.baseUrl}");
+
                 ClaudeAPIResponse response = await SendRequestWithRetry(request);
-                _logger.Log($"[AI DEBUG] HTTP request completed. Success={response.IsSuccess}, Error={response.error?.message}");
+
                 OnProgress?.Invoke(1.0f);
                 OnStatusUpdate?.Invoke(response.IsSuccess ? "Request completed successfully" : "Request failed");
+
                 OnResponseReceived?.Invoke(response);
                 return response;
             }
             catch (Exception ex)
             {
-                string errorMessage = $"[AI DEBUG] Unexpected error in SendRequestAsync: {ex.Message}\n{ex.StackTrace}";
+                string errorMessage = $"Unexpected error in SendRequestAsync: {ex.Message}";
                 _logger.LogError(errorMessage);
                 OnError?.Invoke(errorMessage);
+
                 return new ClaudeAPIResponse
                 {
                     error = new ClaudeError("client_error", errorMessage)
@@ -189,30 +192,33 @@ namespace UnityProjectArchitect.AI.Services
             string apiKey = _keyManager.GetClaudeAPIKey();
             if (string.IsNullOrEmpty(apiKey))
             {
-                _logger.LogError("[AI DEBUG] API key not found or invalid");
                 return new ClaudeAPIResponse
                 {
                     error = new ClaudeError("authentication_error", "API key not found or invalid")
                 };
             }
+
             try
             {
                 string jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(request);
                 Dictionary<string, string> headers = _configuration.GetHeaders();
-                _logger.Log($"[AI DEBUG] SendSingleRequest: Endpoint={_configuration.baseUrl}, PayloadLength={jsonPayload.Length}, Headers={string.Join(", ", headers.Keys)}");
+
                 DateTime startTime = DateTime.Now;
                 HttpResponse httpResponse = await _httpClient.PostWithHeadersAsync(
                     _configuration.baseUrl, 
                     jsonPayload, 
                     headers, 
                     _configuration.timeoutSeconds);
+
                 TimeSpan requestTime = DateTime.Now - startTime;
-                _logger.Log($"[AI DEBUG] HTTP response: StatusCode={httpResponse.StatusCode}, Success={httpResponse.IsSuccess}, Time={requestTime.TotalSeconds:F2}s, ContentLength={httpResponse.Content?.Length}");
+
                 if (_configuration.enableLogging)
                 {
-                    _logger.Log($"[AI DEBUG] HTTP response content: {httpResponse.Content?.Substring(0, Math.Min(500, httpResponse.Content.Length))}");
+                    _logger.Log($"Claude API request completed in {requestTime.TotalSeconds:F2}s");
                 }
+
                 UpdateRateLimitInfo(httpResponse.Headers);
+
                 if (httpResponse.IsSuccess)
                 {
                     try
@@ -220,21 +226,21 @@ namespace UnityProjectArchitect.AI.Services
                         ClaudeAPIResponse response = Newtonsoft.Json.JsonConvert.DeserializeObject<ClaudeAPIResponse>(httpResponse.Content);
                         if (response == null)
                         {
-                            _logger.LogError("[AI DEBUG] Failed to parse API response");
                             return new ClaudeAPIResponse
                             {
                                 error = new ClaudeError("parse_error", "Failed to parse API response")
                             };
                         }
+
                         if (_configuration.enableLogging && response.IsSuccess)
                         {
-                            _logger.Log($"[AI DEBUG] Claude API success: {response.usage?.TotalTokens ?? 0} tokens used");
+                            _logger.Log($"Claude API success: {response.usage?.TotalTokens ?? 0} tokens used");
                         }
+
                         return response;
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"[AI DEBUG] Failed to parse response JSON: {ex.Message}\n{ex.StackTrace}");
                         return new ClaudeAPIResponse
                         {
                             error = new ClaudeError("parse_error", $"Failed to parse response JSON: {ex.Message}")
@@ -244,7 +250,7 @@ namespace UnityProjectArchitect.AI.Services
                 else
                 {
                     string errorMessage = $"HTTP {httpResponse.StatusCode}: {httpResponse.ErrorMessage}";
-                    _logger.LogError($"[AI DEBUG] HTTP error: {errorMessage}");
+                    
                     if (!string.IsNullOrEmpty(httpResponse.Content))
                     {
                         try
@@ -260,6 +266,7 @@ namespace UnityProjectArchitect.AI.Services
                             errorMessage += $" - Response: {httpResponse.Content}";
                         }
                     }
+
                     return new ClaudeAPIResponse
                     {
                         error = new ClaudeError("http_error", errorMessage)
@@ -268,7 +275,6 @@ namespace UnityProjectArchitect.AI.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[AI DEBUG] Request failed: {ex.Message}\n{ex.StackTrace}");
                 return new ClaudeAPIResponse
                 {
                     error = new ClaudeError("request_error", $"Request failed: {ex.Message}")
@@ -358,9 +364,9 @@ namespace UnityProjectArchitect.AI.Services
         {
             int estimatedTokens = 0;
 
-            if (!string.IsNullOrEmpty(request.system))
+            if (request.system != null && !string.IsNullOrEmpty(request.system.content))
             {
-                estimatedTokens += request.system.Length / 4;
+                estimatedTokens += request.system.content.Length / 4;
             }
 
             foreach (ClaudeMessage message in request.messages)
@@ -413,19 +419,7 @@ namespace UnityProjectArchitect.AI.Services
         private ClaudeConfiguration LoadConfiguration()
         {
             string apiKey = _keyManager.GetClaudeAPIKey();
-            ClaudeConfiguration config = new ClaudeConfiguration(apiKey);
-            
-            _logger.Log($"[AI DEBUG] ClaudeAPIClient LoadConfiguration: ApiKey present={!string.IsNullOrEmpty(apiKey)}, Config valid={config.IsValid()}");
-            if (!string.IsNullOrEmpty(apiKey))
-            {
-                _logger.Log($"[AI DEBUG] API key loaded: {apiKey.Substring(0, Math.Min(7, apiKey.Length))}...");
-            }
-            else
-            {
-                _logger.LogWarning("[AI DEBUG] No API key found in ClaudeAPIClient configuration");
-            }
-            
-            return config;
+            return new ClaudeConfiguration(apiKey);
         }
 
         public async Task<ValidationResult> TestConnectionAsync()

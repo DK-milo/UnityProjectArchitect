@@ -36,6 +36,8 @@ namespace UnityProjectArchitect.Unity.Editor
         // Game Concept Studio components
         private TextField _gameDescriptionField;
         private TextField _apiKeyField;
+        private Toggle _forceOfflineToggle;
+        private Label _modeDescriptionLabel;
         private Button _generateDocsButton;
         private Button _exportDocsButton;
         private Button _createStructureButton;
@@ -392,6 +394,7 @@ namespace UnityProjectArchitect.Unity.Editor
             
             _apiKeyField.RegisterValueChangedCallback(evt => {
                 EditorPrefs.SetString("UnityProjectArchitect.ClaudeAPIKey", evt.newValue);
+                UpdateGenerationModeDisplay();
             });
             
             apiKeyContainer.Add(_apiKeyField);
@@ -402,11 +405,70 @@ namespace UnityProjectArchitect.Unity.Editor
             statusLabel.style.color = string.IsNullOrEmpty(_apiKeyField.value) ? new Color(1f, 0.5f, 0f, 1f) : Color.green;
             statusLabel.style.marginTop = 5;
             
+            // Add AI vs Offline toggle
+            VisualElement generationModeContainer = new VisualElement();
+            generationModeContainer.style.marginTop = 15;
+            generationModeContainer.style.marginBottom = 10;
+            
+            Label modeLabel = new Label("Generation Mode:");
+            modeLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            modeLabel.style.marginBottom = 5;
+            
+            _forceOfflineToggle = new Toggle("Force Offline Mode");
+            _forceOfflineToggle.value = EditorPrefs.GetBool("UnityProjectArchitect.ForceOffline", false);
+            _forceOfflineToggle.style.marginBottom = 5;
+            
+            _forceOfflineToggle.RegisterValueChangedCallback(evt => {
+                EditorPrefs.SetBool("UnityProjectArchitect.ForceOffline", evt.newValue);
+                UpdateGenerationModeDisplay();
+            });
+            
+            Label modeDescriptionLabel = new Label();
+            modeDescriptionLabel.name = "modeDescription";
+            modeDescriptionLabel.style.fontSize = 10;
+            modeDescriptionLabel.style.marginTop = 5;
+            modeDescriptionLabel.style.whiteSpace = WhiteSpace.Normal;
+            
+            generationModeContainer.Add(modeLabel);
+            generationModeContainer.Add(_forceOfflineToggle);
+            generationModeContainer.Add(modeDescriptionLabel);
+
+            // Store reference for updates
+            _modeDescriptionLabel = modeDescriptionLabel;
+            
             configFoldout.Add(keyLabel);
             configFoldout.Add(apiKeyContainer);
             configFoldout.Add(statusLabel);
+            configFoldout.Add(generationModeContainer);
+            
+            // Initial update of mode display
+            UpdateGenerationModeDisplay();
             
             parent.Add(configFoldout);
+        }
+
+        private void UpdateGenerationModeDisplay()
+        {
+            if (_modeDescriptionLabel == null) return;
+
+            bool forceOffline = _forceOfflineToggle != null && _forceOfflineToggle.value;
+            bool hasApiKey = _apiKeyField != null && !string.IsNullOrEmpty(_apiKeyField.value);
+
+            if (forceOffline)
+            {
+                _modeDescriptionLabel.text = "Offline mode forced: built-in generators will be used. AI will be bypassed.";
+                _modeDescriptionLabel.style.color = new Color(1f, 0.8f, 0.2f, 1f);
+            }
+            else if (hasApiKey)
+            {
+                _modeDescriptionLabel.text = "AI-enabled: will use Claude AI when available, with automatic offline fallback on errors.";
+                _modeDescriptionLabel.style.color = Color.green;
+            }
+            else
+            {
+                _modeDescriptionLabel.text = "No API key set: offline generators will be used. Add a key to enable AI generation.";
+                _modeDescriptionLabel.style.color = new Color(1f, 0.6f, 0f, 1f);
+            }
         }
         
         private void CreateDocumentationGenerationSection(ScrollView parent)
@@ -1099,11 +1161,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             card.style.borderBottomLeftRadius = 5;
             card.style.borderBottomRightRadius = 5;
             
-            Label titleLabel = new Label($"📄 {title}");
-            titleLabel.style.fontSize = 14;
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.marginBottom = 5;
-            
+            // Create foldout so content is collapsible
+            Foldout foldout = new Foldout { text = $"📄 {title}", value = false };
+            foldout.style.marginBottom = 5;
+
             // Create a ScrollView for the content with proper scroll functionality
             ScrollView contentScrollView = new ScrollView();
             contentScrollView.style.height = 250;
@@ -1143,9 +1204,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             statsLabel.style.color = Color.gray;
             statsLabel.style.marginTop = 5;
             
-            card.Add(titleLabel);
-            card.Add(contentScrollView);
-            card.Add(statsLabel);
+            foldout.Add(contentScrollView);
+            foldout.Add(statsLabel);
+
+            card.Add(foldout);
             
             _documentationResults.Add(card);
         }
