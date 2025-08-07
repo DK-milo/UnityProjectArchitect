@@ -75,6 +75,31 @@ namespace UnityProjectArchitect.AI.Services
                     return null;
                 }
 
+                // Check if the stored value is a valid base64 string
+                // If not, it might be a legacy plain text key that needs to be migrated
+                if (!IsValidBase64String(encryptedKey))
+                {
+                    _logger.LogWarning("Found legacy API key format. Attempting to migrate to encrypted format.");
+                    
+                    // Try to validate if it's a valid API key in plain text
+                    var validation = ValidateAPIKey(encryptedKey);
+                    if (validation.IsValid)
+                    {
+                        // Migrate the plain text key to encrypted format
+                        var migrationResult = SetClaudeAPIKey(encryptedKey);
+                        if (migrationResult.IsValid)
+                        {
+                            _logger.Log("Successfully migrated API key to encrypted format.");
+                            return encryptedKey;
+                        }
+                    }
+                    
+                    // If migration fails, clear the invalid key
+                    _logger.LogWarning("Invalid legacy API key found. Clearing stored value.");
+                    ClearClaudeAPIKey();
+                    return null;
+                }
+
                 string decryptedKey = Decrypt(encryptedKey);
                 
                 if (string.IsNullOrEmpty(decryptedKey))
@@ -95,6 +120,18 @@ namespace UnityProjectArchitect.AI.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error retrieving Claude API key: {ex.Message}");
+                
+                // If there's a decryption error, try to clear the corrupted key
+                try
+                {
+                    _logger.LogWarning("Clearing potentially corrupted API key due to decryption error.");
+                    ClearClaudeAPIKey();
+                }
+                catch (Exception clearEx)
+                {
+                    _logger.LogError($"Failed to clear corrupted API key: {clearEx.Message}");
+                }
+                
                 return null;
             }
         }
@@ -333,6 +370,31 @@ namespace UnityProjectArchitect.AI.Services
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
                 return Convert.ToBase64String(hashBytes);
+            }
+        }
+
+        private bool IsValidBase64String(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Check if string length is multiple of 4 (required for base64)
+                if (value.Length % 4 != 0)
+                {
+                    return false;
+                }
+
+                // Try to convert from base64 - this will throw if invalid
+                Convert.FromBase64String(value);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 

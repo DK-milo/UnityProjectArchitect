@@ -48,11 +48,15 @@ namespace UnityProjectArchitect.AI.Services
         {
         }
 
-        public ClaudeAPIClient(IHttpClientWrapper httpClient, ILogger logger)
+        public ClaudeAPIClient(IHttpClientWrapper httpClient, ILogger logger) : this(httpClient, logger, null)
+        {
+        }
+
+        public ClaudeAPIClient(IHttpClientWrapper httpClient, ILogger logger, APIKeyManager keyManager)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _keyManager = new APIKeyManager(new InMemorySettingsProvider(), logger);
+            _keyManager = keyManager ?? new APIKeyManager(new InMemorySettingsProvider(), logger);
             _configuration = LoadConfiguration();
             _rateLimitInfo = new ClaudeRateLimitInfo();
             _lastRequestTimes = new Dictionary<string, DateTime>();

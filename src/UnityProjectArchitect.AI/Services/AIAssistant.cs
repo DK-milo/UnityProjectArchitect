@@ -29,6 +29,7 @@ namespace UnityProjectArchitect.AI.Services
         private readonly Dictionary<AIProvider, AICapabilities> _providerCapabilities;
         private readonly AIConfiguration _currentConfiguration;
         private readonly ILogger _logger;
+        private readonly APIKeyManager _keyManager;
 
         private bool _isConfigured = false;
         private AIProvider _currentProvider = AIProvider.Claude;
@@ -40,11 +41,19 @@ namespace UnityProjectArchitect.AI.Services
         {
         }
 
-        public AIAssistant(ILogger logger)
+        public AIAssistant(ILogger logger) : this(logger, null)
+        {
+        }
+
+        public AIAssistant(ILogger logger, APIKeyManager keyManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _keyManager = keyManager ?? new APIKeyManager(new InMemorySettingsProvider(), _logger);
             
-            _claudeClient = new ClaudeAPIClient(new StandardHttpClient(), _logger);
+            // Use provided key manager or create default one
+            APIKeyManager apiKeyManager = keyManager ?? APIKeyManager.Instance;
+            
+            _claudeClient = new ClaudeAPIClient(new StandardHttpClient(), _logger, apiKeyManager);
             _promptManager = new PromptTemplateManager(_logger, GetDefaultTemplatesPath());
             _promptOptimizer = new PromptOptimizer();
             _conversationManager = new ConversationManager(_logger);
@@ -54,6 +63,7 @@ namespace UnityProjectArchitect.AI.Services
             _currentConfiguration = new AIConfiguration();
 
             InitializeProviderCapabilities();
+            LoadConfigurationFromKeyManager();
             ValidateConfiguration();
         }
 
@@ -479,6 +489,28 @@ namespace UnityProjectArchitect.AI.Services
                     { "FinetuningSupport", false }
                 }
             };
+        }
+
+        private void LoadConfigurationFromKeyManager()
+        {
+            try
+            {
+                // Load API key from the key manager
+                string apiKey = _keyManager.GetClaudeAPIKey();
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    _currentConfiguration.ApiKey = apiKey;
+                    _logger.Log("API key loaded successfully into AI configuration");
+                }
+                else
+                {
+                    _logger.LogWarning("No API key available for AI configuration");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to load configuration from key manager: {ex.Message}");
+            }
         }
 
         private void ValidateConfiguration()

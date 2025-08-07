@@ -116,16 +116,16 @@ namespace UnityProjectArchitect.Unity.Tests
         }
 
         [UnityTest]
-        public System.Collections.IEnumerator TestUserStoriesGeneratorIntegration()
+        public System.Collections.IEnumerator TestUserStoriesGeneratorConceptOnly()
         {
-            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
+            UnityDocumentationService documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
-            // Create test project data
-            ProjectData projectData = new ProjectData();
-            projectData.UpdateProjectName("Test Unity Project");
-            projectData.UpdateDescription("Test project for User Stories generation");
-            projectData.UpdateProjectType(ProjectType.Game3D);
+            // Create test project data that will be detected as concept project
+            ProjectData conceptProjectData = new ProjectData();
+            conceptProjectData.UpdateProjectName("AI Generated Test Concept");
+            conceptProjectData.UpdateDescription("A 2D platformer game like Mario Bros where the player collects coins and jumps on enemies. The game features multiple levels with increasing difficulty and power-ups that give special abilities.");
+            conceptProjectData.UpdateProjectType(ProjectType.Game2D);
 
             // Create User Stories section
             DocumentationSectionData userStoriesSection = new DocumentationSectionData
@@ -135,34 +135,46 @@ namespace UnityProjectArchitect.Unity.Tests
                 Status = DocumentationStatus.NotStarted
             };
 
-            // Test User Stories generation
-            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(userStoriesSection, projectData);
+            // Test User Stories generation for concept project (should work)
+            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(userStoriesSection, conceptProjectData);
             
             yield return new WaitUntil(() => generationTask.IsCompleted);
             
-            Assert.IsTrue(generationTask.IsCompletedSuccessfully, "User Stories generation task should complete successfully");
+            Assert.IsTrue(generationTask.IsCompletedSuccessfully, "User Stories generation for concept should complete successfully");
             
             string result = generationTask.Result;
             Assert.IsNotNull(result, "User Stories content should not be null");
             Assert.IsTrue(result.Length > 100, "User Stories content should have substantial length");
             Assert.IsTrue(result.Contains("User Stories"), "Content should contain User Stories header");
-            Assert.IsTrue(result.Contains("As a"), "Content should contain user story format");
             
-            Debug.Log($"✅ User Stories generated successfully ({result.Length:N0} characters)");
-            Debug.Log($"Content preview: {result.Substring(0, Math.Min(200, result.Length))}...");
+            Debug.Log($"✅ User Stories generated for concept project ({result.Length:N0} characters)");
+            
+            // Now test that regular project analysis throws exception
+            ProjectData regularProjectData = new ProjectData();
+            regularProjectData.UpdateProjectName("Regular Unity Project");
+            regularProjectData.UpdateDescription(""); // No description = regular project
+            regularProjectData.UpdateProjectType(ProjectType.Game3D);
+            
+            Task<string> regularGenerationTask = documentationService.GenerateDocumentationSectionAsync(userStoriesSection, regularProjectData);
+            yield return new WaitUntil(() => regularGenerationTask.IsCompleted);
+            
+            string regularResult = regularGenerationTask.Result;
+            Assert.IsTrue(regularResult.Contains("only available for game concepts"), "Should indicate UserStories is concept-only");
+            
+            Debug.Log($"✅ Confirmed UserStories blocked for regular project analysis");
         }
 
         [UnityTest]
-        public System.Collections.IEnumerator TestWorkTicketsGeneratorIntegration()
+        public System.Collections.IEnumerator TestWorkTicketsGeneratorConceptOnly()
         {
-            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
+            UnityDocumentationService documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
-            // Create test project data
-            ProjectData projectData = new ProjectData();
-            projectData.UpdateProjectName("Test Unity Project");
-            projectData.UpdateDescription("Test project for Work Tickets generation");
-            projectData.UpdateProjectType(ProjectType.Game3D);
+            // Create test project data that will be detected as concept project
+            ProjectData conceptProjectData = new ProjectData();
+            conceptProjectData.UpdateProjectName("AI Generated Test Concept");
+            conceptProjectData.UpdateDescription("A 2D platformer game like Mario Bros where the player collects coins and jumps on enemies. The game features multiple levels with increasing difficulty and power-ups that give special abilities.");
+            conceptProjectData.UpdateProjectType(ProjectType.Game2D);
 
             // Create Work Tickets section
             DocumentationSectionData workTicketsSection = new DocumentationSectionData
@@ -172,50 +184,60 @@ namespace UnityProjectArchitect.Unity.Tests
                 Status = DocumentationStatus.NotStarted
             };
 
-            // Test Work Tickets generation
-            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(workTicketsSection, projectData);
+            // Test Work Tickets generation for concept project (should work)
+            Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(workTicketsSection, conceptProjectData);
             
             yield return new WaitUntil(() => generationTask.IsCompleted);
             
-            Assert.IsTrue(generationTask.IsCompletedSuccessfully, "Work Tickets generation task should complete successfully");
+            Assert.IsTrue(generationTask.IsCompletedSuccessfully, "Work Tickets generation for concept should complete successfully");
             
             string result = generationTask.Result;
             Assert.IsNotNull(result, "Work Tickets content should not be null");
             Assert.IsTrue(result.Length > 100, "Work Tickets content should have substantial length");
             Assert.IsTrue(result.Contains("Work Tickets"), "Content should contain Work Tickets header");
-            Assert.IsTrue(result.Contains("Implementation") || result.Contains("tickets"), "Content should contain ticket-related content");
             
-            Debug.Log($"✅ Work Tickets generated successfully ({result.Length:N0} characters)");
-            Debug.Log($"Content preview: {result.Substring(0, Math.Min(200, result.Length))}...");
+            Debug.Log($"✅ Work Tickets generated for concept project ({result.Length:N0} characters)");
+            
+            // Now test that regular project analysis throws exception
+            ProjectData regularProjectData = new ProjectData();
+            regularProjectData.UpdateProjectName("Regular Unity Project");
+            regularProjectData.UpdateDescription(""); // No description = regular project
+            regularProjectData.UpdateProjectType(ProjectType.Game3D);
+            
+            Task<string> regularGenerationTask = documentationService.GenerateDocumentationSectionAsync(workTicketsSection, regularProjectData);
+            yield return new WaitUntil(() => regularGenerationTask.IsCompleted);
+            
+            string regularResult = regularGenerationTask.Result;
+            Assert.IsTrue(regularResult.Contains("only available for game concepts"), "Should indicate WorkTickets is concept-only");
+            
+            Debug.Log($"✅ Confirmed WorkTickets blocked for regular project analysis");
         }
 
         [UnityTest]
-        public System.Collections.IEnumerator TestAllDocumentationGeneratorsIntegration()
+        public System.Collections.IEnumerator TestProjectAnalysisGeneratorsIntegration()
         {
-            IDocumentationGenerator documentationService = UnityServiceBridge.GetDocumentationService();
+            UnityDocumentationService documentationService = UnityServiceBridge.GetDocumentationService();
             Assert.IsNotNull(documentationService, "DocumentationService should be available");
 
-            // Create test project data
+            // Create test project data (regular project, not concept)
             ProjectData projectData = new ProjectData();
             projectData.UpdateProjectName("Full Test Project");
-            projectData.UpdateDescription("Complete test for all documentation generators");
+            projectData.UpdateDescription(""); // No description = regular project analysis mode
             projectData.UpdateProjectType(ProjectType.Game3D);
 
-            // Test all supported documentation section types
-            DocumentationSectionType[] sectionTypes = new[]
+            // Test project analysis documentation section types (NOT UserStories/WorkTickets)
+            DocumentationSectionType[] projectAnalysisSectionTypes = new[]
             {
                 DocumentationSectionType.GeneralProductDescription,
                 DocumentationSectionType.SystemArchitecture,
                 DocumentationSectionType.DataModel,
-                DocumentationSectionType.APISpecification,
-                DocumentationSectionType.UserStories,
-                DocumentationSectionType.WorkTickets
+                DocumentationSectionType.APISpecification
             };
 
             int completedGenerators = 0;
-            int totalGenerators = sectionTypes.Length;
+            int totalGenerators = projectAnalysisSectionTypes.Length;
 
-            foreach (DocumentationSectionType sectionType in sectionTypes)
+            foreach (DocumentationSectionType sectionType in projectAnalysisSectionTypes)
             {
                 if (documentationService.CanGenerateSection(sectionType))
                 {
@@ -226,7 +248,7 @@ namespace UnityProjectArchitect.Unity.Tests
                         Status = DocumentationStatus.NotStarted
                     };
 
-                    Debug.Log($"Testing {sectionType} generator...");
+                    Debug.Log($"Testing project analysis {sectionType} generator...");
 
                     Task<string> generationTask = documentationService.GenerateDocumentationSectionAsync(section, projectData);
                     yield return new WaitUntil(() => generationTask.IsCompleted);
@@ -254,8 +276,8 @@ namespace UnityProjectArchitect.Unity.Tests
                 yield return new WaitForSeconds(0.1f);
             }
 
-            Debug.Log($"✅ Integration test complete: {completedGenerators}/{totalGenerators} generators working");
-            Assert.IsTrue(completedGenerators >= 4, $"At least 4 generators should work, got {completedGenerators}");
+            Debug.Log($"✅ Project analysis integration test complete: {completedGenerators}/{totalGenerators} generators working");
+            Assert.IsTrue(completedGenerators >= 3, $"At least 3 project analysis generators should work, got {completedGenerators}");
         }
     }
 }

@@ -1325,6 +1325,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             
             ProjectData projectData = _currentProjectAsset.ProjectData;
             
+            // Clean up any concept-only sections that may exist from before the separation
+            projectData.RemoveConceptOnlySections();
+            
             if (projectData.DocumentationSections.Count == 0)
             {
                 HelpBox warningBox = new HelpBox("No documentation sections found. Initialize project data first.", HelpBoxMessageType.Warning);
@@ -1332,10 +1335,17 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 return;
             }
             
-            // Filter out duplicate sections based on SectionType to prevent duplicate UI elements
+            // Filter out duplicate sections and concept-only sections (UserStories/WorkTickets) to prevent UI clutter
             Dictionary<DocumentationSectionType, DocumentationSectionData> uniqueSections = new Dictionary<DocumentationSectionType, DocumentationSectionData>();
             foreach (DocumentationSectionData section in projectData.DocumentationSections)
             {
+                // Skip UserStories and WorkTickets - they're only for Game Concept Studio, not Project Analysis
+                if (section.SectionType == DocumentationSectionType.UserStories || 
+                    section.SectionType == DocumentationSectionType.WorkTickets)
+                {
+                    continue;
+                }
+                
                 if (!uniqueSections.ContainsKey(section.SectionType))
                 {
                     uniqueSections[section.SectionType] = section;

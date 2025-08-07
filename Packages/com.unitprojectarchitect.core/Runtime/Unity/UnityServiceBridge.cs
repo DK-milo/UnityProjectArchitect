@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityProjectArchitect.Core;
 using UnityProjectArchitect.Services;
 using UnityProjectArchitect.AI.Services;
+using System.Collections.Generic;
 
 namespace UnityProjectArchitect.Unity
 {
@@ -31,13 +32,72 @@ namespace UnityProjectArchitect.Unity
                 _projectAnalyzer = new ProjectAnalyzer();
                 _exportService = new ExportService();
                 _templateManager = new TemplateManager();
-                _aiAssistant = new AIAssistant();
+                
+                // Initialize AI Assistant with Unity-specific settings provider
+                UnityEngine.Debug.Log("🔧 Initializing AI Assistant with Unity Editor settings...");
+                _aiAssistant = CreateUnityAIAssistant();
+                
                 _documentationService = new UnityDocumentationService();
+                
+                UnityEngine.Debug.Log("✅ Unity Project Architect services initialized successfully");
             }
             catch (Exception ex)
             {
                 UnityEngine.Debug.LogError($"Failed to initialize Unity Project Architect services: {ex.Message}");
                 UnityEngine.Debug.LogError($"Stack trace: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// Create AI Assistant instance with Unity-specific configuration
+        /// </summary>
+        private static IAIAssistant CreateUnityAIAssistant()
+        {
+            try
+            {
+                // Create Unity-specific logger that outputs to Unity console
+                UnityProjectArchitect.AI.Services.ILogger unityLogger = new UnityConsoleLogger();
+                
+                // Create Unity-specific settings provider that uses EditorPrefs
+                UnityEditorSettingsProvider settingsProvider = 
+                    new UnityEditorSettingsProvider(unityLogger);
+                
+                // Create API key manager with Unity settings provider
+                UnityProjectArchitect.AI.Services.APIKeyManager keyManager = 
+                    new UnityProjectArchitect.AI.Services.APIKeyManager(settingsProvider, unityLogger);
+                
+                // Create AI assistant with Unity logger and Unity key manager
+                UnityProjectArchitect.AI.Services.AIAssistant aiAssistant = 
+                    new UnityProjectArchitect.AI.Services.AIAssistant(unityLogger, keyManager);
+                
+                // Log configuration status
+                SetAIAssistantUnityConfiguration(aiAssistant, keyManager);
+                
+                return aiAssistant;
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogError($"Failed to create Unity AI Assistant: {ex.Message}");
+                return new UnityProjectArchitect.AI.Services.AIAssistant(); // Fallback to default
+            }
+        }
+        
+        /// <summary>
+        /// Configure AI Assistant to use Unity-specific settings
+        /// </summary>
+        private static void SetAIAssistantUnityConfiguration(UnityProjectArchitect.AI.Services.AIAssistant aiAssistant, UnityProjectArchitect.AI.Services.APIKeyManager keyManager)
+        {
+            // This method would need reflection or internal API access to properly configure
+            // For now, we'll rely on the fact that the Unity settings provider bridges the gap
+            UnityEngine.Debug.Log($"🔑 AI Assistant configuration status: {(aiAssistant.IsConfigured ? "✅ Configured" : "⚠️ Not configured")}");
+            
+            if (keyManager.HasClaudeAPIKey())
+            {
+                UnityEngine.Debug.Log("🔑 API key detected from Unity EditorPrefs");
+            }
+            else
+            {
+                UnityEngine.Debug.Log("⚠️ No API key found in Unity EditorPrefs");
             }
         }
         
@@ -471,14 +531,15 @@ namespace UnityProjectArchitect.Unity
             }
             
             // Create the appropriate documentation generator based on section type
+            // Note: UserStories and WorkTickets are concept-only sections for game planning, not project analysis
             BaseDocumentationGenerator generator = section.SectionType switch
             {
                 DocumentationSectionType.GeneralProductDescription => new GeneralProductDescriptionGenerator(analysisResult),
                 DocumentationSectionType.SystemArchitecture => new SystemArchitectureGenerator(analysisResult),
                 DocumentationSectionType.DataModel => new DataModelGenerator(analysisResult),
                 DocumentationSectionType.APISpecification => new APISpecificationGenerator(analysisResult),
-                DocumentationSectionType.UserStories => new UserStoriesGenerator(analysisResult),
-                DocumentationSectionType.WorkTickets => new WorkTicketsGenerator(analysisResult),
+                DocumentationSectionType.UserStories => throw new System.NotSupportedException("UserStories generation is only available for game concepts, not existing project analysis. Use Game Concept Studio instead."),
+                DocumentationSectionType.WorkTickets => throw new System.NotSupportedException("WorkTickets generation is only available for game concepts, not existing project analysis. Use Game Concept Studio instead."),
                 _ => throw new System.NotSupportedException($"Documentation section type {section.SectionType} is not supported")
             };
             
@@ -495,8 +556,60 @@ namespace UnityProjectArchitect.Unity
         /// </summary>
         private async Task<string> GenerateConceptualArchitecture(string gameDescription)
         {
-            // Simple conceptual architecture generator
-            return await Task.FromResult($@"<!-- Generated by ConceptualArchitectureGenerator -->
+            // Try AI generation first if available
+            try
+            {
+                IAIAssistant aiAssistant = UnityServiceBridge.GetAIAssistant();
+                if (aiAssistant?.IsConfigured == true)
+                {
+                    // Create AI request for conceptual system architecture
+                    var request = new UnityProjectArchitect.Core.AIRequest
+                    {
+                        RequestType = UnityProjectArchitect.Core.AIRequestType.Generation,
+                        Prompt = BuildSystemArchitecturePrompt(),
+                        SectionType = DocumentationSectionType.SystemArchitecture,
+                        Configuration = new UnityProjectArchitect.Core.AIConfiguration
+                        {
+                            Provider = UnityProjectArchitect.Core.AIProvider.Claude,
+                            MaxTokens = 4000,
+                            Temperature = 0.7f
+                        }
+                    };
+
+                    // Add game description as parameter
+                    if (request.Parameters == null)
+                        request.Parameters = new Dictionary<string, object>();
+                    request.Parameters["GameDescription"] = gameDescription;
+
+                    UnityProjectArchitect.Core.AIOperationResult result = await aiAssistant.GenerateContentAsync(request);
+                    if (result.Success && !string.IsNullOrEmpty(result.Content))
+                    {
+                        // Add AI generation metadata
+                        return $@"<!-- Generated by ConceptualArchitectureGenerator using Claude AI -->
+# System Architecture
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC using Claude AI API*
+
+{result.Content}
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualArchitectureGenerator with Claude AI
+- AI Provider: {result.Provider}
+- Processing Time: {result.ProcessingTime.TotalSeconds:F2} seconds
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+<!-- End ConceptualArchitectureGenerator -->";
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"AI generation failed for System Architecture, using offline fallback: {ex.Message}");
+            }
+
+            // Fallback to offline generation
+            return await Task.FromResult($@"<!-- Generated by ConceptualArchitectureGenerator (Offline Mode) -->
 # System Architecture
 
 *Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
@@ -548,7 +661,60 @@ Based on the game concept, the following system architecture is recommended:
         /// </summary>
         private async Task<string> GenerateConceptualDataModel(string gameDescription)
         {
-            return await Task.FromResult($@"<!-- Generated by ConceptualDataModelGenerator -->
+            // Try AI generation first if available
+            try
+            {
+                IAIAssistant aiAssistant = UnityServiceBridge.GetAIAssistant();
+                if (aiAssistant?.IsConfigured == true)
+                {
+                    // Create AI request for conceptual data model
+                    var request = new UnityProjectArchitect.Core.AIRequest
+                    {
+                        RequestType = UnityProjectArchitect.Core.AIRequestType.Generation,
+                        Prompt = BuildDataModelPrompt(),
+                        SectionType = DocumentationSectionType.DataModel,
+                        Configuration = new UnityProjectArchitect.Core.AIConfiguration
+                        {
+                            Provider = UnityProjectArchitect.Core.AIProvider.Claude,
+                            MaxTokens = 4000,
+                            Temperature = 0.7f
+                        }
+                    };
+
+                    // Add game description as parameter
+                    if (request.Parameters == null)
+                        request.Parameters = new Dictionary<string, object>();
+                    request.Parameters["GameDescription"] = gameDescription;
+
+                    UnityProjectArchitect.Core.AIOperationResult result = await aiAssistant.GenerateContentAsync(request);
+                    if (result.Success && !string.IsNullOrEmpty(result.Content))
+                    {
+                        // Add AI generation metadata
+                        return $@"<!-- Generated by ConceptualDataModelGenerator using Claude AI -->
+# Data Model
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC using Claude AI API*
+
+{result.Content}
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualDataModelGenerator with Claude AI
+- AI Provider: {result.Provider}
+- Processing Time: {result.ProcessingTime.TotalSeconds:F2} seconds
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+<!-- End ConceptualDataModelGenerator -->";
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"AI generation failed for Data Model, using offline fallback: {ex.Message}");
+            }
+
+            // Fallback to offline generation
+            return await Task.FromResult($@"<!-- Generated by ConceptualDataModelGenerator (Offline Mode) -->
 # Data Model
 
 *Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
@@ -614,7 +780,60 @@ public class GameSettings
         /// </summary>
         private async Task<string> GenerateConceptualAPISpec(string gameDescription)
         {
-            return await Task.FromResult($@"<!-- Generated by ConceptualAPISpecGenerator -->
+            // Try AI generation first if available
+            try
+            {
+                IAIAssistant aiAssistant = UnityServiceBridge.GetAIAssistant();
+                if (aiAssistant?.IsConfigured == true)
+                {
+                    // Create AI request for conceptual API specification
+                    var request = new UnityProjectArchitect.Core.AIRequest
+                    {
+                        RequestType = UnityProjectArchitect.Core.AIRequestType.Generation,
+                        Prompt = BuildAPISpecPrompt(),
+                        SectionType = DocumentationSectionType.APISpecification,
+                        Configuration = new UnityProjectArchitect.Core.AIConfiguration
+                        {
+                            Provider = UnityProjectArchitect.Core.AIProvider.Claude,
+                            MaxTokens = 4000,
+                            Temperature = 0.7f
+                        }
+                    };
+
+                    // Add game description as parameter
+                    if (request.Parameters == null)
+                        request.Parameters = new Dictionary<string, object>();
+                    request.Parameters["GameDescription"] = gameDescription;
+
+                    UnityProjectArchitect.Core.AIOperationResult result = await aiAssistant.GenerateContentAsync(request);
+                    if (result.Success && !string.IsNullOrEmpty(result.Content))
+                    {
+                        // Add AI generation metadata
+                        return $@"<!-- Generated by ConceptualAPISpecGenerator using Claude AI -->
+# API Specification
+
+*Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC using Claude AI API*
+
+{result.Content}
+
+---
+**Generation Metadata:**
+- Generated by: ConceptualAPISpecGenerator with Claude AI
+- AI Provider: {result.Provider}
+- Processing Time: {result.ProcessingTime.TotalSeconds:F2} seconds
+- Generation Date: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}
+---
+<!-- End ConceptualAPISpecGenerator -->";
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"AI generation failed for API Specification, using offline fallback: {ex.Message}");
+            }
+
+            // Fallback to offline generation
+            return await Task.FromResult($@"<!-- Generated by ConceptualAPISpecGenerator (Offline Mode) -->
 # API Specification
 
 *Generated on {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC*
@@ -791,6 +1010,65 @@ public interface ICombatSystem
                 DocumentationSectionType.WorkTickets => true,
                 _ => false
             };
+        }
+
+        private string BuildDataModelPrompt()
+        {
+            return @"Generate a comprehensive Data Model document for a game concept. 
+
+Based on the game description provided, create a professional data model that includes:
+
+1. **Data Architecture Overview**: High-level data organization and storage approach
+2. **Core Data Entities**: Essential game data structures (Player, Game State, Level, etc.)
+3. **Game-Specific Data**: Data unique to this game concept (items, quests, NPCs, etc.)
+4. **Data Relationships**: How different data entities relate and reference each other
+5. **Data Flow**: How data moves and transforms through the game systems
+6. **Persistence Strategy**: What data needs to be saved and when
+7. **Data Validation**: Rules and constraints for data integrity
+8. **Performance Considerations**: Data optimization for Unity and target platforms
+
+Use the actual game concept provided in the context. Format the output as professional markdown with clear headers, data schemas, and examples where appropriate.
+
+Focus on creating a practical, Unity-focused data model that supports the specific gameplay needs while maintaining performance and maintainability.";
+        }
+
+        private string BuildAPISpecPrompt()
+        {
+            return @"Generate a comprehensive API Specification document for a game concept. 
+
+Based on the game description provided, create a professional API specification that includes:
+
+1. **Public API Overview**: High-level description of the game's public interfaces
+2. **Core Game APIs**: Essential APIs for game functionality (Player, GameManager, etc.)
+3. **Game-Specific APIs**: APIs unique to this game concept (inventory, combat, crafting, etc.)
+4. **Event System APIs**: Game events and messaging interfaces
+5. **Data Access APIs**: Interfaces for accessing and modifying game data
+6. **Utility APIs**: Helper functions and common utilities
+7. **Integration APIs**: External service integration (analytics, cloud save, etc.)
+8. **API Documentation**: Clear documentation with examples and parameters
+
+Use the actual game concept provided in the context. Format the output as professional markdown with clear headers, code examples, and API documentation.
+
+Focus on creating practical, Unity-focused APIs that support the specific gameplay requirements while maintaining clean architecture and ease of use.";
+        }
+
+        private string BuildSystemArchitecturePrompt()
+        {
+            return @"Generate a comprehensive System Architecture document for a game concept. 
+
+Based on the game description provided, create a professional system architecture that includes:
+
+1. **Architecture Overview**: High-level architectural approach and patterns
+2. **Core Systems**: Essential game systems like Game Manager, Player Controller, Scene Management
+3. **Game-Specific Systems**: Systems unique to this game concept (inventory, combat, crafting, etc.)
+4. **Architecture Patterns**: Recommended patterns (Component-based, MVC, Observer, etc.)
+5. **Data Flow**: How information moves through the system
+6. **Technical Considerations**: Performance, scalability, and Unity-specific considerations
+7. **System Dependencies**: How different systems interact and depend on each other
+
+Use the actual game concept provided in the context. Format the output as professional markdown with clear headers, code examples where appropriate, and Mermaid diagrams if helpful for system relationships.
+
+Focus on creating a practical, Unity-focused architecture that addresses the specific needs of the game concept while following best practices for game development.";
         }
     }
 }

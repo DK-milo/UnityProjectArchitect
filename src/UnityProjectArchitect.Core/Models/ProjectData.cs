@@ -35,14 +35,15 @@ namespace UnityProjectArchitect.Core
         {
             if (DocumentationSections.Count == 0)
             {
+                // Only add sections appropriate for project analysis (not game concept planning)
+                // UserStories and WorkTickets are for game concepts, not existing project analysis
                 DocumentationSections.AddRange(new[]
                 {
                     new DocumentationSectionData { SectionType = DocumentationSectionType.GeneralProductDescription, IsEnabled = true },
                     new DocumentationSectionData { SectionType = DocumentationSectionType.SystemArchitecture, IsEnabled = true },
                     new DocumentationSectionData { SectionType = DocumentationSectionType.DataModel, IsEnabled = true },
-                    new DocumentationSectionData { SectionType = DocumentationSectionType.APISpecification, IsEnabled = true },
-                    new DocumentationSectionData { SectionType = DocumentationSectionType.UserStories, IsEnabled = true },
-                    new DocumentationSectionData { SectionType = DocumentationSectionType.WorkTickets, IsEnabled = true }
+                    new DocumentationSectionData { SectionType = DocumentationSectionType.APISpecification, IsEnabled = true }
+                    // Note: UserStories and WorkTickets are only available in Game Concept Studio mode
                 });
             }
         }
@@ -111,6 +112,33 @@ namespace UnityProjectArchitect.Core
             FolderStructure = new FolderStructureData();
             DocumentationVersion = 1;
             MarkModified();
+        }
+
+        /// <summary>
+        /// Removes concept-only sections (UserStories, WorkTickets) from project analysis assets.
+        /// This cleans up existing ProjectData that may have these sections from before the separation.
+        /// </summary>
+        public void RemoveConceptOnlySections()
+        {
+            List<DocumentationSectionData> toRemove = new List<DocumentationSectionData>();
+            
+            foreach (DocumentationSectionData section in DocumentationSections)
+            {
+                if (section.SectionType == DocumentationSectionType.UserStories || 
+                    section.SectionType == DocumentationSectionType.WorkTickets)
+                {
+                    toRemove.Add(section);
+                }
+            }
+
+            if (toRemove.Count > 0)
+            {
+                foreach (DocumentationSectionData section in toRemove)
+                {
+                    DocumentationSections.Remove(section);
+                }
+                MarkModified();
+            }
         }
     }
 
