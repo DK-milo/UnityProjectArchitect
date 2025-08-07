@@ -28,27 +28,11 @@ namespace UnityProjectArchitect.Unity
             try
             {
                 // Initialize real DLL services
-                UnityEngine.Debug.Log("UnityServiceBridge: Creating ProjectAnalyzer...");
                 _projectAnalyzer = new ProjectAnalyzer();
-                UnityEngine.Debug.Log("UnityServiceBridge: ✅ ProjectAnalyzer created");
-                
-                UnityEngine.Debug.Log("UnityServiceBridge: Creating ExportService...");
                 _exportService = new ExportService();
-                UnityEngine.Debug.Log("UnityServiceBridge: ✅ ExportService created");
-                
-                UnityEngine.Debug.Log("UnityServiceBridge: Creating TemplateManager...");
                 _templateManager = new TemplateManager();
-                UnityEngine.Debug.Log("UnityServiceBridge: ✅ TemplateManager created");
-                
-                UnityEngine.Debug.Log("UnityServiceBridge: Creating AIAssistant...");
                 _aiAssistant = new AIAssistant();
-                UnityEngine.Debug.Log("UnityServiceBridge: ✅ AIAssistant created");
-                
-                UnityEngine.Debug.Log("UnityServiceBridge: Creating UnityDocumentationService...");
                 _documentationService = new UnityDocumentationService();
-                UnityEngine.Debug.Log("UnityServiceBridge: ✅ UnityDocumentationService created");
-                
-                UnityEngine.Debug.Log("Unity Project Architect Service Bridge initialized with DLL services");
             }
             catch (Exception ex)
             {
@@ -75,18 +59,13 @@ namespace UnityProjectArchitect.Unity
         /// </summary>
         public static IExportService GetExportService()
         {
-            UnityEngine.Debug.LogError("🔍 DEBUG: GetExportService called! _exportService is " + (_exportService == null ? "NULL" : "NOT NULL"));
-            
             if (_exportService == null)
             {
-                UnityEngine.Debug.LogError("🔍 DEBUG: _exportService is null, calling Initialize()...");
                 Initialize();
-                UnityEngine.Debug.LogError("🔍 DEBUG: After Initialize(), _exportService is " + (_exportService == null ? "STILL NULL" : "NOW NOT NULL"));
             }
             
             if (_exportService == null)
             {
-                UnityEngine.Debug.LogError("🔍 DEBUG: Returning MockExportService because _exportService is null!");
                 return new MockExportService();
             }
             else
