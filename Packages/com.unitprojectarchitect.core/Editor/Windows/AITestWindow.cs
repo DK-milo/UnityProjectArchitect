@@ -366,10 +366,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             card.style.borderBottomLeftRadius = 5;
             card.style.borderBottomRightRadius = 5;
             
-            Label titleLabel = new Label($"📄 {title}");
-            titleLabel.style.fontSize = 14;
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.marginBottom = 5;
+            // Collapsible section for each generated result
+            Foldout sectionFoldout = new Foldout { text = $"📄 {title}", value = false };
+            sectionFoldout.style.marginBottom = 5;
             
             TextField contentField = new TextField()
             {
@@ -385,9 +384,10 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             statsLabel.style.color = Color.gray;
             statsLabel.style.marginTop = 5;
             
-            card.Add(titleLabel);
-            card.Add(contentField);
-            card.Add(statsLabel);
+            sectionFoldout.Add(contentField);
+            sectionFoldout.Add(statsLabel);
+
+            card.Add(sectionFoldout);
             
             _resultsContainer.Add(card);
         }

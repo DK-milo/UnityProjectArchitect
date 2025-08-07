@@ -72,20 +72,21 @@ namespace UnityProjectArchitect.AI.Services
         /// </summary>
         public async Task<AIOperationResult> GenerateContentAsync(AIRequest request)
         {
+            _logger.Log("[AI DEBUG] GenerateContentAsync called");
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
             DateTime startTime = DateTime.Now;
-            _logger.Log($"Starting content generation for request type: {request.RequestType}");
-
+            _logger.Log($"[AI DEBUG] Starting content generation for request type: {request.RequestType}, Prompt length: {request.Prompt?.Length}, SectionType: {request.SectionType}, Config: {request.Configuration?.Provider}, MaxTokens: {request.Configuration?.MaxTokens}, Temp: {request.Configuration?.Temperature}");
             try
             {
+                _logger.Log("[AI DEBUG] About to invoke OnProgress");
                 OnProgress?.Invoke("Initializing content generation...", 0.1f);
-
-                // Validate request
+                _logger.Log("[AI DEBUG] OnProgress invoked, starting request validation");
                 ValidationResult validation = await ValidateAIRequestAsync(request);
+                _logger.Log($"[AI DEBUG] Request validation completed: IsValid={validation.IsValid}, Message={validation.ErrorMessage}");
                 if (!validation.IsValid)
                 {
+                    _logger.LogError($"[AI DEBUG] Request validation failed: {validation.ErrorMessage}");
                     AIOperationResult validationError = new AIOperationResult(false, string.Empty)
                     {
                         ErrorMessage = validation.ErrorMessage,
@@ -96,65 +97,45 @@ namespace UnityProjectArchitect.AI.Services
                     OnOperationComplete?.Invoke(validationError);
                     return validationError;
                 }
-
                 OnProgress?.Invoke("Building context and optimizing prompt...", 0.3f);
-
-                // Build context and optimize prompt
                 string optimizedPrompt = await BuildOptimizedPromptAsync(request);
                 string projectContext = await ContextBuilder.BuildContextAsync(request.ProjectContext);
-
                 OnProgress?.Invoke("Sending request to AI provider...", 0.5f);
-
-                // Generate content using current provider
+                _logger.Log($"[AI DEBUG] Sending to provider: {_currentProvider}, Optimized prompt length: {optimizedPrompt.Length}");
                 AIOperationResult result = await GenerateWithProviderAsync(optimizedPrompt, projectContext, request);
-
                 OnProgress?.Invoke("Validating generated content...", 0.8f);
-
-                // Validate generated content
                 if (result.Success && !string.IsNullOrEmpty(result.Content))
                 {
+                    _logger.Log($"[AI DEBUG] Content generation success: Content length={result.Content.Length}, Provider={result.Provider}, Time={result.ProcessingTime.TotalSeconds:F2}s");
                     ContentValidationResult contentValidation = await _contentValidator.ValidateContentAsync(
                         result.Content, request.SectionType ?? DocumentationSectionType.GeneralProductDescription);
-                    
                     if (!contentValidation.IsValid)
                     {
                         result.Metadata["ContentValidationIssues"] = contentValidation.Issues;
-                        result.ConfidenceScore *= 0.7f; // Reduce confidence for validation issues
+                        result.ConfidenceScore *= 0.7f;
+                        _logger.LogWarning($"[AI DEBUG] Content validation issues: {string.Join(", ", contentValidation.Issues)}");
                     }
                 }
-
-                OnProgress?.Invoke("Finalizing result...", 1.0f);
-
-                // Update statistics
-                UpdateUsageStatistics(result, request);
-
-                // Store conversation history if multi-turn
-                if (request.Parameters.ContainsKey("ConversationId"))
+                else
                 {
-                    string conversationId = request.Parameters["ConversationId"].ToString();
-                    await _conversationManager.AddMessageAsync(conversationId, "user", request.Prompt);
-                    if (result.Success)
-                    {
-                        await _conversationManager.AddMessageAsync(conversationId, "assistant", result.Content);
-                    }
+                    _logger.LogWarning($"[AI DEBUG] Content generation failed or empty. Success={result.Success}, Error={result.ErrorMessage}");
                 }
-
-                _logger.Log($"Content generation completed in {result.ProcessingTime.TotalSeconds:F2}s");
+                OnProgress?.Invoke("Finalizing result...", 1.0f);
+                UpdateUsageStatistics(result, request);
+                _logger.Log($"[AI DEBUG] Content generation completed in {result.ProcessingTime.TotalSeconds:F2}s");
                 OnOperationComplete?.Invoke(result);
                 return result;
             }
             catch (Exception ex)
             {
-                string errorMessage = $"Content generation failed: {ex.Message}";
+                string errorMessage = $"[AI DEBUG] Content generation failed: {ex.Message}\n{ex.StackTrace}";
                 _logger.LogError(errorMessage);
-                
                 AIOperationResult errorResult = new AIOperationResult(false, string.Empty)
                 {
                     ErrorMessage = errorMessage,
                     Provider = _currentProvider,
                     ProcessingTime = DateTime.Now - startTime
                 };
-                
                 OnError?.Invoke(errorMessage);
                 OnOperationComplete?.Invoke(errorResult);
                 return errorResult;
@@ -429,12 +410,12 @@ namespace UnityProjectArchitect.AI.Services
         /// </summary>
         public AIConfiguration GetDefaultConfiguration(AIProvider provider)
         {
-            return provider switch
+            var config = provider switch
             {
                 AIProvider.Claude => new AIConfiguration
                 {
                     Provider = AIProvider.Claude,
-                    Model = "claude-3-sonnet-20240229",
+                    Model = "claude-3-5-sonnet-20241022",
                     MaxTokens = 2048,
                     Temperature = 0.7f,
                     TimeoutSeconds = 30,
@@ -443,6 +424,14 @@ namespace UnityProjectArchitect.AI.Services
                 },
                 _ => new AIConfiguration { Provider = provider }
             };
+            
+            // Include the actual API key from the current configuration
+            if (_currentConfiguration != null && !string.IsNullOrEmpty(_currentConfiguration.ApiKey))
+            {
+                config.ApiKey = _currentConfiguration.ApiKey;
+            }
+            
+            return config;
         }
 
         /// <summary>
@@ -470,7 +459,7 @@ namespace UnityProjectArchitect.AI.Services
                 Provider = AIProvider.Claude,
                 SupportedModels = new List<string>
                 {
-                    "claude-3-sonnet-20240229",
+                    "claude-3-5-sonnet-20241022",
                     "claude-3-haiku-20240307",
                     "claude-3-opus-20240229"
                 },
@@ -500,30 +489,40 @@ namespace UnityProjectArchitect.AI.Services
                 if (!string.IsNullOrEmpty(apiKey))
                 {
                     _currentConfiguration.ApiKey = apiKey;
-                    _logger.Log("API key loaded successfully into AI configuration");
                 }
                 else
                 {
-                    _logger.LogWarning("No API key available for AI configuration");
+                    _logger.LogWarning("[AI DEBUG] No API key available for AI configuration");
+                    // Ensure the configuration is properly initialized even without an API key
+                    _currentConfiguration.ApiKey = "";
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to load configuration from key manager: {ex.Message}");
+                _logger.LogError($"[AI DEBUG] Failed to load configuration from key manager: {ex.Message}");
+                // Ensure the configuration is properly initialized even on error
+                _currentConfiguration.ApiKey = "";
             }
         }
 
         private void ValidateConfiguration()
         {
-            _isConfigured = _claudeClient.IsConfigured && _currentConfiguration.IsValid();
+            bool claudeClientConfigured = _claudeClient.IsConfigured;
+            bool currentConfigValid = _currentConfiguration.IsValid();
             
-            if (_isConfigured)
+            _isConfigured = claudeClientConfigured && currentConfigValid;
+            
+            if (!_isConfigured)
             {
-                _logger.Log("AI Assistant successfully configured");
-            }
-            else
-            {
-                _logger.LogWarning("AI Assistant configuration incomplete - some features may not be available");
+                _logger.LogWarning("[AI DEBUG] AI Assistant configuration incomplete - some features may not be available");
+                if (!claudeClientConfigured)
+                {
+                    _logger.LogWarning("[AI DEBUG] - ClaudeAPIClient is not configured");
+                }
+                if (!currentConfigValid)
+                {
+                    _logger.LogWarning("[AI DEBUG] - Current AI configuration is not valid");
+                }
             }
         }
 
@@ -585,7 +584,7 @@ namespace UnityProjectArchitect.AI.Services
         private async Task<AIOperationResult> GenerateWithProviderAsync(string prompt, string context, AIRequest request)
         {
             DateTime startTime = DateTime.Now;
-
+            _logger.Log($"[AI DEBUG] GenerateWithProviderAsync: Provider={_currentProvider}, Prompt length={prompt?.Length}, Context length={context?.Length}");
             try
             {
                 switch (_currentProvider)
@@ -594,9 +593,9 @@ namespace UnityProjectArchitect.AI.Services
                         ClaudeAPIRequest claudeRequest = new ClaudeAPIRequest(prompt, context);
                         claudeRequest.max_tokens = request.Configuration?.MaxTokens ?? 2048;
                         claudeRequest.temperature = request.Configuration?.Temperature ?? 0.7f;
-
+                        _logger.Log($"[AI DEBUG] Sending ClaudeAPIRequest: MaxTokens={claudeRequest.max_tokens}, Temp={claudeRequest.temperature}");
                         ClaudeAPIResponse response = await _claudeClient.SendRequestAsync(claudeRequest);
-                        
+                        _logger.Log($"[AI DEBUG] ClaudeAPIResponse: Success={response.IsSuccess}, Error={response.error?.message}, TokensUsed={response.usage?.TotalTokens}");
                         return new AIOperationResult(response.IsSuccess, response.GetTextContent())
                         {
                             Provider = AIProvider.Claude,
@@ -611,13 +610,13 @@ namespace UnityProjectArchitect.AI.Services
                                 { "MaxTokens", claudeRequest.max_tokens }
                             }
                         };
-
                     default:
                         throw new NotSupportedException($"Provider {_currentProvider} is not supported");
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError($"[AI DEBUG] Provider operation failed: {ex.Message}\n{ex.StackTrace}");
                 return new AIOperationResult(false, string.Empty)
                 {
                     ErrorMessage = $"Provider operation failed: {ex.Message}",

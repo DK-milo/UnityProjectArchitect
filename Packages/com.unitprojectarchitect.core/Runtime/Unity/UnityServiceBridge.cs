@@ -90,15 +90,6 @@ namespace UnityProjectArchitect.Unity
             // This method would need reflection or internal API access to properly configure
             // For now, we'll rely on the fact that the Unity settings provider bridges the gap
             UnityEngine.Debug.Log($"🔑 AI Assistant configuration status: {(aiAssistant.IsConfigured ? "✅ Configured" : "⚠️ Not configured")}");
-            
-            if (keyManager.HasClaudeAPIKey())
-            {
-                UnityEngine.Debug.Log("🔑 API key detected from Unity EditorPrefs");
-            }
-            else
-            {
-                UnityEngine.Debug.Log("⚠️ No API key found in Unity EditorPrefs");
-            }
         }
         
         
@@ -157,16 +148,6 @@ namespace UnityProjectArchitect.Unity
             {
                 Initialize();
             }
-            // If offline is forced, return a wrapper that reports not configured to cause offline fallbacks
-            try
-            {
-                bool forceOffline = UnityEditor.EditorPrefs.GetBool("UnityProjectArchitect.ForceOffline", false);
-                if (forceOffline && _aiAssistant != null)
-                {
-                    return new OfflineAIAssistantProxy(_aiAssistant);
-                }
-            }
-            catch { /* ignore outside editor */ }
             return _aiAssistant;
         }
         
@@ -240,30 +221,6 @@ namespace UnityProjectArchitect.Unity
     }
     
     #region Mock Implementations (Fallback Only)
-
-    /// <summary>
-    /// Proxy that forces IsConfigured=false so generators take offline path,
-    /// while preserving interface shape if needed for future extension.
-    /// </summary>
-    internal class OfflineAIAssistantProxy : IAIAssistant
-    {
-        private readonly IAIAssistant _inner;
-        public OfflineAIAssistantProxy(IAIAssistant inner) { _inner = inner; }
-        public event System.Action<AIOperationResult> OnOperationComplete { add { } remove { } }
-        public event System.Action<string, float> OnProgress { add { } remove { } }
-        public event System.Action<string> OnError { add { } remove { } }
-        public System.Threading.Tasks.Task<AIOperationResult> GenerateContentAsync(AIRequest request) => System.Threading.Tasks.Task.FromResult(new AIOperationResult(false, string.Empty) { ErrorMessage = "Offline forced" });
-        public System.Threading.Tasks.Task<AIOperationResult> EnhanceContentAsync(string content, AIEnhancementRequest enhancementRequest) => System.Threading.Tasks.Task.FromResult(new AIOperationResult(false, string.Empty) { ErrorMessage = "Offline forced" });
-        public System.Threading.Tasks.Task<AIOperationResult> AnalyzeProjectAsync(ProjectData projectData) => System.Threading.Tasks.Task.FromResult(new AIOperationResult(false, string.Empty) { ErrorMessage = "Offline forced" });
-        public System.Threading.Tasks.Task<AIOperationResult> GenerateSuggestionsAsync(ProjectData projectData, SuggestionType suggestionType) => System.Threading.Tasks.Task.FromResult(new AIOperationResult(false, string.Empty) { ErrorMessage = "Offline forced" });
-        public System.Threading.Tasks.Task<ValidationResult> ValidateAPIKeyAsync(string apiKey, AIProvider provider) => System.Threading.Tasks.Task.FromResult(ValidationResult.Failure("Offline forced"));
-        public System.Threading.Tasks.Task<bool> TestConnectionAsync(AIConfiguration configuration) => System.Threading.Tasks.Task.FromResult(false);
-        public System.Collections.Generic.List<AIProvider> GetSupportedProviders() => new System.Collections.Generic.List<AIProvider> { AIProvider.Offline };
-        public AIConfiguration GetDefaultConfiguration(AIProvider provider) => new AIConfiguration();
-        public AICapabilities GetCapabilities(AIProvider provider) => new AICapabilities { Provider = AIProvider.Offline };
-        public bool IsConfigured => false;
-        public AIProvider CurrentProvider => AIProvider.Offline;
-    }
     
     /// <summary>
     /// Minimal mock implementation - only used as fallback if real services fail to initialize
