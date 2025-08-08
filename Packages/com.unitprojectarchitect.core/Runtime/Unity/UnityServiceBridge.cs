@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEditor;
 using UnityProjectArchitect.Core;
 using UnityProjectArchitect.Services;
 using UnityProjectArchitect.AI.Services;
@@ -148,6 +149,13 @@ namespace UnityProjectArchitect.Unity
             {
                 Initialize();
             }
+            
+            // Check if offline mode is forced
+            if (UnityEditor.EditorPrefs.GetBool("UnityProjectArchitect.ForceOffline", false))
+            {
+                return new OfflineAIAssistantProxy();
+            }
+            
             return _aiAssistant;
         }
         
@@ -357,6 +365,129 @@ namespace UnityProjectArchitect.Unity
         public bool CanExport(ExportFormat format)
         {
             return false;
+        }
+    }
+    
+    /// <summary>
+    /// Offline AI Assistant Proxy that always returns IsConfigured=false
+    /// This ensures generators take offline fallback paths when force offline mode is enabled
+    /// </summary>
+    internal class OfflineAIAssistantProxy : IAIAssistant
+    {
+        public event System.Action<UnityProjectArchitect.Core.AIOperationResult> OnOperationComplete;
+        public event System.Action<string, float> OnProgress;
+        public event System.Action<string> OnError;
+        
+        public bool IsConfigured => false;
+        public UnityProjectArchitect.Core.AIProvider CurrentProvider => UnityProjectArchitect.Core.AIProvider.Offline;
+        
+        public Task<UnityProjectArchitect.Core.AIOperationResult> GenerateContentAsync(UnityProjectArchitect.Core.AIRequest request)
+        {
+            // Return a failed result to force offline fallback
+            return Task.FromResult(new UnityProjectArchitect.Core.AIOperationResult
+            {
+                Success = false,
+                Content = null,
+                ErrorMessage = "Offline mode enabled - using built-in templates",
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                ProcessingTime = System.TimeSpan.Zero
+            });
+        }
+        
+        public Task<UnityProjectArchitect.Core.AIOperationResult> EnhanceContentAsync(string content, UnityProjectArchitect.Core.AIEnhancementRequest enhancementRequest)
+        {
+            // Return a failed result to force offline fallback
+            return Task.FromResult(new UnityProjectArchitect.Core.AIOperationResult
+            {
+                Success = false,
+                Content = null,
+                ErrorMessage = "Offline mode enabled - content enhancement not available",
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                ProcessingTime = System.TimeSpan.Zero
+            });
+        }
+        
+        public Task<UnityProjectArchitect.Core.AIOperationResult> AnalyzeProjectAsync(UnityProjectArchitect.Core.ProjectData projectData)
+        {
+            // Return a failed result to force offline fallback
+            return Task.FromResult(new UnityProjectArchitect.Core.AIOperationResult
+            {
+                Success = false,
+                Content = null,
+                ErrorMessage = "Offline mode enabled - using built-in analysis",
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                ProcessingTime = System.TimeSpan.Zero
+            });
+        }
+        
+        public Task<UnityProjectArchitect.Core.AIOperationResult> GenerateSuggestionsAsync(UnityProjectArchitect.Core.ProjectData projectData, UnityProjectArchitect.Core.SuggestionType suggestionType)
+        {
+            // Return a failed result to force offline fallback
+            return Task.FromResult(new UnityProjectArchitect.Core.AIOperationResult
+            {
+                Success = false,
+                Content = null,
+                ErrorMessage = "Offline mode enabled - suggestions not available",
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                ProcessingTime = System.TimeSpan.Zero
+            });
+        }
+        
+        public Task<UnityProjectArchitect.Core.ValidationResult> ValidateAPIKeyAsync(string apiKey, UnityProjectArchitect.Core.AIProvider provider)
+        {
+            UnityProjectArchitect.Core.ValidationResult result = new UnityProjectArchitect.Core.ValidationResult
+            {
+                IsValid = false
+            };
+            
+            result.Issues.Add(new UnityProjectArchitect.Core.ValidationIssue
+            {
+                Severity = UnityProjectArchitect.Core.ValidationSeverity.Info,
+                Type = UnityProjectArchitect.Core.ValidationType.AIConfiguration,
+                Message = "Offline mode enabled - API key validation skipped"
+            });
+            
+            return Task.FromResult(result);
+        }
+        
+        public Task<bool> TestConnectionAsync(UnityProjectArchitect.Core.AIConfiguration configuration)
+        {
+            return Task.FromResult(false);
+        }
+        
+        public System.Collections.Generic.List<UnityProjectArchitect.Core.AIProvider> GetSupportedProviders()
+        {
+            return new System.Collections.Generic.List<UnityProjectArchitect.Core.AIProvider>
+            {
+                UnityProjectArchitect.Core.AIProvider.Offline
+            };
+        }
+        
+        public UnityProjectArchitect.Core.AIConfiguration GetDefaultConfiguration(UnityProjectArchitect.Core.AIProvider provider)
+        {
+            return new UnityProjectArchitect.Core.AIConfiguration
+            {
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                MaxTokens = 0,
+                Temperature = 0f,
+                TimeoutSeconds = 0
+            };
+        }
+        
+        public UnityProjectArchitect.Core.AICapabilities GetCapabilities(UnityProjectArchitect.Core.AIProvider provider)
+        {
+            return new UnityProjectArchitect.Core.AICapabilities
+            {
+                Provider = UnityProjectArchitect.Core.AIProvider.Offline,
+                SupportedModels = new System.Collections.Generic.List<string>(),
+                MaxTokens = 0,
+                SupportsStreaming = false,
+                SupportsImages = false,
+                SupportsCodeGeneration = false,
+                SupportsMultipleLanguages = false,
+                SupportedEnhancements = new System.Collections.Generic.List<UnityProjectArchitect.Core.EnhancementType>(),
+                Features = new System.Collections.Generic.Dictionary<string, bool>()
+            };
         }
     }
     

@@ -44,6 +44,8 @@ namespace UnityProjectArchitect.Unity.Editor
         private Label _statusLabel;
         private VisualElement _documentationResults;
         private UnityProjectDataAsset _conceptProject;
+        private Toggle _forceOfflineToggle;
+        private Label _modeDescriptionLabel;
         
         // Project Analyzer components
         private UnityProjectDataAsset _currentProjectAsset;
@@ -672,6 +674,7 @@ namespace UnityProjectArchitect.Unity.Editor
             
             _apiKeyField.RegisterValueChangedCallback(evt => {
                 EditorPrefs.SetString("UnityProjectArchitect.ClaudeAPIKey", evt.newValue);
+                UpdateGenerationModeDisplay();
             });
             
             apiKeyContainer.Add(_apiKeyField);
@@ -682,11 +685,62 @@ namespace UnityProjectArchitect.Unity.Editor
             statusLabel.style.color = string.IsNullOrEmpty(_apiKeyField.value) ? new Color(1f, 0.5f, 0f, 1f) : Color.green;
             statusLabel.style.marginTop = 5;
             
+            // Force Offline Mode toggle
+            _forceOfflineToggle = new Toggle("Force Offline Mode")
+            {
+                value = EditorPrefs.GetBool("UnityProjectArchitect.ForceOffline", false)
+            };
+            _forceOfflineToggle.style.marginTop = 10;
+            _forceOfflineToggle.style.fontSize = _baseFontSize - 1;
+            
+            _forceOfflineToggle.RegisterValueChangedCallback(evt => {
+                EditorPrefs.SetBool("UnityProjectArchitect.ForceOffline", evt.newValue);
+                UpdateGenerationModeDisplay();
+            });
+            
+            // Mode description label
+            _modeDescriptionLabel = new Label();
+            _modeDescriptionLabel.style.fontSize = _baseFontSize - 3;
+            _modeDescriptionLabel.style.marginTop = 5;
+            _modeDescriptionLabel.style.whiteSpace = WhiteSpace.Normal;
+            
             configFoldout.Add(keyLabel);
             configFoldout.Add(apiKeyContainer);
             configFoldout.Add(statusLabel);
+            configFoldout.Add(_forceOfflineToggle);
+            configFoldout.Add(_modeDescriptionLabel);
+            
+            // Initialize mode description
+            UpdateGenerationModeDisplay();
             
             parent.Add(configFoldout);
+        }
+        
+        /// <summary>
+        /// Updates the generation mode display based on API key and force offline toggle
+        /// </summary>
+        private void UpdateGenerationModeDisplay()
+        {
+            if (_modeDescriptionLabel == null) return;
+            
+            bool hasApiKey = !string.IsNullOrEmpty(EditorPrefs.GetString("UnityProjectArchitect.ClaudeAPIKey", ""));
+            bool forceOffline = EditorPrefs.GetBool("UnityProjectArchitect.ForceOffline", false);
+            
+            if (forceOffline)
+            {
+                _modeDescriptionLabel.text = "🔸 Mode: Offline - Using built-in templates and structured generation";
+                _modeDescriptionLabel.style.color = new Color(0.60f, 0.35f, 0.05f, 1f);
+            }
+            else if (hasApiKey)
+            {
+                _modeDescriptionLabel.text = "🔸 Mode: AI-Enhanced - Using Claude AI for advanced content generation";
+                _modeDescriptionLabel.style.color = new Color(0.15f, 0.40f, 0.15f, 1f);
+            }
+            else
+            {
+                _modeDescriptionLabel.text = "🔸 Mode: Smart Fallback - Will use AI if available, otherwise offline templates";
+                _modeDescriptionLabel.style.color = new Color(0.40f, 0.40f, 0.40f, 1f);
+            }
         }
         
         private void CreateDocumentationGenerationSection(ScrollView parent)
