@@ -24,14 +24,15 @@ namespace UnityProjectArchitect.Unity.Editor
         private VisualElement _contentContainer;
         
         // Tab content containers
+        private VisualElement _overviewTab;
         private VisualElement _gameConceptTab;
         private VisualElement _projectAnalyzerTab;
         private VisualElement _templateCreatorTab;
         
         // Current active tab
         private int _activeTab = 0;
-        private readonly string[] _tabNames = { "Game Concept Studio", "Project Analyzer", "Smart Template Creator" };
-        private readonly string[] _tabIcons = { "🎮", "🔍", "📁" };
+        private readonly string[] _tabNames = { "Overview & Tutorial", "Game Concept Studio", "Project Analyzer", "Smart Template Creator" };
+        private readonly string[] _tabIcons = { "📘", "🎮", "🔍", "📁" };
         
         // Game Concept Studio components
         private TextField _gameDescriptionField;
@@ -39,6 +40,7 @@ namespace UnityProjectArchitect.Unity.Editor
         private Button _generateDocsButton;
         private Button _exportDocsButton;
         private Button _createStructureButton;
+        // Removed sticky action bar
         private Label _statusLabel;
         private VisualElement _documentationResults;
         private UnityProjectDataAsset _conceptProject;
@@ -65,6 +67,9 @@ namespace UnityProjectArchitect.Unity.Editor
         private bool _compactMode;
         private int _baseFontSize;
         private string _textSizeSetting;
+        private string _currentSearchTerm = "";
+        private TwoPaneSplitView _splitView;
+        private bool _isStyleSheetAttached;
         
         public static void ShowWindow()
         {
@@ -81,6 +86,7 @@ namespace UnityProjectArchitect.Unity.Editor
             _compactMode = EditorPrefs.GetBool("UnityProjectArchitect.CompactMode", false);
             _textSizeSetting = EditorPrefs.GetString("UnityProjectArchitect.TextSize", "Normal");
             _baseFontSize = GetBaseFontSize(_textSizeSetting);
+            TryAttachStyleSheet();
             CreateUI();
         }
         
@@ -89,16 +95,17 @@ namespace UnityProjectArchitect.Unity.Editor
             _rootElement = rootVisualElement;
             _rootElement.Clear();
             _baseFontSize = GetBaseFontSize(_textSizeSetting);
+            TryAttachStyleSheet();
             
             // Add top header bar for modern look and quick status
             VisualElement topHeader = CreateTopHeaderBar();
+            if (topHeader != null) topHeader.AddToClassList("upa-topbar");
             _rootElement.Add(topHeader);
 
-            // Main container with horizontal layout
-            VisualElement mainContainer = new VisualElement();
-            mainContainer.style.flexDirection = FlexDirection.Row;
-            mainContainer.style.flexGrow = 1;
-            mainContainer.style.marginTop = 6;
+            // Toolbar (search and quick actions)
+            VisualElement toolbar = CreateToolbar();
+            if (toolbar != null) toolbar.AddToClassList("upa-toolbar");
+            _rootElement.Add(toolbar);
             
             // Create left side tab buttons
             CreateTabNavigation();
@@ -106,15 +113,44 @@ namespace UnityProjectArchitect.Unity.Editor
             // Create right side content area
             CreateContentArea();
             
-            // Add to main container
-            mainContainer.Add(_tabButtonsContainer);
-            mainContainer.Add(_contentContainer);
-            
-            _rootElement.Add(mainContainer);
+            // Create resizable split view (left nav / content)
+            _splitView = new TwoPaneSplitView(0, 220, TwoPaneSplitViewOrientation.Horizontal)
+            {
+                style = { flexGrow = 1, marginTop = 6 }
+            };
+            _splitView.Add(_tabButtonsContainer);
+            _splitView.Add(_contentContainer);
+
+            _rootElement.Add(_splitView);
             
             // Initialize tabs
             CreateAllTabs();
             SwitchToTab(0);
+        }
+
+        private void TryAttachStyleSheet()
+        {
+            if (_rootElement == null) return;
+            string ussPath = "Packages/com.unitprojectarchitect.core/Editor/Windows/UnifiedProjectArchitectWindow.uss";
+            StyleSheet ss = AssetDatabase.LoadAssetAtPath<StyleSheet>(ussPath);
+            if (ss != null && !_isStyleSheetAttached)
+            {
+                _rootElement.styleSheets.Add(ss);
+                _isStyleSheetAttached = true;
+            }
+            // Always update the text size class on the root
+            _rootElement.RemoveFromClassList("text-small");
+            _rootElement.RemoveFromClassList("text-normal");
+            _rootElement.RemoveFromClassList("text-large");
+            _rootElement.RemoveFromClassList("text-xlarge");
+            string cls = _textSizeSetting switch
+            {
+                "Small" => "text-small",
+                "Large" => "text-large",
+                "ExtraLarge" => "text-xlarge",
+                _ => "text-normal"
+            };
+            _rootElement.AddToClassList(cls);
         }
 
         private enum TextSizeOption
@@ -155,19 +191,12 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateTabNavigation()
         {
             _tabButtonsContainer = new VisualElement();
-            _tabButtonsContainer.style.width = 220;
-            _tabButtonsContainer.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 1f);
-            _tabButtonsContainer.style.paddingTop = 10;
-            _tabButtonsContainer.style.paddingBottom = 10;
-            _tabButtonsContainer.style.paddingLeft = 5;
-            _tabButtonsContainer.style.paddingRight = 5;
-            _tabButtonsContainer.style.borderRightWidth = 1;
-            _tabButtonsContainer.style.borderRightColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+            _tabButtonsContainer.AddToClassList("upa-sidebar");
             _tabButtonsContainer.style.fontSize = _baseFontSize;
             
             // Header
             Label headerLabel = new Label("Unity Project Architect Studio");
-            headerLabel.style.fontSize = _baseFontSize + 0;
+            headerLabel.AddToClassList("upa-fs-base");
             headerLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             headerLabel.style.color = Color.white;
             headerLabel.style.marginBottom = 20;
@@ -185,21 +214,13 @@ namespace UnityProjectArchitect.Unity.Editor
         private Button CreateTabButton(int tabIndex, string icon, string tabName)
         {
             Button tabButton = new Button(() => SwitchToTab(tabIndex));
+            tabButton.AddToClassList("upa-tabbtn");
             tabButton.style.height = _compactMode ? 44 : 56;
-            tabButton.style.marginBottom = 5;
             tabButton.style.fontSize = _baseFontSize - 2;
-            tabButton.style.unityTextAlign = TextAnchor.MiddleLeft;
-            tabButton.style.paddingLeft = 10;
-            tabButton.style.borderLeftWidth = 3;
-            tabButton.style.borderLeftColor = new Color(0, 0, 0, 0);
-            tabButton.style.borderTopLeftRadius = 6;
-            tabButton.style.borderBottomLeftRadius = 6;
-            tabButton.style.backgroundColor = new Color(0.20f, 0.20f, 0.20f, 1f);
             
             // Create button content with icon and text
             VisualElement buttonContent = new VisualElement();
-            buttonContent.style.flexDirection = FlexDirection.Row;
-            buttonContent.style.alignItems = Align.Center;
+            buttonContent.AddToClassList("upa-row");
             
             Label iconLabel = new Label(icon);
             iconLabel.style.fontSize = 16;
@@ -234,36 +255,194 @@ namespace UnityProjectArchitect.Unity.Editor
         {
             _contentContainer = new VisualElement();
             _contentContainer.style.flexGrow = 1;
-            _contentContainer.style.paddingTop = _compactMode ? 10 : 16;
-            _contentContainer.style.paddingBottom = _compactMode ? 10 : 16;
-            _contentContainer.style.paddingLeft = _compactMode ? 10 : 16;
-            _contentContainer.style.paddingRight = _compactMode ? 10 : 16;
+            _contentContainer.AddToClassList("upa-content");
             _contentContainer.style.fontSize = _baseFontSize;
-            _contentContainer.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f, 1f);
-            _contentContainer.style.borderTopLeftRadius = 8;
-            _contentContainer.style.borderTopRightRadius = 8;
-            _contentContainer.style.borderBottomLeftRadius = 8;
-            _contentContainer.style.borderBottomRightRadius = 8;
-            _contentContainer.style.borderLeftWidth = 1;
-            _contentContainer.style.borderRightWidth = 1;
-            _contentContainer.style.borderTopWidth = 1;
-            _contentContainer.style.borderBottomWidth = 1;
-            _contentContainer.style.borderLeftColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            _contentContainer.style.borderRightColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            _contentContainer.style.borderTopColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            _contentContainer.style.borderBottomColor = new Color(0.20f, 0.20f, 0.20f, 1f);
+
+            // Make header sticky by using a separate container (already added in each tab before the ScrollView)
         }
+
+        // Sticky bar helper removed
         
         private void CreateAllTabs()
         {
+            CreateOverviewTab();
             CreateGameConceptStudioTab();
             CreateProjectAnalyzerTab();
             CreateSmartTemplateCreatorTab();
+        }
+
+        private void CreateOverviewTab()
+        {
+            _overviewTab = new VisualElement();
+
+            ScrollView scrollView = new ScrollView();
+            _overviewTab.Add(scrollView);
+
+            CreateTabHeader(scrollView, "📘 Overview & Tutorial", "Welcome! This guide explains how to get the most out of Unity Project Architect Studio.");
+            AddHeaderDivider(scrollView);
+
+            // Quick intro card
+            VisualElement introCard = new VisualElement();
+            introCard.AddToClassList("upa-card");
+
+            Label introTitle = new Label("What is this studio?");
+            introTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+            introTitle.style.fontSize = _baseFontSize + 2;
+            introTitle.style.marginBottom = 4;
+
+            Label introText = new Label("It’s a unified workspace to design game concepts, analyze projects, and generate/export professional documentation with optional AI.");
+            introText.style.whiteSpace = WhiteSpace.Normal;
+            introText.style.fontSize = _baseFontSize - 1;
+
+            introCard.Add(introTitle);
+            introCard.Add(introText);
+            scrollView.Add(introCard);
+
+            // Sections for each tab
+            scrollView.Add(CreateOverviewSection(
+                "🎮 Game Concept Studio",
+                "Describe your game idea, then generate documentation (General Description, User Stories, Work Tickets, System Architecture). You can export and scaffold a project structure.",
+                "Go to Game Concept Studio",
+                () => SwitchToTab(1)
+            ));
+
+            scrollView.Add(CreateOverviewSection(
+                "🔍 Project Analyzer",
+                "Load an existing Unity project’s data asset, analyze its structure, and generate documentation such as System Architecture. Export as Markdown/PDF.",
+                "Go to Project Analyzer",
+                () => SwitchToTab(2)
+            ));
+
+            scrollView.Add(CreateOverviewSection(
+                "📁 Smart Template Creator",
+                "Create reusable templates with smart folder suggestions based on project type. Customize folders and quickly scaffold them in your project.",
+                "Go to Template Creator",
+                () => SwitchToTab(3)
+            ));
+        }
+
+        private VisualElement CreateOverviewSection(string title, string body, string ctaText, System.Action onClick)
+        {
+            VisualElement card = new VisualElement();
+            card.AddToClassList("upa-card");
+
+            Label titleLabel = new Label(title);
+            titleLabel.AddToClassList("upa-fs-title");
+            titleLabel.style.marginBottom = 2;
+
+            Label bodyLabel = new Label(body);
+            bodyLabel.AddToClassList("upa-fs-base");
+            bodyLabel.style.whiteSpace = WhiteSpace.Normal;
+            bodyLabel.style.marginBottom = 6;
+
+            Button cta = new Button(onClick) { text = ctaText };
+            cta.style.height = 28;
+            cta.style.fontSize = _baseFontSize - 1;
+
+            card.Add(titleLabel);
+            card.Add(bodyLabel);
+            card.Add(cta);
+            return card;
+        }
+
+        private VisualElement CreateToolbar()
+        {
+            Toolbar toolbar = new Toolbar();
+            // Styling via USS
+
+            Label spacer = new Label("");
+            spacer.style.flexGrow = 1;
+
+            ToolbarSearchField searchField = new ToolbarSearchField();
+            searchField.value = _currentSearchTerm;
+            searchField.style.minWidth = 220;
+            searchField.RegisterValueChangedCallback(evt => {
+                _currentSearchTerm = evt.newValue ?? string.Empty;
+                ApplySearchFilter(_currentSearchTerm);
+            });
+
+            toolbar.Add(spacer);
+            toolbar.Add(searchField);
+            return toolbar;
+        }
+
+        private void ApplySearchFilter(string term)
+        {
+            term = (term ?? string.Empty).Trim();
+
+            VisualElement activeRoot = _activeTab switch
+            {
+                0 => _overviewTab,
+                1 => _gameConceptTab,
+                2 => _projectAnalyzerTab,
+                3 => _templateCreatorTab,
+                _ => null
+            };
+
+            if (activeRoot == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(term))
+            {
+                foreach (VisualElement child in activeRoot.Children())
+                {
+                    child.style.display = DisplayStyle.Flex;
+                }
+                return;
+            }
+
+            string lower = term.ToLowerInvariant();
+            foreach (VisualElement child in activeRoot.Children())
+            {
+                bool matches = ElementMatchesSearch(child, lower);
+                child.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
+        private bool ElementMatchesSearch(VisualElement element, string lower)
+        {
+            if (element == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(element.name) && element.name.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            if (element is Label lbl && !string.IsNullOrEmpty(lbl.text) && lbl.text.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            if (element is TextField tf && !string.IsNullOrEmpty(tf.value) && tf.value.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            if (element is Foldout fo && !string.IsNullOrEmpty(fo.text) && fo.text.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            foreach (VisualElement child in element.Children())
+            {
+                if (ElementMatchesSearch(child, lower))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
         
         private void CreateGameConceptStudioTab()
         {
             _gameConceptTab = new VisualElement();
+            
+            // Sticky action bar removed
             
             ScrollView scrollView = new ScrollView();
             _gameConceptTab.Add(scrollView);
@@ -273,11 +452,11 @@ namespace UnityProjectArchitect.Unity.Editor
                 "Transform your game ideas into professional documentation and project structure");
             AddHeaderDivider(scrollView);
             
-            // Step 1: Game Description
-            CreateGameDescriptionSection(scrollView);
-            
             // AI Configuration
             CreateAIConfigurationSection(scrollView);
+
+            // Step 1: Game Description
+            CreateGameDescriptionSection(scrollView);
             
             // Step 2: Generate Documentation
             CreateDocumentationGenerationSection(scrollView);
@@ -292,6 +471,8 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateProjectAnalyzerTab()
         {
             _projectAnalyzerTab = new VisualElement();
+            
+            // Sticky action bar removed
             
             ScrollView scrollView = new ScrollView();
             _projectAnalyzerTab.Add(scrollView);
@@ -320,6 +501,8 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateSmartTemplateCreatorTab()
         {
             _templateCreatorTab = new VisualElement();
+            
+            // Sticky action bar removed
             
             ScrollView scrollView = new ScrollView();
             _templateCreatorTab.Add(scrollView);
@@ -351,15 +534,15 @@ namespace UnityProjectArchitect.Unity.Editor
         private void CreateTabHeader(VisualElement parent, string title, string description)
         {
             VisualElement headerContainer = new VisualElement();
-            headerContainer.style.marginBottom = 20;
+            headerContainer.AddToClassList("upa-card");
             
             Label titleLabel = new Label(title);
-            titleLabel.style.fontSize = _baseFontSize + 8;
+            titleLabel.AddToClassList("upa-fs-title");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.marginBottom = 5;
             
             Label descLabel = new Label(description);
-            descLabel.style.fontSize = _baseFontSize + 0;
+            descLabel.AddToClassList("upa-fs-subtitle");
             descLabel.style.color = Color.gray;
             descLabel.style.whiteSpace = WhiteSpace.Normal;
             
@@ -371,10 +554,7 @@ namespace UnityProjectArchitect.Unity.Editor
         private void AddHeaderDivider(VisualElement parent)
         {
             VisualElement divider = new VisualElement();
-            divider.style.height = 1;
-            divider.style.marginTop = 8;
-            divider.style.marginBottom = 12;
-            divider.style.backgroundColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+            divider.AddToClassList("upa-divider");
             parent.Add(divider);
         }
         
@@ -421,11 +601,15 @@ namespace UnityProjectArchitect.Unity.Editor
             _gameDescriptionField.style.whiteSpace = WhiteSpace.Normal;
             _gameDescriptionField.style.unityTextAlign = TextAnchor.UpperLeft;
             _gameDescriptionField.style.minHeight = 180; // Ensure minimum height for scrolling
+            _gameDescriptionField.RegisterValueChangedCallback(_ => {
+                UpdateGenerateButtonState();
+            });
             
             textFieldScrollView.Add(_gameDescriptionField);
             
             VisualElement buttonContainer = new VisualElement();
             buttonContainer.style.flexDirection = FlexDirection.Row;
+            buttonContainer.style.justifyContent = Justify.FlexEnd;
             
             Button templateButton = new Button(() => {
                 _gameDescriptionField.value = GetGameDescriptionTemplate();
@@ -510,24 +694,30 @@ namespace UnityProjectArchitect.Unity.Editor
             Foldout generationFoldout = new Foldout { text = "Step 2: Generate Documentation", value = true };
             StyleFoldout(generationFoldout);
             
-            _generateDocsButton = new Button(GenerateDocumentationFromConcept) 
-            { 
-                text = "✨ Generate Professional Documentation" 
-            };
-            _generateDocsButton.style.height = 40;
-            _generateDocsButton.style.fontSize = _baseFontSize + 0;
-            _generateDocsButton.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _generateDocsButton.style.backgroundColor = new Color(0.2f, 0.6f, 0.2f, 1f);
+            _generateDocsButton = new Button(GenerateDocumentationFromConcept) { text = "✨ Generate Professional Documentation" };
+            _generateDocsButton.AddToClassList("upa-btn");
+            _generateDocsButton.AddToClassList("upa-btn-lg");
+            _generateDocsButton.AddToClassList("upa-btn-primary");
             
             _statusLabel = new Label("Ready to generate documentation from your game concept");
-            _statusLabel.style.marginTop = 10;
-            _statusLabel.style.fontSize = _baseFontSize - 1;
-            _statusLabel.style.color = Color.green;
+            _statusLabel.AddToClassList("upa-fs-base");
+            _statusLabel.AddToClassList("upa-mt-10");
             
             generationFoldout.Add(_generateDocsButton);
             generationFoldout.Add(_statusLabel);
             
             parent.Add(generationFoldout);
+            
+            // Ensure correct initial state based on current description content
+            UpdateGenerateButtonState();
+        }
+
+        private void UpdateGenerateButtonState()
+        {
+            if (_generateDocsButton == null) return;
+            string text = _gameDescriptionField != null ? _gameDescriptionField.value : string.Empty;
+            bool hasContent = !string.IsNullOrWhiteSpace(text) && text.Trim().Length >= 10;
+            _generateDocsButton.SetEnabled(hasContent);
         }
         
         private void CreateExportAndStructureSection(ScrollView parent)
@@ -536,28 +726,23 @@ namespace UnityProjectArchitect.Unity.Editor
             StyleFoldout(exportFoldout);
             
             Label instructionLabel = new Label("Choose what to do with your generated documentation:");
-            instructionLabel.style.marginBottom = 10;
-            instructionLabel.style.fontSize = _baseFontSize - 1;
+            instructionLabel.AddToClassList("upa-fs-base");
+            instructionLabel.AddToClassList("upa-mb-10");
             
             VisualElement buttonContainer = new VisualElement();
-            buttonContainer.style.flexDirection = FlexDirection.Row;
+            buttonContainer.AddToClassList("upa-row");
             
-            _exportDocsButton = new Button(ExportDocumentation) 
-            { 
-                text = "📄 Export Documentation" 
-            };
-            _exportDocsButton.style.height = 35;
+            _exportDocsButton = new Button(ExportDocumentation) { text = "📄 Export Documentation" };
+            _exportDocsButton.AddToClassList("upa-btn");
+            _exportDocsButton.AddToClassList("upa-btn-lg");
+            _exportDocsButton.AddToClassList("upa-mr-5");
             _exportDocsButton.style.flexGrow = 1;
-            _exportDocsButton.style.marginRight = 5;
             _exportDocsButton.SetEnabled(false);
             
-            _createStructureButton = new Button(CreateProjectStructure) 
-            { 
-                text = "📁 Create Project Structure" 
-            };
-            _createStructureButton.style.height = 35;
+            _createStructureButton = new Button(CreateProjectStructure) { text = "📁 Create Project Structure" };
+            _createStructureButton.AddToClassList("upa-btn");
+            _createStructureButton.AddToClassList("upa-btn-lg");
             _createStructureButton.style.flexGrow = 1;
-            _createStructureButton.style.marginLeft = 5;
             _createStructureButton.SetEnabled(false);
             
             buttonContainer.Add(_exportDocsButton);
@@ -592,12 +777,15 @@ namespace UnityProjectArchitect.Unity.Editor
             switch (tabIndex)
             {
                 case 0:
-                    _contentContainer.Add(_gameConceptTab);
+                    _contentContainer.Add(_overviewTab);
                     break;
                 case 1:
-                    _contentContainer.Add(_projectAnalyzerTab);
+                    _contentContainer.Add(_gameConceptTab);
                     break;
                 case 2:
+                    _contentContainer.Add(_projectAnalyzerTab);
+                    break;
+                case 3:
                     _contentContainer.Add(_templateCreatorTab);
                     break;
             }
@@ -632,25 +820,8 @@ namespace UnityProjectArchitect.Unity.Editor
 
         private void StyleFoldout(Foldout foldout)
         {
-            foldout.style.marginBottom = _compactMode ? 10 : 16;
-            foldout.style.paddingTop = _compactMode ? 4 : 6;
-            foldout.style.paddingBottom = _compactMode ? 4 : 6;
-            foldout.style.paddingLeft = _compactMode ? 6 : 8;
-            foldout.style.paddingRight = _compactMode ? 6 : 8;
+            foldout.AddToClassList("upa-foldout");
             foldout.style.fontSize = _compactMode ? _baseFontSize - 1 : _baseFontSize;
-            foldout.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 0.7f);
-            foldout.style.borderTopLeftRadius = 6;
-            foldout.style.borderTopRightRadius = 6;
-            foldout.style.borderBottomLeftRadius = 6;
-            foldout.style.borderBottomRightRadius = 6;
-            foldout.style.borderLeftWidth = 1;
-            foldout.style.borderRightWidth = 1;
-            foldout.style.borderTopWidth = 1;
-            foldout.style.borderBottomWidth = 1;
-            foldout.style.borderLeftColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            foldout.style.borderRightColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            foldout.style.borderTopColor = new Color(0.20f, 0.20f, 0.20f, 1f);
-            foldout.style.borderBottomColor = new Color(0.20f, 0.20f, 0.20f, 1f);
         }
 
         private VisualElement CreateTopHeaderBar()
@@ -1288,38 +1459,15 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateDocumentationCard(string title, string content)
         {
             VisualElement card = new VisualElement();
-            card.style.marginBottom = 15;
-            card.style.paddingTop = 10;
-            card.style.paddingBottom = 10;
-            card.style.paddingLeft = 10;
-            card.style.paddingRight = 10;
-            card.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.3f);
-            card.style.borderTopLeftRadius = 5;
-            card.style.borderTopRightRadius = 5;
-            card.style.borderBottomLeftRadius = 5;
-            card.style.borderBottomRightRadius = 5;
+            card.AddToClassList("upa-card");
             
             // Use a foldout so the content area is collapsible per section
             Foldout sectionFoldout = new Foldout { text = $"📄 {title}", value = false };
-            sectionFoldout.style.marginBottom = 5;
+            sectionFoldout.AddToClassList("upa-foldout");
             
             // Create a ScrollView for the content with proper scroll functionality
             ScrollView contentScrollView = new ScrollView();
             contentScrollView.style.height = 250;
-            contentScrollView.style.marginBottom = 5;
-            contentScrollView.style.borderTopLeftRadius = 3;
-            contentScrollView.style.borderTopRightRadius = 3;
-            contentScrollView.style.borderBottomLeftRadius = 3;
-            contentScrollView.style.borderBottomRightRadius = 3;
-            contentScrollView.style.borderLeftWidth = 1;
-            contentScrollView.style.borderRightWidth = 1;
-            contentScrollView.style.borderTopWidth = 1;
-            contentScrollView.style.borderBottomWidth = 1;
-            contentScrollView.style.borderLeftColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-            contentScrollView.style.borderRightColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-            contentScrollView.style.borderTopColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-            contentScrollView.style.borderBottomColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-            contentScrollView.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
             
             TextField contentField = new TextField()
             {
@@ -1444,18 +1592,18 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             StyleFoldout(actionsContainer);
             
             _projectStatusLabel = new Label("Ready to analyze project and generate documentation");
-            _projectStatusLabel.style.marginBottom = 10;
-            _projectStatusLabel.style.fontSize = _baseFontSize - 1;
-            _projectStatusLabel.style.color = Color.green;
+            _projectStatusLabel.AddToClassList("upa-fs-base");
+            _projectStatusLabel.AddToClassList("upa-mb-10");
             
             VisualElement buttonContainer = new VisualElement();
-            buttonContainer.style.flexDirection = FlexDirection.Row;
-            buttonContainer.style.justifyContent = Justify.SpaceBetween;
-            buttonContainer.style.marginBottom = 10;
+            buttonContainer.AddToClassList("upa-row");
+            buttonContainer.AddToClassList("upa-mb-10");
             
             Button analyzeButton = new Button(AnalyzeCurrentProject) { text = "🔍 Analyze Project" };
+            analyzeButton.AddToClassList("upa-btn");
+            analyzeButton.AddToClassList("upa-btn-lg");
+            analyzeButton.AddToClassList("upa-mr-5");
             analyzeButton.style.flexGrow = 1;
-            analyzeButton.style.marginRight = 5;
             
             Button refreshButton = new Button(() => {
                 if (_currentProjectAsset != null)
@@ -1464,8 +1612,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 }
                 RefreshProjectUI();
             }) { text = "🔄 Refresh Data" };
+            refreshButton.AddToClassList("upa-btn");
+            refreshButton.AddToClassList("upa-btn-lg");
             refreshButton.style.flexGrow = 1;
-            refreshButton.style.marginLeft = 5;
             
             buttonContainer.Add(analyzeButton);
             buttonContainer.Add(refreshButton);
@@ -2068,20 +2217,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateSuggestionCard(string folderName, VisualElement parentContainer = null)
         {
             VisualElement card = new VisualElement();
+            card.AddToClassList("upa-card");
             card.style.flexDirection = FlexDirection.Row;
             card.style.alignItems = Align.Center;
-            card.style.marginBottom = 5;
-            card.style.paddingTop = 8;
-            card.style.paddingBottom = 8;
-            card.style.paddingLeft = 10;
-            card.style.paddingRight = 10;
-            card.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.4f);
-            card.style.borderTopLeftRadius = 4;
-            card.style.borderTopRightRadius = 4;
-            card.style.borderBottomLeftRadius = 4;
-            card.style.borderBottomRightRadius = 4;
-            card.style.borderLeftWidth = 2;
-            card.style.borderLeftColor = new Color(0.2f, 0.6f, 0.2f, 1f);
             
             Label folderLabel = new Label($"📁 {folderName}");
             folderLabel.style.fontSize = _baseFontSize - 1;
@@ -2164,18 +2302,9 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
         private void CreateCustomFolderCard(string folderName)
         {
             VisualElement card = new VisualElement();
+            card.AddToClassList("upa-card");
             card.style.flexDirection = FlexDirection.Row;
             card.style.alignItems = Align.Center;
-            card.style.marginBottom = 3;
-            card.style.paddingTop = 3;
-            card.style.paddingBottom = 3;
-            card.style.paddingLeft = 8;
-            card.style.paddingRight = 8;
-            card.style.backgroundColor = new Color(0.2f, 0.4f, 0.2f, 0.3f);
-            card.style.borderTopLeftRadius = 3;
-            card.style.borderTopRightRadius = 3;
-            card.style.borderBottomLeftRadius = 3;
-            card.style.borderBottomRightRadius = 3;
             
             Label folderLabel = new Label($"📁 {folderName}");
             folderLabel.style.fontSize = _baseFontSize - 1;
