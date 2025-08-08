@@ -137,7 +137,9 @@
 
 /* Buttons */
 .upa-btn { border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; }
+.upa-btn-normalize { padding-top: 0px; padding-bottom: 0px; align-items: center; justify-content: center; }
 .upa-btn-sm { height: 24px; font-size: 12px; }
+.upa-btn-md { height: 35px; min-height: 35px; max-height: 35px; font-size: 13px; }
 .upa-btn-lg { height: 40px; font-size: 14px; }
 .upa-btn-primary { background-color: #339966; }
 .upa-btn-accent { background-color: #1a66cc; }
@@ -146,7 +148,7 @@
 /* Tab button base */
 .upa-tabbtn {
   margin-bottom: 5px;
-  unity-text-align: upper-left;
+  unity-text-align: middle-left;
   padding-left: 10px;
   border-left-width: 3px;
   border-top-left-radius: 6px;

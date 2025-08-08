@@ -731,17 +731,22 @@ namespace UnityProjectArchitect.Unity.Editor
             
             VisualElement buttonContainer = new VisualElement();
             buttonContainer.AddToClassList("upa-row");
+            // Normalize vertical padding
+            buttonContainer.style.marginTop = 0;
+            buttonContainer.style.marginBottom = 0;
             
             _exportDocsButton = new Button(ExportDocumentation) { text = "📄 Export Documentation" };
             _exportDocsButton.AddToClassList("upa-btn");
-            _exportDocsButton.AddToClassList("upa-btn-lg");
+            _exportDocsButton.AddToClassList("upa-btn-md");
+            _exportDocsButton.AddToClassList("upa-btn-normalize");
             _exportDocsButton.AddToClassList("upa-mr-5");
             _exportDocsButton.style.flexGrow = 1;
             _exportDocsButton.SetEnabled(false);
             
             _createStructureButton = new Button(CreateProjectStructure) { text = "📁 Create Project Structure" };
             _createStructureButton.AddToClassList("upa-btn");
-            _createStructureButton.AddToClassList("upa-btn-lg");
+            _createStructureButton.AddToClassList("upa-btn-md");
+            _createStructureButton.AddToClassList("upa-btn-normalize");
             _createStructureButton.style.flexGrow = 1;
             _createStructureButton.SetEnabled(false);
             
@@ -1597,11 +1602,11 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             
             VisualElement buttonContainer = new VisualElement();
             buttonContainer.AddToClassList("upa-row");
-            buttonContainer.AddToClassList("upa-mb-10");
             
             Button analyzeButton = new Button(AnalyzeCurrentProject) { text = "🔍 Analyze Project" };
             analyzeButton.AddToClassList("upa-btn");
-            analyzeButton.AddToClassList("upa-btn-lg");
+            analyzeButton.AddToClassList("upa-btn-md");
+            analyzeButton.AddToClassList("upa-btn-normalize");
             analyzeButton.AddToClassList("upa-mr-5");
             analyzeButton.style.flexGrow = 1;
             
@@ -1613,7 +1618,8 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
                 RefreshProjectUI();
             }) { text = "🔄 Refresh Data" };
             refreshButton.AddToClassList("upa-btn");
-            refreshButton.AddToClassList("upa-btn-lg");
+            refreshButton.AddToClassList("upa-btn-md");
+            refreshButton.AddToClassList("upa-btn-normalize");
             refreshButton.style.flexGrow = 1;
             
             buttonContainer.Add(analyzeButton);
