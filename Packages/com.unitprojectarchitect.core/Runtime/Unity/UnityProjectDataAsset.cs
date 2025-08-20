@@ -54,6 +54,20 @@ namespace UnityProjectArchitect.Unity
         }
         
         /// <summary>
+        /// Force refresh project analysis by clearing cached analysis data
+        /// </summary>
+        public void ClearAnalysisCache()
+        {
+            if (_projectData != null)
+            {
+                // Clear any cached analysis data that might contain outdated project type
+                _projectData.ClearAnalysisData();
+                SaveToJson();
+                Debug.Log("Project analysis cache cleared. Next analysis will be fresh.");
+            }
+        }
+        
+        /// <summary>
         /// Load ProjectData from JSON
         /// </summary>
         private void LoadFromJson()

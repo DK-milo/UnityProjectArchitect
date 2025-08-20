@@ -238,7 +238,14 @@ namespace UnityProjectArchitect.Services
                 if (hasVrFolders)
                     return ProjectType.VR;
 
-                bool hasArFolders = analysis.Folders.Any(f => f.Name.ToLower().Contains("ar"));
+                bool hasArFolders = analysis.Folders.Any(f => 
+                    f.Name.ToLower() == "ar" || 
+                    f.Name.ToLower() == "augmentedreality" ||
+                    f.Name.ToLower().StartsWith("ar_") ||
+                    f.Name.ToLower().EndsWith("_ar") ||
+                    f.Name.ToLower().Contains("arcore") ||
+                    f.Name.ToLower().Contains("arkit") ||
+                    f.Name.ToLower().Contains("arfoundation"));
                 if (hasArFolders)
                     return ProjectType.AR;
 

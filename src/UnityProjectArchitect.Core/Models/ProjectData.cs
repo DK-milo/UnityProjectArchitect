@@ -140,6 +140,39 @@ namespace UnityProjectArchitect.Core
                 MarkModified();
             }
         }
+
+        /// <summary>
+        /// Clears cached analysis data to force fresh project analysis
+        /// </summary>
+        public void ClearAnalysisData()
+        {
+            // Reset project type to General to force re-detection
+            ProjectType = ProjectType.General;
+            
+            // Clear content from analysis-related sections to force regeneration
+            foreach (DocumentationSectionData section in DocumentationSections)
+            {
+                if (section.SectionType == DocumentationSectionType.GeneralProductDescription ||
+                    section.SectionType == DocumentationSectionType.SystemArchitecture ||
+                    section.SectionType == DocumentationSectionType.DataModel ||
+                    section.SectionType == DocumentationSectionType.APISpecification ||
+                    section.SectionType == DocumentationSectionType.ProjectOverview ||
+                    section.SectionType == DocumentationSectionType.CodeAnalysis ||
+                    section.SectionType == DocumentationSectionType.AssetAnalysis ||
+                    section.SectionType == DocumentationSectionType.PerformanceAnalysis ||
+                    section.SectionType == DocumentationSectionType.ProjectMetrics)
+                {
+                    section.Content = "";
+                    section.Status = DocumentationStatus.NotStarted;
+                    section.LastUpdated = DateTime.MinValue;
+                }
+            }
+            
+            // Clear folder structure data
+            FolderStructure = new FolderStructureData();
+            
+            MarkModified();
+        }
     }
 
     public enum ProjectType

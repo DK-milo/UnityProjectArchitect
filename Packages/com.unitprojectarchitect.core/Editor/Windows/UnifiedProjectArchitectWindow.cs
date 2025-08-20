@@ -1676,8 +1676,29 @@ A 3D action-adventure RPG set in an enchanted forest where players take on the r
             refreshButton.AddToClassList("upa-btn-normalize");
             refreshButton.style.flexGrow = 1;
             
+            Button clearCacheButton = new Button(() => {
+                if (_currentProjectAsset != null)
+                {
+                    if (EditorUtility.DisplayDialog("Clear Analysis Cache", 
+                        "This will clear all cached analysis data and force a fresh project analysis. The project type will be re-detected. Continue?", 
+                        "Yes, Clear Cache", "Cancel"))
+                    {
+                        _currentProjectAsset.ClearAnalysisCache();
+                        RefreshProjectUI();
+                        EditorUtility.DisplayDialog("Cache Cleared", 
+                            "Analysis cache has been cleared. Next analysis will be completely fresh with updated project type detection.", 
+                            "OK");
+                    }
+                }
+            }) { text = "🗑️ Clear Cache" };
+            clearCacheButton.AddToClassList("upa-btn");
+            clearCacheButton.AddToClassList("upa-btn-md");
+            clearCacheButton.AddToClassList("upa-btn-normalize");
+            clearCacheButton.style.flexGrow = 1;
+            
             buttonContainer.Add(analyzeButton);
             buttonContainer.Add(refreshButton);
+            buttonContainer.Add(clearCacheButton);
             
             // Progress bar for analysis
             _analysisProgress = new ProgressBar();
