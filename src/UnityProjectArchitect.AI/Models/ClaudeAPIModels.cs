@@ -6,7 +6,7 @@ namespace UnityProjectArchitect.Core.AI
     [Serializable]
     public class ClaudeAPIRequest
     {
-        public string model { get; set; } = "claude-3-5-sonnet-20241022";
+        public string model { get; set; } = "claude-opus-4-1-20250805";
         public int max_tokens { get; set; } = 4000;
         public List<ClaudeMessage> messages { get; set; }
         public string system { get; set; }

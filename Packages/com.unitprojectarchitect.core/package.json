@@ -1,6 +1,6 @@
 {
   "name": "com.unitprojectarchitect.core",
-  "version": "0.3.0",
+  "version": "0.1.1",
   "displayName": "Unity Project Architect",
   "description": "AI-powered project documentation and organization tool with intelligent templates, real-time analysis, and professional export capabilities.",
   "unity": "2023.3",
