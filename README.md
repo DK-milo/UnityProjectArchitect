@@ -1,7 +1,7 @@
 # Unity Project Architect
 
-**Version:** 0.3.0 (Complete - Ready for Publishing)  
-**Unity Compatibility:** Unity 6 (6000.0.0f1+) and Unity 2023.3+  
+**Version:** 1.0.0 (Complete - Ready for Publishing)  
+**Unity Compatibility:** Unity 6 (6000.0.0f1+)
 **Package Name:** `com.unitprojectarchitect.core`
 
 An AI-powered Unity Editor package that automatically generates comprehensive project documentation, creates intelligent project templates, and provides development workflow assistance through advanced project analysis and Claude AI integration.
@@ -58,8 +58,8 @@ Automatically generates six essential project documentation sections:
 
 1. Open Unity Package Manager
 2. Click "+" → "Add package from git URL"
-3. Enter: `https://github.com/your-repo/unity-project-architect.git`
-4. Or download and import the `.unitypackage` file
+3. Enter: https://github.com/DK-milo/UnityProjectArchitect.git?path=/Packages/com.unitprojectarchitect.core#43dbf8bdf405496be28a9e7e6c0fd735781e6476
+5. Or download and import the `.unitypackage` file
 
 ## 🔧 Quick Start
 
